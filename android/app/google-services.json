@@ -1,0 +1,83 @@
+{
+  "project_info": {
+    "project_number": "566332137185",
+    "firebase_url": "https://custard-kmp-default-rtdb.firebaseio.com",
+    "project_id": "custard-kmp",
+    "storage_bucket": "custard-kmp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:566332137185:android:e9b76b291afb32e7d6e1a0",
+        "android_client_info": {
+          "package_name": "app.custard.custard_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "566332137185-83mc90kuklq8mg8vfpfoo85elocb71ro.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzIF2g9n6ZoK8rxFGObq4wfUl81Tbt7u8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "566332137185-7lpt6ib45od45db3jel530bddasa8k61.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "566332137185-d25ajj9pcapote85tubscvc6uglc9t17.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.custard.app.ios"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:566332137185:android:061e23cb805b8e88d6e1a0",
+        "android_client_info": {
+          "package_name": "com.custard.app.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "566332137185-83mc90kuklq8mg8vfpfoo85elocb71ro.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzIF2g9n6ZoK8rxFGObq4wfUl81Tbt7u8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "566332137185-7lpt6ib45od45db3jel530bddasa8k61.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "566332137185-d25ajj9pcapote85tubscvc6uglc9t17.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.custard.app.ios"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
