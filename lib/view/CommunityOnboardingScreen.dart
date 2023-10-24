@@ -1,16 +1,19 @@
 import 'package:custard_flutter/components/CommunityCard.dart';
 import 'package:custard_flutter/components/CustardTextField.dart';
 import 'package:custard_flutter/components/SlideShowContainer.dart';
+import 'package:custard_flutter/view/ChapterOboardingScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
-
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../components/TitleBodyContainer.dart';
 import '../controllers/CommunityOnboardingController.dart';
 
 class CommunityOnboardingScreen extends StatelessWidget {
   var controller = Get.put(CommunityOnboardingController());
+  var selectedImage = Rxn<File>();
 
   CommunityOnboardingScreen({super.key});
 
@@ -25,7 +28,9 @@ class CommunityOnboardingScreen extends StatelessWidget {
             _photoUploadScreen(),
             _tags()
           ],
-          onFinish: () {  }
+          onFinish: () {
+            Get.to(ChapterOboardingScreen());
+          }
         ),
       ),
     );
@@ -60,7 +65,6 @@ class CommunityOnboardingScreen extends StatelessWidget {
             labelText: "About Community",
             controller: controller.aboutCommunity
         ),
-        CommunityCard()
       ],
     );
   }
@@ -72,16 +76,25 @@ class CommunityOnboardingScreen extends StatelessWidget {
             "Hi! Priya Bhatt",
             "It’s your brand new profile! Wanna change it up? You can do that from your account settings."
         ),
-        const CircleAvatar(
-          radius: 75,
-          backgroundImage: AssetImage('assets/avatar.png'),
+        Obx(() =>  selectedImage.value == null ?
+          CircleAvatar(
+            radius: 75,
+            backgroundImage: AssetImage('assets/avatar.png'),
+          )
+            :
+          CircleAvatar(
+            radius: 75,
+            backgroundImage: FileImage(selectedImage.value!),
+          )
         ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  _pickImage();
+                },
                 child: const Row(
                   children: [
                     Icon(Icons.upload),
@@ -114,5 +127,11 @@ class CommunityOnboardingScreen extends StatelessWidget {
         )
       ],
     );
+  }
+
+  Future _pickImage() async {
+    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if(image == null) return;
+    selectedImage.value = File(image.path);
   }
 }

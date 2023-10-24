@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:custard_flutter/components/CustardTextField.dart';
 import 'package:custard_flutter/controllers/UserOnboardingController.dart';
 import 'package:custard_flutter/utils/CustardColors.dart';
@@ -7,12 +9,14 @@ import 'package:custom_radio_grouped_button/custom_radio_grouped_button.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../components/SlideShowContainer.dart';
 import '../components/TitleBodyContainer.dart';
 
 class UserOnboardingScreen extends StatelessWidget {
   final controller = Get.put(UserOnboardingController());
+  var selectedImage = Rxn<File>();
 
   UserOnboardingScreen({super.key});
 
@@ -100,9 +104,16 @@ class UserOnboardingScreen extends StatelessWidget {
            "Hi! Priya Bhatt",
            "It’s your brand new profile! Wanna change it up? You can do that from your account settings."
        ),
-       const CircleAvatar(
+       Obx(() =>  selectedImage.value == null ?
+       CircleAvatar(
          radius: 75,
          backgroundImage: AssetImage('assets/avatar.png'),
+       )
+           :
+       CircleAvatar(
+         radius: 75,
+         backgroundImage: FileImage(selectedImage.value!),
+       )
        ),
        Row(
          crossAxisAlignment: CrossAxisAlignment.center,
@@ -136,5 +147,11 @@ class UserOnboardingScreen extends StatelessWidget {
        )
      ],
    );
+  }
+
+  Future _pickImage() async {
+    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if(image == null) return;
+    selectedImage.value = File(image.path);
   }
 }

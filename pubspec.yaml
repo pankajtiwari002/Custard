@@ -48,6 +48,8 @@ dependencies:
   firebase_crashlytics: ^3.1.0
   custom_radio_grouped_button: ^2.2.1
   dotted_border: ^2.1.0
+  flutter_toggle_tab: ^1.4.1
+  image_picker: ^1.0.4
 
 dev_dependencies:
   flutter_test:
@@ -75,6 +77,7 @@ flutter:
   assets:
    - assets/temp.png
    - assets/avatar.png
+   - assets/location.svg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 
