@@ -1,16 +1,24 @@
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-// class CommunityScreen extends GetxController{
-//   var tabController;
-//   Rx<int> tabIndex = 0.obs;
+class CommunityController extends GetxController with GetSingleTickerProviderStateMixin{
+  late TabController tabController;
+  Rx<int> tabIndex = 0.obs;
+  Rx<bool> isPending = false.obs;
+  Rx<int> memberIndex = 0.obs;
 
-//   @override
-//   void onInit(){
-//     super.onInit();
-//     tabController = TabController(length: 3, vsync: this);
-//     tabController.addListener(() {
-//       tabIndex = tabController.index;
-//     });
-//   }
-// }
+  @override
+  void onInit(){
+    super.onInit();
+    tabController = TabController(length: 3, vsync: this);
+    tabController.addListener(() {
+      tabIndex = tabController.index.obs;
+    });
+  }
+
+  @override
+  void onClose() {
+    tabController.dispose();
+    super.onClose();
+  }
+}
