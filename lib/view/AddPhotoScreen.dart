@@ -1,5 +1,6 @@
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/components/CustardTextField.dart';
+import 'package:custard_flutter/components/UserPhotosContainer.dart';
 import 'package:custard_flutter/controllers/AddPhotoController.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -52,15 +53,21 @@ class AddPhotoScreen extends StatelessWidget {
                   controller: controller.grpName
               ),
             ),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 3,
-                children: List.generate(100, (index) {
-                  return Center(
-                    child: _photoTile(),
-                  );
-                }),
-              )
+            // Expanded(
+            //   child: GridView.count(
+            //     crossAxisCount: 3,
+            //     children: List.generate(100, (index) {
+            //       return Center(
+            //         child: _photoTile(),
+            //       );
+            //     }),
+            //   )
+            // ),
+            UserPhotosContainer(
+                images: ["https://via.placeholder.com/100x100","https://via.placeholder.com/100x100","https://via.placeholder.com/100x100","https://via.placeholder.com/100x100"],
+                title: "title",
+                onPress: () {},
+                userImage: "https://via.placeholder.com/100x100"
             ),
             CustardButton(
                 onPressed: () {},
