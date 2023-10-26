@@ -3,6 +3,7 @@ import 'package:custard_flutter/components/CommunityTile.dart';
 import 'package:custard_flutter/components/CustardAppBar.dart';
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/utils/CustardColors.dart';
+import 'package:custard_flutter/view/CommunityScreen.dart';
 import 'package:custard_flutter/view/GalleryScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -108,7 +109,9 @@ class HomeScreen extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: CustardButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Get.to(()=> CommunityScreen());
+                  },
                   buttonType: ButtonType.POSITIVE,
                   label: "Open Chapter Page",
                   backgroundColor: Colors.white,

@@ -1,5 +1,5 @@
 import 'dart:developer';
-
+import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/components/EventCard.dart';
 import 'package:custard_flutter/view/AcceptOrRejectScreen.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +14,7 @@ class CommunityScreen extends StatelessWidget {
 
   final controller = Get.put(CommunityController());
 
-  void _showBottomSheet() {
+  void _showMoreBottomSheet() {
     Get.bottomSheet(
       ClipRRect(
         borderRadius: BorderRadius.only(
@@ -108,11 +108,191 @@ class CommunityScreen extends StatelessWidget {
           ),
         ),
       ),
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(200),
-        topRight: Radius.circular(200),
-      )),
+    );
+  }
+
+  void _showFilterBottomSheet() {
+    Get.bottomSheet(
+      ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(40.0),
+          topRight: Radius.circular(40.0),
+        ),
+        child: Container(
+          // height: 400,
+          padding: EdgeInsets.only(bottom: 20),
+          color: Colors.white,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(
+                    top: 20, bottom: 0, left: 30, right: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'More Options',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close),
+                      onPressed: () {
+                        Get.back();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    title: Text('Memner Role'),
+                    trailing: Text("Any"),
+                  ),
+                  ListTile(
+                    title: Text('Location'),
+                    trailing: Text("Any"),
+                  ),
+                  ListTile(
+                    title: Text('Skills'),
+                    trailing: Text("Any"),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _addARoleBottomSheet() {
+    Get.bottomSheet(
+      ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(40.0),
+          topRight: Radius.circular(40.0),
+        ),
+        child: Container(
+          // height: 400,
+          padding: EdgeInsets.only(bottom: 20),
+          color: Colors.white,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(
+                    top: 20, bottom: 0, left: 30, right: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'More Options',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close),
+                      onPressed: () {
+                        Get.back();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              Container(
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(40),
+                  border: Border.all(color: Color.fromARGB(255, 194, 192, 192)),
+                ),
+                child: TextFormField(
+                  decoration: InputDecoration(
+                      label: Text("Add a role"),
+                      prefixIcon: Icon(Icons.search),
+                      border: InputBorder.none),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void openEditAboutSheet() {
+    controller.editAbout.text = controller.about.value;
+    print(controller.about.value);
+    Get.bottomSheet(
+      ClipRRect(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(40.0),
+          topRight: Radius.circular(40.0),
+        ),
+        child: Container(
+          color: Colors.white,
+          padding: EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios),
+                      onPressed: () {
+                        Get.back();
+                      },
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.0),
+                TextFormField(
+                  controller: controller.editAbout,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                    labelText: 'About the Community',
+                  ),
+                  maxLines: 10,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                CustardButton(
+                  onPressed: () {
+                    controller.about.value = controller.editAbout.text;
+                    Get.back();
+                  },
+                  buttonType: ButtonType.POSITIVE,
+                  label: 'Save Changes',
+                  backgroundColor: Color(0xFF665EE0),
+                  textColor: Colors.white,
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Center(
+                    child: TextButton(
+                        onPressed: () {},
+                        child: Text(
+                          "Discard",
+                          style:
+                              TextStyle(color: Color(0xFF665EE0), fontSize: 18),
+                        ))),
+                const SizedBox(
+                  height: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -212,13 +392,15 @@ class CommunityScreen extends StatelessWidget {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   IconButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      Get.back();
+                                    },
                                     icon: const Icon(Icons.arrow_back_ios),
                                     color: Colors.white,
                                   ),
                                   IconButton(
                                     onPressed: () {
-                                      _showBottomSheet();
+                                      _showMoreBottomSheet();
                                     },
                                     icon: const Icon(Icons.more_vert),
                                     color: Colors.white,
@@ -369,13 +551,18 @@ class CommunityScreen extends StatelessWidget {
                     indicatorWeight: 3.0,
                   ),
                   Container(
-                    height: size.height * 1.15,
+                    // height: size.height * 1.15,
+                    constraints: BoxConstraints(
+                      maxHeight: size.height*0.9,
+                      minHeight: size.height*0.4
+                    ),
                     child: TabBarView(
                       controller: controller.tabController,
                       children: [
-                        details(),
-                        member(controller, context, _showDialog),
-                        Text('Access Content')
+                        details(controller, openEditAboutSheet),
+                        member(controller, context, _showDialog,
+                            _showFilterBottomSheet, _addARoleBottomSheet),
+                        access(),
                       ],
                     ),
                   )
@@ -389,361 +576,231 @@ class CommunityScreen extends StatelessWidget {
   }
 }
 
-details() {
+details(CommunityController controller, Function openEditAboutSheet) {
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          children: [
-            const Text(
-              'About',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-                fontFamily: 'Gilroy',
-                fontWeight: FontWeight.w600,
+    child: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'About',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontFamily: 'Gilroy',
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            SizedBox(
-              width: 10,
-            ),
-            IconButton(onPressed: () {}, icon: Icon(Icons.edit))
-          ],
-        ),
-        const Text(
-            "This case study aligns with the goals outlined in Executive Order [Specify the Executive Order Number if applicable]. The Executive Order emphasizes the modernization of government operations through the adoption of innovative technology solutions, with a focus on streamlining processes and enhancing digital services."),
-        Row(
-          children: [
-            const Text(
-              'Our Events',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-                fontFamily: 'Gilroy',
-                fontWeight: FontWeight.w600,
+              SizedBox(
+                width: 10,
               ),
-            ),
-            const SizedBox(
-              width: 10,
-            ),
-            IconButton(onPressed: () {}, icon: Icon(Icons.edit))
-          ],
-        ),
-        Container(
-          alignment: Alignment.topLeft,
-          height: 300,
-          child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: 4,
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (context, index) {
-                return EventCard();
-              }),
-        ),
-        Row(
-          children: [
-            const Text(
-              'Highlights',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-                fontFamily: 'Gilroy',
-                fontWeight: FontWeight.w600,
+              IconButton(
+                  onPressed: () {
+                    openEditAboutSheet();
+                  },
+                  icon: Icon(Icons.edit))
+            ],
+          ),
+          Text(controller.about.value),
+          Row(
+            children: [
+              const Text(
+                'Our Events',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontFamily: 'Gilroy',
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            const SizedBox(
-              width: 10,
-            ),
-            IconButton(onPressed: () {}, icon: Icon(Icons.edit))
-          ],
-        ),
-        Container(
-          alignment: Alignment.topLeft,
-          height: 200,
-          child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: 4,
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (context, index) {
-                return HighlightContainer();
-              }),
-        ),
-        Row(
-          children: [
-            const Text(
-              'Hosts',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-                fontFamily: 'Gilroy',
-                fontWeight: FontWeight.w600,
+              const SizedBox(
+                width: 10,
               ),
-            ),
-            const SizedBox(
-              width: 10,
-            ),
-            IconButton(onPressed: () {}, icon: Icon(Icons.edit)),
-          ],
-        ),
-        Container(
-          alignment: Alignment.topLeft,
-          height: 100,
-          child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: 3,
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (context, index) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: CircleAvatar(
-                    backgroundImage: NetworkImage(
-                      "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500",
+              IconButton(onPressed: () {}, icon: Icon(Icons.edit))
+            ],
+          ),
+          Container(
+            alignment: Alignment.topLeft,
+            height: 300,
+            child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: 4,
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (context, index) {
+                  return EventCard();
+                }),
+          ),
+          Row(
+            children: [
+              const Text(
+                'Highlights',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontFamily: 'Gilroy',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(
+                width: 10,
+              ),
+              IconButton(onPressed: () {}, icon: Icon(Icons.edit))
+            ],
+          ),
+          Container(
+            alignment: Alignment.topLeft,
+            height: 200,
+            child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: 4,
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (context, index) {
+                  return HighlightContainer();
+                }),
+          ),
+          Row(
+            children: [
+              const Text(
+                'Hosts',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontFamily: 'Gilroy',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(
+                width: 10,
+              ),
+              IconButton(onPressed: () {}, icon: Icon(Icons.edit)),
+            ],
+          ),
+          Container(
+            alignment: Alignment.topLeft,
+            height: 100,
+            child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: 3,
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (context, index) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    child: CircleAvatar(
+                      backgroundImage: NetworkImage(
+                        "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500",
+                      ),
+                      radius: 40,
                     ),
-                    radius: 40,
-                  ),
-                );
-              }),
-        ),
-      ],
+                  );
+                }),
+          ),
+        ],
+      ),
     ),
   );
 }
 
 member(
-    CommunityController controller, BuildContext context, Function showDialog) {
+    CommunityController controller,
+    BuildContext context,
+    Function showDialog,
+    Function showFilterBottomSheet,
+    Function addARoleBottomSheet) {
   return Padding(
     padding: const EdgeInsets.all(8.0),
-    child: Column(
-      children: [
-        const SizedBox(
-          height: 10,
-        ),
-        Row(
-          children: [
-            CustomContainer(
-              text: "108 Member",
-              controller: controller,
-              containerIndex: 0,
-            ),
-            const SizedBox(
-              width: 10,
-            ),
-            CustomContainer(
-              text: "4 Pending Approval",
-              controller: controller,
-              containerIndex: 1,
-            ),
-          ],
-        ),
-        SizedBox(
-          height: 10,
-        ),
-        Obx(
-          () => Visibility(
-            visible: controller.memberIndex == 0,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: 15),
-                  width: 400,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Add the function to be executed when the button is pressed
-                    },
-                    style: ElevatedButton.styleFrom(
-                        // Text color
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25.0),
-                          side: BorderSide(color: Color(0xFF7B61FF)),
+    child: SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(
+            height: 10,
+          ),
+          Row(
+            children: [
+              CustomContainer(
+                text: "108 Member",
+                controller: controller,
+                containerIndex: 0,
+              ),
+              const SizedBox(
+                width: 10,
+              ),
+              CustomContainer(
+                text: "4 Pending Approval",
+                controller: controller,
+                containerIndex: 1,
+              ),
+            ],
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          Obx(
+            () => Visibility(
+              visible: controller.memberIndex == 0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: 15),
+                    width: 400,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Add the function to be executed when the button is pressed
+                        addARoleBottomSheet();
+                      },
+                      style: ElevatedButton.styleFrom(
+                          // Text color
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25.0),
+                            side: BorderSide(color: Color(0xFF7B61FF)),
+                          ),
+                          backgroundColor: Colors.white),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          '+ Invite Member',
+                          style: TextStyle(color: Color(0xFF7B61FF)),
                         ),
-                        backgroundColor: Colors.white),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text(
-                        '+ Invite Member',
-                        style: TextStyle(color: Color(0xFF7B61FF)),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                const TextField(
-                  decoration: InputDecoration(
-                      hintText: 'Search Member',
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Colors.grey,
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                              hintText: 'Search Member',
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                color: Colors.grey,
+                              ),
+                              border: InputBorder.none),
+                        ),
                       ),
-                      suffixIcon: Icon(
-                        Icons.filter,
-                        color: Colors.grey,
+                      IconButton(
+                        onPressed: () {
+                          showFilterBottomSheet();
+                        },
+                        icon: const Icon(
+                          Icons.tune,
+                          color: Colors.grey,
+                        ),
                       ),
-                      border: InputBorder.none),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'HOSTS',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFF546881),
-                        fontSize: 14,
-                        fontFamily: 'Gilroy',
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      '1 online',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFFFFB661),
-                        fontSize: 12,
-                        fontFamily: 'Gilroy',
-                        fontWeight: FontWeight.w500,
-                      ),
-                    )
-                  ],
-                ),
-                ListView.builder(
-                  itemCount: 2,
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    return const ListTile(
-                      title: Text("Priya Bhatt"),
-                      leading: CircleAvatar(
-                        backgroundImage: NetworkImage(
-                            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdXX7GO70tKqiGR95LplD2avbw4oIOGll9jJBNCnvT&s"),
-                        radius: 16,
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text.rich(
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: '24 days streak ',
-                                  style: TextStyle(
-                                    color: Color(0xFFFF6161),
-                                    fontSize: 14,
-                                    fontFamily: 'Gilroy',
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: '🔥',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontFamily: 'Gilroy',
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          Icon(Icons.more_vert)
-                        ],
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'School',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFF546881),
-                        fontSize: 14,
-                        fontFamily: 'Gilroy',
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      '1 online',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFFFFB661),
-                        fontSize: 12,
-                        fontFamily: 'Gilroy',
-                        fontWeight: FontWeight.w500,
-                      ),
-                    )
-                  ],
-                ),
-                ListView.builder(
-                  itemCount: 1,
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      title: const Text("Priya Bhatt"),
-                      leading: const CircleAvatar(
-                        backgroundImage: NetworkImage(
-                            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdXX7GO70tKqiGR95LplD2avbw4oIOGll9jJBNCnvT&s"),
-                        radius: 16,
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text.rich(
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: '24 days streak ',
-                                  style: TextStyle(
-                                    color: Color(0xFFFF6161),
-                                    fontSize: 14,
-                                    fontFamily: 'Gilroy',
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: '🔥',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontFamily: 'Gilroy',
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          IconButton(
-                              onPressed: () {}, icon: Icon(Icons.more_vert))
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-        Obx(() => Visibility(
-              visible: controller.memberIndex == 1,
-              child: Column(
-                children: [
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -770,13 +827,84 @@ member(
                     ],
                   ),
                   ListView.builder(
-                    itemCount: 4,
+                    itemCount: 2,
+                    shrinkWrap: true,
+                    primary: false,
+                    itemBuilder: (context, index) {
+                      return const ListTile(
+                        title: Text("Priya Bhatt"),
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage(
+                              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdXX7GO70tKqiGR95LplD2avbw4oIOGll9jJBNCnvT&s"),
+                          radius: 16,
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '24 days streak ',
+                                    style: TextStyle(
+                                      color: Color(0xFFFF6161),
+                                      fontSize: 14,
+                                      fontFamily: 'Gilroy',
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '🔥',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                      fontFamily: 'Gilroy',
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            Icon(Icons.more_vert)
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'School',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xFF546881),
+                          fontSize: 14,
+                          fontFamily: 'Gilroy',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        '1 online',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xFFFFB661),
+                          fontSize: 12,
+                          fontFamily: 'Gilroy',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      )
+                    ],
+                  ),
+                  ListView.builder(
+                    itemCount: 1,
                     shrinkWrap: true,
                     itemBuilder: (context, index) {
                       return ListTile(
-                        onTap: () {
-                          Get.to(() => AcceptOrRejectScreen());
-                        },
                         title: const Text("Priya Bhatt"),
                         leading: const CircleAvatar(
                           backgroundImage: NetworkImage(
@@ -786,20 +914,33 @@ member(
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            const Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '24 days streak ',
+                                    style: TextStyle(
+                                      color: Color(0xFFFF6161),
+                                      fontSize: 14,
+                                      fontFamily: 'Gilroy',
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '🔥',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                      fontFamily: 'Gilroy',
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                             IconButton(
-                                onPressed: () {},
-                                icon: Icon(
-                                  Icons.check,
-                                  color: Colors.green,
-                                )),
-                            IconButton(
-                                onPressed: () {
-                                  showDialog();
-                                },
-                                icon: Icon(
-                                  Icons.close,
-                                  color: Colors.red,
-                                )),
+                                onPressed: () {}, icon: Icon(Icons.more_vert))
                           ],
                         ),
                       );
@@ -807,9 +948,289 @@ member(
                   ),
                 ],
               ),
-            ))
-      ],
+            ),
+          ),
+          Obx(() => Visibility(
+                visible: controller.memberIndex == 1,
+                child: Column(
+                  children: [
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'HOSTS',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFF546881),
+                            fontSize: 14,
+                            fontFamily: 'Gilroy',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '1 online',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFFFFB661),
+                            fontSize: 12,
+                            fontFamily: 'Gilroy',
+                            fontWeight: FontWeight.w500,
+                          ),
+                        )
+                      ],
+                    ),
+                    ListView.builder(
+                      itemCount: 4,
+                      shrinkWrap: true,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                            onTap: () {
+                              Get.to(() => AcceptOrRejectScreen());
+                            },
+                            title: const Text("Priya Bhatt"),
+                            leading: const CircleAvatar(
+                              backgroundImage: NetworkImage(
+                                  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdXX7GO70tKqiGR95LplD2avbw4oIOGll9jJBNCnvT&s"),
+                              radius: 16,
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "view Answer  ",
+                                  style: TextStyle(
+                                      color: Color(0xFF7B61FF), fontSize: 15),
+                                ),
+                                Icon(Icons.arrow_forward_ios_rounded,
+                                    color: Color(0xFF7B61FF))
+                              ],
+                            ));
+                      },
+                    ),
+                  ],
+                ),
+              ))
+        ],
+      ),
     ),
+  );
+}
+
+access() {
+  return Padding(
+    padding: const EdgeInsets.all(12),
+    child: Column(children: [
+      SizedBox(
+        height: 20,
+      ),
+      Text(
+        'Mountaineers Pricing Features',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: 18,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w700,
+          height: 0.08,
+        ),
+      ),
+      SizedBox(
+        height: 10,
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Free',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 18,
+              fontFamily: 'Gilroy',
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          IconButton(
+              onPressed: () {},
+              icon: Icon(
+                Icons.toggle_on,
+                color: Color(0xFF7B61FF),
+                size: 60,
+              )),
+          Text(
+            'Paid',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 18,
+              fontFamily: 'Gilroy',
+              fontWeight: FontWeight.w600,
+            ),
+          )
+        ],
+      ),
+      Container(
+        padding: EdgeInsets.only(left: 40),
+        width: 300,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.check_circle_outlined,
+                  color: Color(0xFF7B61FF),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Socialize & make new friends.',
+                  style: TextStyle(
+                    color: Color(0xFF010101),
+                    fontSize: 14,
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.check_circle_outlined,
+                  color: Color(0xFF7B61FF),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Attend exclusive events.',
+                  style: TextStyle(
+                    color: Color(0xFF010101),
+                    fontSize: 14,
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.check_circle_outlined,
+                  color: Color(0xFF7B61FF),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Enhance creativity & expression.',
+                  style: TextStyle(
+                    color: Color(0xFF010101),
+                    fontSize: 14,
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.check_circle_outlined,
+                  color: Color(0xFF7B61FF),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Stay updated with dance trends.',
+                  style: TextStyle(
+                    color: Color(0xFF010101),
+                    fontSize: 14,
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.check_circle_outlined,
+                  color: Color(0xFF7B61FF),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  'Opportunities for collaborations.',
+                  style: TextStyle(
+                    color: Color(0xFF010101),
+                    fontSize: 14,
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      SizedBox(
+        height: 30,
+      ),
+      Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: 'Rs 149 ',
+              style: TextStyle(
+                color: Color(0xFF090B0E),
+                fontSize: 32,
+                fontFamily: 'Gilroy',
+                fontWeight: FontWeight.w700,
+                height: 0,
+              ),
+            ),
+            TextSpan(
+              text: 'only',
+              style: TextStyle(
+                color: Color(0xFF090B0E),
+                fontSize: 18,
+                fontFamily: 'Gilroy',
+                fontWeight: FontWeight.w500,
+                height: 0,
+              ),
+            ),
+          ],
+        ),
+        textAlign: TextAlign.center,
+      ),
+      SizedBox(height: 20),
+      Container(
+        width: double.infinity,
+        height: 50,
+        padding: EdgeInsets.symmetric(horizontal: 15),
+        child: ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF7B61FF),
+          ),
+          onPressed: () {},
+          icon: Icon(Icons.edit,color: Colors.white),
+          label: Text("Edit",style: TextStyle(color: Colors.white),),
+        ),
+      ),
+    ]),
   );
 }
 
