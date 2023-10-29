@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 class RoleScreen extends StatelessWidget {
   const RoleScreen({super.key});
+  
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +15,9 @@ class RoleScreen extends StatelessWidget {
         title: const Text('School'),
         centerTitle: true,
         leading: IconButton(
-            onPressed: () {}, icon: const Icon(Icons.arrow_back_ios)),
+            onPressed: () {
+              Get.back();
+            }, icon: const Icon(Icons.arrow_back_ios)),
       ),
       body: fun2(),
     );

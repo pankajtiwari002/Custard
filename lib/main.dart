@@ -1,10 +1,6 @@
 import 'package:custard_flutter/firebase_options.dart';
 import 'package:custard_flutter/repo/AuthRepo.dart';
-import 'package:custard_flutter/view/CommunityOnboardingScreen.dart';
-import 'package:custard_flutter/view/CommunityScreen.dart';
 import 'package:custard_flutter/view/HomeScreen.dart';
-import 'package:custard_flutter/view/LoginScreen.dart';
-import 'package:custard_flutter/view/RoleScreen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -29,7 +25,7 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.light,
-      home: RoleScreen(),
+      home: HomeScreen(),
     );
   }
 }

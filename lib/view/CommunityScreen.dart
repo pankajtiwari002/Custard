@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/components/EventCard.dart';
 import 'package:custard_flutter/view/AcceptOrRejectScreen.dart';
+import 'package:custard_flutter/view/RoleScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
@@ -59,6 +60,9 @@ class CommunityScreen extends StatelessWidget {
                         title: Text('Theme Customization'),
                       ),
                       ListTile(
+                        onTap: (){
+                          Get.to(() => RoleScreen());
+                        },
                         leading: Icon(Icons.people),
                         title: Text('Roles'),
                       ),
@@ -544,6 +548,7 @@ class CommunityScreen extends StatelessWidget {
                       Tab(text: 'Details'),
                       Tab(text: 'Member'),
                       Tab(text: 'Access'),
+                      Tab(text: 'Settings'),
                     ],
                     labelColor: const Color(0xFF7B61FF),
                     unselectedLabelColor: Colors.black,
@@ -553,9 +558,8 @@ class CommunityScreen extends StatelessWidget {
                   Container(
                     // height: size.height * 1.15,
                     constraints: BoxConstraints(
-                      maxHeight: size.height*0.9,
-                      minHeight: size.height*0.4
-                    ),
+                        maxHeight: size.height * 0.9,
+                        minHeight: size.height * 0.4),
                     child: TabBarView(
                       controller: controller.tabController,
                       children: [
@@ -563,6 +567,7 @@ class CommunityScreen extends StatelessWidget {
                         member(controller, context, _showDialog,
                             _showFilterBottomSheet, _addARoleBottomSheet),
                         access(),
+                        settings(),
                       ],
                     ),
                   )
@@ -1226,12 +1231,60 @@ access() {
             backgroundColor: Color(0xFF7B61FF),
           ),
           onPressed: () {},
-          icon: Icon(Icons.edit,color: Colors.white),
-          label: Text("Edit",style: TextStyle(color: Colors.white),),
+          icon: Icon(Icons.edit, color: Colors.white),
+          label: Text(
+            "Edit",
+            style: TextStyle(color: Colors.white),
+          ),
         ),
       ),
     ]),
   );
+}
+
+settings() {
+  return Column(children: [
+    SizedBox(
+      height: 20,
+    ),
+    ListTile(
+      title: Text("Invite People"),
+      trailing: Icon(
+        Icons.person_3_outlined,
+        color: Color(0xFF7B61FF),
+      ),
+    ),
+    ListTile(
+      title: Text("Privacy Settings"),
+      trailing: Icon(
+        Icons.security_outlined,
+        color: Color(0xFF7B61FF),
+      ),
+    ),
+    SizedBox(height: 2),
+    Divider(),
+    SizedBox(height: 2),
+    SwitchListTile(
+      value: true,
+      title: Text("Mute this Chapter"),
+      onChanged: (val) {}
+    ),
+    SwitchListTile(
+      title: Text("Notification Settings"),
+      value: true, 
+      onChanged: (val) {}
+    ),
+    SizedBox(height: 2),
+    Divider(),
+    SizedBox(height: 2),
+    ListTile(
+      title: Text("Open Foundation Page",style: TextStyle(color: Color(0xFF7B61FF))),
+      trailing: Icon(
+        Icons.link,
+        color: Color(0xFF7B61FF),
+      ),
+    ),
+  ]);
 }
 
 class CustomContainer extends StatelessWidget {
