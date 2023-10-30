@@ -13,6 +13,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../components/SlideShowContainer.dart';
 import '../components/TitleBodyContainer.dart';
+import 'JoinCommunityScreen.dart';
 
 class UserOnboardingScreen extends StatelessWidget {
   final controller = Get.put(UserOnboardingController());
@@ -38,7 +39,7 @@ class UserOnboardingScreen extends StatelessWidget {
                   CongratsScreen(
                     backgroundColor: Colors.red,
                     image: const AssetImage('assets/avatar.png'),
-                    next: CommunityOnboardingScreen(),
+                    next: JoinCommunityScreen(),
                     message: 'Congratulation! \n Your profile is created',
                     label: 'Join a Community',
                   )
