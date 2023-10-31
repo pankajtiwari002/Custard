@@ -1,10 +1,14 @@
+import 'dart:developer';
 import 'dart:io';
-
+import 'dart:typed_data';
 import 'package:custard_flutter/components/CustardTextField.dart';
+import 'package:custard_flutter/controllers/PhoneAuthController.dart';
 import 'package:custard_flutter/controllers/UserOnboardingController.dart';
 import 'package:custard_flutter/utils/CustardColors.dart';
+import 'package:custard_flutter/utils/utils.dart';
 import 'package:custard_flutter/view/CommunityOnboardingScreen.dart';
 import 'package:custard_flutter/view/CongratsScreen.dart';
+import 'package:custard_flutter/view/HomeScreen.dart';
 import 'package:custom_radio_grouped_button/custom_radio_grouped_button.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -16,143 +20,146 @@ import '../components/TitleBodyContainer.dart';
 import 'JoinCommunityScreen.dart';
 
 class UserOnboardingScreen extends StatelessWidget {
-  final controller = Get.put(UserOnboardingController());
-  var selectedImage = Rxn<File>();
-
+  // var selectedImage = Rxn<File>();
+  late UserOnboardingController controller;
+  PhoneAuthController phoneAuthController = Get.find();
   UserOnboardingScreen({super.key});
 
- @override
+  Future<void> onPressed() async {
+    bool res = await controller.joinUser();
+    if(res){
+      Get.offAll(HomeScreen());
+    }
+    else{
+      print("failed.........");
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: Colors.white,
-        body: Padding(
-          padding: const EdgeInsets.all(12),
-          child: SlideShowContainer(
-            widgets: [
-              _nameScreen(),
-              _genderScreen(),
-              _photoScreen(),
-              _bioScreen()
-            ],
-            onFinish: () {
-              Get.to(
-                  CongratsScreen(
-                    backgroundColor: Colors.red,
-                    image: const AssetImage('assets/avatar.png'),
-                    next: JoinCommunityScreen(),
-                    message: 'Congratulation! \n Your profile is created',
-                    label: 'Join a Community',
-                  )
-              );
-            },
-          ),
-        )
+    controller = Get.put(UserOnboardingController(context: context));
+    controller.phone = phoneAuthController.phoneNumber.text;
+    controller.isVerified = true;
+    return SafeArea(
+      child: Scaffold(
+          backgroundColor: Colors.white,
+          body: Padding(
+            padding: const EdgeInsets.all(12),
+            child: SlideShowContainer(
+              widgets: [
+                _nameScreen(),
+                _genderScreen(),
+                _photoScreen(),
+                _bioScreen(),
+                _locationScreen()
+              ],
+              onFinish: () {
+                Get.to(CongratsScreen(
+                  backgroundColor: Colors.red,
+                  image: const AssetImage('assets/avatar.png'),
+                  next: JoinCommunityScreen(),
+                  message: 'Congratulation! \n Your profile is created',
+                  label: 'Join a Community',
+                  onPressed: onPressed,
+                ));
+              },
+            ),
+          )),
     );
   }
 
   _nameScreen() {
     return Column(
       children: [
-        TitleBodyContainer(
-            "Hi! Priya Bhatt",
-            "It’s your brand new profile! Wanna change it up? You can do that from your account settings."
-        ),
+        TitleBodyContainer("Hi! Priya Bhatt",
+            "It’s your brand new profile! Wanna change it up? You can do that from your account settings."),
         const SizedBox(height: 24),
         CustardTextField(
-            labelText: "Name",
-            controller: controller.nameController
-        )
+            labelText: "Name", controller: controller.nameController)
       ],
     );
   }
 
   _genderScreen() {
-     return Column(
-       children: [
-         TitleBodyContainer(
-             "Hi! Prteek",
-             "It’s your brand new profile! Wanna change it up? You can do that from your account settings."
-         ),
-         const SizedBox(height: 24),
-         CustomRadioButton(
-             buttonLables: const [
-               "Male",
-               "Female",
-               "Others"
-             ],
-             buttonValues: const [
-               "MALE",
-               "FEMALE",
-               "OTHERS"
-             ],
-             radioButtonValue: (value) {
-               Get.snackbar("title", value);
-             },
-           height: 50,
-           horizontal: true,
-             unSelectedColor: Colors.white,
-             selectedColor: CustardColors.appTheme,
-              enableShape: true,
-         )
-       ],
-     );
+    return Column(
+      children: [
+        TitleBodyContainer("Hi! Prteek",
+            "It’s your brand new profile! Wanna change it up? You can do that from your account settings."),
+        const SizedBox(height: 24),
+        CustomRadioButton(
+          buttonLables: const ["Male", "Female", "Others"],
+          buttonValues: const ["MALE", "FEMALE", "OTHERS"],
+          radioButtonValue: (value) {
+            controller.gender.value = value;
+            Get.snackbar("title", value);
+          },
+          height: 50,
+          horizontal: true,
+          unSelectedColor: Colors.white,
+          selectedColor: CustardColors.appTheme,
+          enableShape: true,
+        )
+      ],
+    );
   }
 
   _photoScreen() {
-   return Column(
-     children: [
-       TitleBodyContainer(
-           "Hi! Priya Bhatt",
-           "It’s your brand new profile! Wanna change it up? You can do that from your account settings."
-       ),
-       Obx(() =>  selectedImage.value == null ?
-       CircleAvatar(
-         radius: 75,
-         backgroundImage: AssetImage('assets/avatar.png'),
-       )
-           :
-       CircleAvatar(
-         radius: 75,
-         backgroundImage: FileImage(selectedImage.value!),
-       )
-       ),
-       Row(
-         crossAxisAlignment: CrossAxisAlignment.center,
-         mainAxisAlignment: MainAxisAlignment.center,
-         children: [
-           TextButton(
-               onPressed: () {},
-               child: const Row(
-                 children: [
-                   Icon(Icons.upload),
-                   Text("Upload picture")
-                 ],
-               )
-           )
-         ],
-       )
-     ],
-   );
+    return Column(
+      children: [
+        TitleBodyContainer("Hi! Priya Bhatt",
+            "It’s your brand new profile! Wanna change it up? You can do that from your account settings."),
+        Obx(() => controller.image.value == null
+            ? CircleAvatar(
+                radius: 75,
+                backgroundImage: AssetImage('assets/avatar.png'),
+              )
+            : CircleAvatar(
+                radius: 75,
+                backgroundImage: MemoryImage(controller.image.value!),
+              )),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+                onPressed: () async {
+                  Uint8List image = await pickImage(ImageSource.gallery);
+                  controller.image.value = image;
+                },
+                child: const Row(
+                  children: [Icon(Icons.upload), Text("Upload picture")],
+                ))
+          ],
+        )
+      ],
+    );
   }
-
   _bioScreen() {
-   return Column(
-     children: [
-       TitleBodyContainer(
-           "Hi! Priya Bhatt",
-           "It’s your brand new profile! Wanna change it up? You can do that from your account settings."
-       ),
-       CustardTextField(
-           labelText: "Bio",
-           controller: controller.bioController
-       )
-     ],
-   );
+    return Column(
+      children: [
+        TitleBodyContainer("Hi! Priya Bhatt",
+            "It’s your brand new profile! Wanna change it up? You can do that from your account settings."),
+        CustardTextField(labelText: "Bio", controller: controller.bioController)
+      ],
+    );
   }
-
-  Future _pickImage() async {
-    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if(image == null) return;
-    selectedImage.value = File(image.path);
+  _locationScreen(){
+    print("city: ");
+    log(controller.city);
+    return Column(
+      children: [
+        TitleBodyContainer("Hi! Priya Bhatt",
+            "It’s your brand new profile! Wanna change it up? You can do that from your account settings."),
+            SizedBox(height: 50,),
+        Container(
+          height: 200,
+          decoration: BoxDecoration(
+            image: DecorationImage(image: NetworkImage('https://img.freepik.com/free-vector/location_53876-25530.jpg?w=2000')),
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(20),
+          ),
+        )
+      ],
+    );
   }
 }

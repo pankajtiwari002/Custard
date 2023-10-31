@@ -9,6 +9,7 @@ class CongratsScreen extends StatelessWidget {
   String message;
   String label;
   Widget next;
+  Future<void> Function() onPressed;
 
   CongratsScreen({
     super.key,
@@ -16,7 +17,8 @@ class CongratsScreen extends StatelessWidget {
     required this.image,
     required this.next,
     required this.message,
-    required this.label
+    required this.label,
+    required this.onPressed
   });
 
   @override
@@ -42,10 +44,7 @@ class CongratsScreen extends StatelessWidget {
               flex: 1,
             ),
             CustardButton(
-              onPressed: () {
-                Get.snackbar("title", "$next");
-                Get.to(next);
-              },
+              onPressed: onPressed,
               buttonType: ButtonType.POSITIVE,
               label: label,
               backgroundColor: Colors.white,

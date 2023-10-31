@@ -50,6 +50,11 @@ dependencies:
   dotted_border: ^2.1.0
   flutter_toggle_tab: ^1.4.1
   image_picker: ^1.0.4
+  cloud_firestore: ^4.9.3
+  firebase_storage: ^11.2.8
+  uuid: ^4.1.0
+  location: ^5.0.3
+  geocoding: ^2.1.1
 
 dev_dependencies:
   flutter_test:
@@ -79,6 +84,7 @@ flutter:
    - assets/temp.png
    - assets/avatar.png
    - assets/location.svg
+   - assets/location.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 

@@ -22,48 +22,51 @@ class SlideShowContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: _statusIndicator(currPage.value),
-        ),
-        Row(
-          children: [
-            Obx(() => Visibility(
-                maintainSize: true,
-                maintainAnimation: true,
-                maintainState: true,
-                visible: currPage.value == 0 ? false : true,
-                child: IconButton(
-                    onPressed: () {
-                      if(currPage.value > 0) {
-                        currPage--;
-                      }else {
-                        Get.snackbar("title", "message");
-                      }
-                    },
-                    icon: const Icon(Icons.arrow_back)
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: _statusIndicator(currPage.value),
+          ),
+          Row(
+            children: [
+              Obx(() => Visibility(
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  maintainState: true,
+                  visible: currPage.value == 0 ? false : true,
+                  child: IconButton(
+                      onPressed: () {
+                        if(currPage.value > 0) {
+                          currPage--;
+                        }else {
+                          Get.snackbar("title", "message");
+                        }
+                      },
+                      icon: const Icon(Icons.arrow_back)
+                  ),
                 ),
-              ),
-            )],
-        ),
-        Obx(() => widgets[currPage.value]),
-        const Spacer(flex: 1),
-        CustardButton(
-            onPressed: (){
-              if(currPage.value < totalPages-1) {
-                currPage++;
-              }else {
-                onFinish();
-                Get.snackbar("title", "message");
-              }
-            },
-            buttonType: ButtonType.NEGATIVE,
-            label: "Next"
-        )
-      ],
+              )],
+          ),
+          Obx(() => widgets[currPage.value]),
+          // const Spacer(flex: 1),
+          SizedBox(height: 20,),
+          CustardButton(
+              onPressed: (){
+                if(currPage.value < totalPages-1) {
+                  currPage++;
+                }else {
+                  onFinish();
+                  Get.snackbar("title", "message");
+                }
+              },
+              buttonType: ButtonType.NEGATIVE,
+              label: "Next"
+          )
+        ],
+      ),
     );
   }
 

@@ -8,15 +8,20 @@ class PhoneAuthController extends GetxController {
   var phoneNumber = TextEditingController();
   var otp = TextEditingController();
 
-  void sendOtp() {
+  Future<void> sendOtp() async{
     isOtpSent = true;
-    // AuthRepo.instance.phoneVerification(phoneNumber.text);
+    AuthRepo.instance.phoneVerification(phoneNumber.text);
     update();
   }
 
-  void resendOtp() {
+  Future<void> resendOtp() async{
     isOtpSent = false;
-    // AuthRepo.instance.verifyOtp(otp.text);
+    AuthRepo.instance.verifyOtp(otp.text);
     update();
+  }
+
+  Future<bool> verifyOtp() async{
+    bool isVerified = await AuthRepo.instance.verifyOtp(otp.text);
+    return isVerified;
   }
 }

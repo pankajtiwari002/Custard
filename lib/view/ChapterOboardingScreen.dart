@@ -12,9 +12,19 @@ import 'package:get/get.dart';
 
 import '../components/CommunityCard.dart';
 import '../components/DashedBox.dart';
+import 'CongratsScreen.dart';
 
 class ChapterOboardingScreen extends StatelessWidget {
   var controller = Get.put(ChapterControllers());
+
+  Future<void> onPressed() async {
+    bool res = await controller.createChapter();
+    if (res) {
+      Get.offAll(HomeScreen());
+    } else {
+      print("failed.........");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +40,14 @@ class ChapterOboardingScreen extends StatelessWidget {
             _themeCard()
           ],
           onFinish: () {
-            Get.to(HomeScreen());
+            Get.to(CongratsScreen(
+              backgroundColor: Colors.red,
+              image: const AssetImage('assets/avatar.png'),
+              next: HomeScreen(),
+              message: 'Congratulation! \n Your Chapter is created',
+              label: 'Create a Chapter',
+              onPressed: onPressed,
+            ));
           },
         ),
       ),
@@ -60,8 +77,7 @@ class ChapterOboardingScreen extends StatelessWidget {
         ),
         CustardTextField(
             labelText: "Search Location",
-            controller: controller.locationController
-        )
+            controller: controller.locationController)
       ],
     );
   }
@@ -78,12 +94,10 @@ class ChapterOboardingScreen extends StatelessWidget {
                     color: Color(0xFF061237),
                     fontSize: 12,
                     fontFamily: 'Gilroy',
-                    fontWeight: FontWeight.w500
-                )
-            ),
+                    fontWeight: FontWeight.w500)),
             DashedBox(
               widget: [
-                Icon(Icons.lock,size: 16),
+                Icon(Icons.lock, size: 16),
                 SizedBox(width: 12, height: 12),
                 Text(
                   'Anyone can join for free',
@@ -106,44 +120,39 @@ class ChapterOboardingScreen extends StatelessWidget {
         Text(
           'Add a Bio',
           style: TextStyle(
-            color: Color(0xFF141414),
-            fontSize: 18,
-            fontFamily: 'Gilroy',
-            fontWeight: FontWeight.w700
-          ),
+              color: Color(0xFF141414),
+              fontSize: 18,
+              fontFamily: 'Gilroy',
+              fontWeight: FontWeight.w700),
         ),
         CustardTextField(
-            labelText: "Bio",
-            controller: controller.bioController
-        ),
+            labelText: "Bio", controller: controller.bioController),
         Row(
           children: [
             Switch(
                 value: controller.memberApproval,
                 onChanged: (value) {
                   controller.memberApproval = value;
-                }
-            ),
+                }),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Do you want a member approval',
                   style: TextStyle(
-                    color: Color(0xFF344053),
-                    fontSize: 14,
-                    fontFamily: 'Gilroy',
-                    fontWeight: FontWeight.w600
-                  ),
+                      color: Color(0xFF344053),
+                      fontSize: 14,
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w600),
                 ),
                 Text(
-                  'By approving this, members can directly enter into the community',
+                  'By approving this, members can directly enter into\n the community',
                   style: TextStyle(
-                    color: Color(0xFF667084),
-                    fontSize: 14,
-                    fontFamily: 'Gilroy',
-                    fontWeight: FontWeight.w400
-                  ),
+                      color: Color(0xFF667084),
+                      fontSize: 12,
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w400),
+                  maxLines: 2,
                 )
               ],
             )
@@ -165,12 +174,10 @@ class ChapterOboardingScreen extends StatelessWidget {
                     color: Color(0xFF061237),
                     fontSize: 12,
                     fontFamily: 'Gilroy',
-                    fontWeight: FontWeight.w500
-                )
-            ),
+                    fontWeight: FontWeight.w500)),
             DashedBox(
               widget: [
-                Icon(Icons.lock,size: 16),
+                Icon(Icons.lock, size: 16),
                 SizedBox(width: 12, height: 12),
                 Text(
                   'Anyone can join for free',
@@ -193,11 +200,10 @@ class ChapterOboardingScreen extends StatelessWidget {
         Text(
           'How a member can access your communtiy?',
           style: TextStyle(
-            color: Color(0xFF141414),
-            fontSize: 18,
-            fontFamily: 'Gilroy',
-            fontWeight: FontWeight.w700
-          ),
+              color: Color(0xFF141414),
+              fontSize: 18,
+              fontFamily: 'Gilroy',
+              fontWeight: FontWeight.w700),
         ),
         Text(
           'You can change this anytime',
@@ -210,26 +216,38 @@ class ChapterOboardingScreen extends StatelessWidget {
             height: 0,
           ),
         ),
-        FlutterToggleTab(
-          width: 90,
-          borderRadius: 15,
-          selectedIndex: controller.tabSelected,
-          selectedTextStyle: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w600),
-          unSelectedTextStyle: TextStyle(
-              color: Colors.grey,
-              fontSize: 12,
-              fontWeight: FontWeight.w400),
-          labels: [
-            "Monthly Membership",
-            "Start with Free"
-          ],
-          selectedLabelIndex: (index) {
-            controller.tabSelected = index;
-          },
-        )
+        Obx(() => FlutterToggleTab(
+              width: 90,
+              borderRadius: 15,
+              selectedIndex: controller.tabSelected.value,
+              selectedTextStyle: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600),
+              unSelectedTextStyle: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400),
+              labels: ["Monthly Membership", "Start with Free"],
+              selectedLabelIndex: (index) {
+                controller.tabSelected.value = index;
+              },
+            )),
+            SizedBox(height: 20,),
+        Obx(
+          () => Visibility(
+            visible: controller.tabSelected.value==0,
+            child: TextFormField(
+              controller: controller.priceController,
+              decoration: InputDecoration(
+                label: Text("Enter Price"),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+                suffix: const Text('INR',style: TextStyle(color: Colors.grey),)
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -270,8 +288,7 @@ class ChapterOboardingScreen extends StatelessWidget {
                   color: Color(0xFF090B0E),
                   fontSize: 12,
                   fontFamily: 'Gilroy',
-                  fontWeight: FontWeight.w500
-              ),
+                  fontWeight: FontWeight.w500),
             ),
             title: Text(
               'Me',
@@ -280,11 +297,8 @@ class ChapterOboardingScreen extends StatelessWidget {
                   color: Color(0xFF090B0E),
                   fontSize: 14,
                   fontFamily: 'Gilroy',
-                  fontWeight: FontWeight.w600
-              ),
-            )
-          )
-        ),
+                  fontWeight: FontWeight.w600),
+            ))),
         Obx(
           () => RadioButtonTile(
               value: 2,
@@ -297,8 +311,7 @@ class ChapterOboardingScreen extends StatelessWidget {
                     color: Color(0xFF090B0E),
                     fontSize: 12,
                     fontFamily: 'Gilroy',
-                    fontWeight: FontWeight.w500
-                ),
+                    fontWeight: FontWeight.w500),
               ),
               title: Text(
                 'My Members',
@@ -307,10 +320,8 @@ class ChapterOboardingScreen extends StatelessWidget {
                     color: Color(0xFF090B0E),
                     fontSize: 14,
                     fontFamily: 'Gilroy',
-                    fontWeight: FontWeight.w600
-                ),
-            )
-          ),
+                    fontWeight: FontWeight.w600),
+              )),
         )
       ],
     );
@@ -337,12 +348,10 @@ class ChapterOboardingScreen extends StatelessWidget {
                     color: Color(0xFF061237),
                     fontSize: 12,
                     fontFamily: 'Gilroy',
-                    fontWeight: FontWeight.w500
-                )
-            ),
+                    fontWeight: FontWeight.w500)),
             DashedBox(
               widget: [
-                Icon(Icons.lock,size: 16),
+                Icon(Icons.lock, size: 16),
                 SizedBox(width: 12, height: 12),
                 Text(
                   'Anyone can join for free',
@@ -357,30 +366,29 @@ class ChapterOboardingScreen extends StatelessWidget {
               ],
             ),
             ElevatedButton(
-                onPressed: () {},
-                child: Row(
-                  children: [
-                    Text(
-                      'custard.io/design-z',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontFamily: 'Manrope',
-                        fontWeight: FontWeight.w700,
-                        height: 0.14,
-                        letterSpacing: 0.30,
-                      ),
-                    ),
-                    Icon(
-                        Icons.link,
+              onPressed: () {},
+              child: Row(
+                children: [
+                  Text(
+                    'custard.io/design-z',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
                       color: Colors.white,
-                    )
-                  ],
-                ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: CustardColors.appTheme
+                      fontSize: 12,
+                      fontFamily: 'Manrope',
+                      fontWeight: FontWeight.w700,
+                      height: 0.14,
+                      letterSpacing: 0.30,
+                    ),
+                  ),
+                  Icon(
+                    Icons.link,
+                    color: Colors.white,
+                  )
+                ],
               ),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: CustardColors.appTheme),
             )
           ],
         ),
@@ -388,16 +396,13 @@ class ChapterOboardingScreen extends StatelessWidget {
           width: 12,
           height: 12,
         ),
-        Text(
-          'Theme',
-          textAlign: TextAlign.left,
-          style: TextStyle(
-            color: Color(0xFF090B0E),
-            fontSize: 18,
-            fontFamily: 'Gilroy',
-            fontWeight: FontWeight.w700
-           )
-        ),
+        Text('Theme',
+            textAlign: TextAlign.left,
+            style: TextStyle(
+                color: Color(0xFF090B0E),
+                fontSize: 18,
+                fontFamily: 'Gilroy',
+                fontWeight: FontWeight.w700)),
         Container(
           height: 200,
           child: ListView.builder(
@@ -405,8 +410,7 @@ class ChapterOboardingScreen extends StatelessWidget {
               itemCount: themes.length,
               shrinkWrap: true,
               itemBuilder: (BuildContext context, int index) =>
-                  _themeCardUI(themes[index])
-          ),
+                  _themeCardUI(themes[index])),
         ),
       ],
     );
@@ -425,11 +429,10 @@ class ChapterOboardingScreen extends StatelessWidget {
             data.title,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Color(0xFF090B0E),
-              fontSize: 12,
-              fontFamily: 'Gilroy',
-              fontWeight: FontWeight.w600
-            ),
+                color: Color(0xFF090B0E),
+                fontSize: 12,
+                fontFamily: 'Gilroy',
+                fontWeight: FontWeight.w600),
           )
         ],
       ),
@@ -437,9 +440,9 @@ class ChapterOboardingScreen extends StatelessWidget {
   }
 }
 
-class ThemeCard{
+class ThemeCard {
   String image;
   String title;
 
-  ThemeCard({required this.image,required this.title});
+  ThemeCard({required this.image, required this.title});
 }
