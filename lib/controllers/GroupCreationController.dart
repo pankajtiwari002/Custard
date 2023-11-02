@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
-class AddPhotoController extends GetxController {
+class GroupCreationController extends GetxController {
   var grpName = TextEditingController();
   RxList<Uint8List> images = RxList();
   RxList<Map<String,dynamic>> members = [

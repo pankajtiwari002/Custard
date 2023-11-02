@@ -46,7 +46,9 @@ class HomeScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        IconButton(icon: Icon(Icons.close), onPressed: () {}),
+                        IconButton(icon: Icon(Icons.close), onPressed: () {
+                          globalKey.currentState?.closeDrawer();
+                        }),
                         IconButton(icon: Icon(Icons.settings), onPressed: () {})
                       ],
                     ),

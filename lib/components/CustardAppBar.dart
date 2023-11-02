@@ -11,7 +11,7 @@ class CustardAppBar {
         padding: EdgeInsets.all(6),
         child: GestureDetector(
           onTap: () {
-            onAvatarTap;
+            onAvatarTap();
           },
           child: CircleAvatar(
             backgroundImage: AssetImage('assets/avatar.png'),

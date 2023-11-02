@@ -6,7 +6,7 @@ class UserPhotosContainer extends StatelessWidget {
 
   List<String> images;
   String title;
-  Function onPress;
+  void Function() onPress;
   String userImage;
 
   UserPhotosContainer({
@@ -60,7 +60,7 @@ class UserPhotosContainer extends StatelessWidget {
                   flex: 1,
                 ),
                 TextButton(
-                    onPressed: onPress(),
+                    onPressed: onPress,
                     child: Text(
                       'View all',
                       textAlign: TextAlign.center,
@@ -77,6 +77,7 @@ class UserPhotosContainer extends StatelessWidget {
             ),
             SizedBox(height: 10,),
             GridView.custom(
+              primary: false,
               shrinkWrap: true,
               gridDelegate: SliverQuiltedGridDelegate(
                 crossAxisCount: 4,
@@ -92,7 +93,12 @@ class UserPhotosContainer extends StatelessWidget {
               ),
               childrenDelegate: SliverChildBuilderDelegate(
                 childCount: 4,
-                (context, index) => Container(color: Colors.red),
+                (context, index) => Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(image: NetworkImage(images[index]),fit: BoxFit.cover),
+                    borderRadius:BorderRadius.circular(15)
+                  ),
+                ),
               ),
             )
           ],

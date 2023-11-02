@@ -1,5 +1,6 @@
 import 'package:custard_flutter/utils/CustardColors.dart';
-import 'package:custard_flutter/view/AddPhotoScreen.dart';
+import 'package:custard_flutter/view/GroupCreationScreen.dart';
+import 'package:custard_flutter/view/GroupImageScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -47,7 +48,7 @@ class GalleryScreen extends StatelessWidget {
             ),
             TextButton(
                 onPressed: () {
-                  Get.to(AddPhotoScreen());
+                  Get.to(GroupImageScreen());
                 },
                 child: Text(
                   'View all',

@@ -1,10 +1,10 @@
-import 'package:custard_flutter/controllers/AddPhotoController.dart';
+import 'package:custard_flutter/controllers/GroupCreationController.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class AddParticipationsScreens extends StatelessWidget {
-  AddPhotoController controller = Get.find();
+  GroupCreationController controller = Get.find();
 
   isContains(RxList<Map<String, dynamic>> list, int id) {
     for (int i = 0; i < list.length; i++) {
