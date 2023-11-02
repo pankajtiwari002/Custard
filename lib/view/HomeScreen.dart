@@ -151,25 +151,25 @@ class HomeScreen extends StatelessWidget {
         },
         indicatorColor: CustardColors.appTheme,
         selectedIndex: currentPageIndex.value,
-        destinations: const [
+        destinations: [
           NavigationDestination(
-              icon: Icon(Icons.home),
+              icon: Icon(Icons.home,color: currentPageIndex.value==0 ? Colors.white : Colors.black,),
               label: "Home"
           ),
           NavigationDestination(
-              icon: Icon(Icons.group),
+              icon: Icon(Icons.group,color: currentPageIndex.value==1 ? Colors.white : Colors.black,),
               label: "Discussions"
           ),
           NavigationDestination(
-              icon: Icon(Icons.event),
+              icon: Icon(Icons.event,color: currentPageIndex.value==2 ? Colors.white : Colors.black,),
               label: "Events"
           ),
           NavigationDestination(
-              icon: Icon(Icons.browse_gallery),
+              icon: Icon(Icons.browse_gallery,color: currentPageIndex.value==3 ? Colors.white : Colors.black,),
               label: "Gallery"
           ),
           NavigationDestination(
-              icon: Icon(Icons.verified_user),
+              icon: Icon(Icons.verified_user,color: currentPageIndex.value==4 ? Colors.white : Colors.black,),
               label: "Profile"
           )
         ],

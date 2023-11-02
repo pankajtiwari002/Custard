@@ -84,7 +84,10 @@ class GalleryScreen extends StatelessWidget {
         width: 150,
         height: 150,
         margin: EdgeInsets.fromLTRB(4, 0, 4, 0),
-        child: Image(image: NetworkImage("https://via.placeholder.com/150x150")),
+        decoration: BoxDecoration(
+          image: DecorationImage(image: AssetImage(data),fit: BoxFit.cover)
+        ),
+        // child: Image(image: NetworkImage("https://via.placeholder.com/150x150")),
       ),
     );
   }
@@ -106,7 +109,7 @@ class GalleryScreen extends StatelessWidget {
               height: 0,
             ),
           ),
-          _groupsTile(GalleryTileData(grpIcon: "https://via.placeholder.com/150x150", name: "name", recentImage: "https://via.placeholder.com/150x150")),
+          _groupsTile(GalleryTileData(grpIcon: "https://via.placeholder.com/150x150", name: "name", recentImage: "https://t3.ftcdn.net/jpg/02/48/42/64/360_F_248426448_NVKLywWqArG2ADUxDq6QprtIzsF82dMF.jpg")),
           _groupsTile(GalleryTileData(grpIcon: "https://via.placeholder.com/150x150", name: "name", recentImage: "https://via.placeholder.com/150x150")),
           _groupsTile(GalleryTileData(grpIcon: "https://via.placeholder.com/150x150", name: "name", recentImage: "https://via.placeholder.com/150x150")),
           _groupsTile(GalleryTileData(grpIcon: "https://via.placeholder.com/150x150", name: "name", recentImage: "https://via.placeholder.com/150x150")),
@@ -143,12 +146,11 @@ class GalleryScreen extends StatelessWidget {
           ),
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image(
-              width: 60,
+            child: Container(
               height: 60,
-              image: NetworkImage(data.recentImage),
+              child: Image.network("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLMI5YxZE03Vnj-s-sth2_JxlPd30Zy7yEGg&usqp=CAU")
             ),
-          )
+          ),
         ],
       ),
     );
