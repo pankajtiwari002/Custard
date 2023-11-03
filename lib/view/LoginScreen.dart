@@ -22,89 +22,80 @@ class LoginScreen extends StatelessWidget {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: LayoutBuilder(
-          builder: (context, constraint) {
-            return Padding(
-              padding: const EdgeInsets.all(0),
-              child: SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraint.maxHeight),
-                  child: IntrinsicHeight(
-                    child: Column(
-                      children: [
-                        const Text(
-                          'Custard.',
-                          style: TextStyle(
-                            color: Color(0xFF7B61FF),
-                            fontSize: 30,
-                          ),
-                        ),
-                        const Image(image: AssetImage('assets/temp.png')),
-                        GetBuilder<PhoneAuthController>(
-                            builder: (_) {
-                              return controller.isOtpSent ?
-                              TitleBodyContainer(
-                                  'Enter OTP',
-                                  'Confirm your OTP sent to ${controller.phoneNumber.text}'
-                              )
-                                  :
-                              TitleBodyContainer(
-                                  'Sign Up with your phone number',
-                                  'Only the community you join can see your phone number'
-                              );
-                            }
-                        ),
-                        GetBuilder<PhoneAuthController>(
-                          builder: (_) => Material(
-                            child: controller.isOtpSent ?
-                            OtpContainer() : PhoneContainer(),
-                          ),
-                        ),
-                        const Spacer(
-                          // flex: 1,
-                        ),
-                                  
-                        GetBuilder<PhoneAuthController>(builder: (_) {
-                          return !controller.isOtpSent ?
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 6,vertical: 10).copyWith(top: 0),
-                            child: CustardButton(
-                                onPressed: () async {
-                                  try {
-                                    await controller.sendOtp();
-                                  } catch (e) {
-                                    log(e.toString());
-                                  }
-                                },
-                                buttonType: ButtonType.POSITIVE,
-                                label: 'Continue'
-                            ),
-                          )
-                              :
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 6,vertical: 10).copyWith(top: 0),
-                            child: CustardButton(
-                            onPressed: () async{
-                              try {
-                                // await controller.verifyOtp();
-                                Get.to(UserOnboardingScreen());
-                              } catch (e) {
-                                log(e.toString());
-                              }
-                            },
-                            label: 'Verify and Continue',
-                            buttonType: ButtonType.POSITIVE
-                            ),
-                          );
-                        })
-                      ],
+        body: SingleChildScrollView(
+          child: Column(
+                children: [
+                  const Text(
+                    'Custard.',
+                    style: TextStyle(
+                      color: Color(0xFF7B61FF),
+                      fontSize: 30,
                     ),
                   ),
-                ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  const Image(image: AssetImage('assets/temp.png')),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  GetBuilder<PhoneAuthController>(builder: (_) {
+                    return controller.isOtpSent
+                        ? TitleBodyContainer('Enter OTP',
+                            'Confirm your OTP sent to ${controller.phoneNumber.text}')
+                        : TitleBodyContainer('Sign Up with your phone number',
+                            'Only the community you join can see your phone number');
+                  }),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    child: GetBuilder<PhoneAuthController>(
+                      builder: (_) => Material(
+                        child: controller.isOtpSent
+                            ? OtpContainer()
+                            : PhoneContainer(),
+                      ),
+                    ),
+                  ),
+                  // const Spacer(
+                  // flex: 1,
+                  // ),
+                ],
               ),
-            );
-          }
-        ),
+            ),
+        bottomNavigationBar: GetBuilder<PhoneAuthController>(builder: (_) {
+          return !controller.isOtpSent
+              ? Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 10)
+                          .copyWith(top: 0),
+                  child: CustardButton(
+                      onPressed: () async {
+                        try {
+                          await controller.sendOtp();
+                        } catch (e) {
+                          log(e.toString());
+                        }
+                      },
+                      buttonType: ButtonType.POSITIVE,
+                      label: 'Continue'),
+                )
+              : Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 10)
+                          .copyWith(top: 0),
+                  child: CustardButton(
+                      onPressed: () async {
+                        try {
+                          // await controller.verifyOtp();
+                          Get.to(UserOnboardingScreen());
+                        } catch (e) {
+                          log(e.toString());
+                        }
+                      },
+                      label: 'Verify and Continue',
+                      buttonType: ButtonType.POSITIVE),
+                );
+        }),
       ),
     );
   }

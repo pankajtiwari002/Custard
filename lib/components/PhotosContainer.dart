@@ -8,6 +8,7 @@ import '../controllers/GroupCreationController.dart';
 
 class PhotosContainer extends StatelessWidget {
   GroupCreationController controller = Get.find();
+
   Future<void> _pickMultiImages() async {
     List<XFile>? pickedImages = await ImagePicker().pickMultiImage();
     List<Uint8List> pImages = [];
@@ -15,6 +16,8 @@ class PhotosContainer extends StatelessWidget {
       print("Not NULL");
       for (XFile file in pickedImages) {
         Uint8List bytes = await file.readAsBytes();
+        String path = file.path;
+        controller.imagePaths.add(path);
         pImages.add(bytes);
       }
       controller.images.addAll(pImages);

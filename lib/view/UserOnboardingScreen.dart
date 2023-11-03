@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/components/CustardTextField.dart';
 import 'package:custard_flutter/controllers/PhoneAuthController.dart';
 import 'package:custard_flutter/controllers/UserOnboardingController.dart';
@@ -25,12 +26,22 @@ class UserOnboardingScreen extends StatelessWidget {
   PhoneAuthController phoneAuthController = Get.find();
   UserOnboardingScreen({super.key});
 
+  onFinish() {
+    Get.to(CongratsScreen(
+      backgroundColor: Colors.red,
+      image: const AssetImage('assets/avatar.png'),
+      next: JoinCommunityScreen(),
+      message: 'Congratulation! \n Your profile is created',
+      label: 'Join a Community',
+      onPressed: onPressed,
+    ));
+  }
+
   Future<void> onPressed() async {
     bool res = await controller.joinUser();
-    if(res){
+    if (res) {
       Get.offAll(HomeScreen());
-    }
-    else{
+    } else {
       print("failed.........");
     }
   }
@@ -42,29 +53,35 @@ class UserOnboardingScreen extends StatelessWidget {
     controller.isVerified = true;
     return SafeArea(
       child: Scaffold(
-          backgroundColor: Colors.white,
-          body: Padding(
+        backgroundColor: Colors.white,
+        body: Padding(
             padding: const EdgeInsets.all(12),
             child: SlideShowContainer(
-              widgets: [
-                _nameScreen(),
-                _genderScreen(),
-                _photoScreen(),
-                _bioScreen(),
-                _locationScreen()
-              ],
-              onFinish: () {
-                Get.to(CongratsScreen(
-                  backgroundColor: Colors.red,
-                  image: const AssetImage('assets/avatar.png'),
-                  next: JoinCommunityScreen(),
-                  message: 'Congratulation! \n Your profile is created',
-                  label: 'Join a Community',
-                  onPressed: onPressed,
-                ));
-              },
+                widgets: [
+                  _nameScreen(),
+                  _genderScreen(),
+                  _photoScreen(),
+                  _bioScreen(),
+                  _locationScreen()
+                ],
+                onFinish: () {},
+              ),
             ),
-          )),
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: CustardButton(
+              onPressed: () {
+                if (controller.currPage.value < 4) {
+                  controller.currPage.value = controller.currPage.value + 1;
+                } else {
+                  onFinish();
+                  Get.snackbar("title", "message");
+                }
+              },
+              buttonType: ButtonType.NEGATIVE,
+              label: "Next"),
+        ),
+      ),
     );
   }
 
@@ -134,6 +151,7 @@ class UserOnboardingScreen extends StatelessWidget {
       ],
     );
   }
+
   _bioScreen() {
     return Column(
       children: [
@@ -143,18 +161,23 @@ class UserOnboardingScreen extends StatelessWidget {
       ],
     );
   }
-  _locationScreen(){
+
+  _locationScreen() {
     print("city: ");
     log(controller.city);
     return Column(
       children: [
         TitleBodyContainer("Hi! Priya Bhatt",
             "It’s your brand new profile! Wanna change it up? You can do that from your account settings."),
-            SizedBox(height: 50,),
+        SizedBox(
+          height: 50,
+        ),
         Container(
           height: 200,
           decoration: BoxDecoration(
-            image: DecorationImage(image: NetworkImage('https://img.freepik.com/free-vector/location_53876-25530.jpg?w=2000')),
+            image: DecorationImage(
+                image: NetworkImage(
+                    'https://img.freepik.com/free-vector/location_53876-25530.jpg?w=2000')),
             border: Border.all(color: Colors.grey),
             borderRadius: BorderRadius.circular(20),
           ),

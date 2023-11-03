@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:custard_flutter/components/CustardButton.dart';
+import 'package:custard_flutter/controllers/UserOnboardingController.dart';
 import 'package:custard_flutter/utils/CustardColors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ class SlideShowContainer extends StatelessWidget {
   var currPage = 0.obs;
   late var totalPages;
   Function() onFinish;
+  UserOnboardingController userOnboardingController = Get.find();
   
   SlideShowContainer({
     super.key,
@@ -50,21 +52,9 @@ class SlideShowContainer extends StatelessWidget {
                 ),
               )],
           ),
-          Obx(() => widgets[currPage.value]),
+          Obx(() => widgets[userOnboardingController.currPage.value]),
           // const Spacer(flex: 1),
           SizedBox(height: 20,),
-          CustardButton(
-              onPressed: (){
-                if(currPage.value < totalPages-1) {
-                  currPage++;
-                }else {
-                  onFinish();
-                  Get.snackbar("title", "message");
-                }
-              },
-              buttonType: ButtonType.NEGATIVE,
-              label: "Next"
-          )
         ],
       ),
     );
@@ -78,7 +68,7 @@ class SlideShowContainer extends StatelessWidget {
           margin: const EdgeInsets.all(5),
           decoration: BoxDecoration(
               borderRadius: const BorderRadius.all(Radius.circular(25)),
-              color: i <= currPage.value ? CustardColors.appTheme : CustardColors.buttonLight
+              color: i <= userOnboardingController.currPage.value ? CustardColors.appTheme : CustardColors.buttonLight
           )
       )),
     )

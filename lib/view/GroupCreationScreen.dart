@@ -15,7 +15,7 @@ import '../components/PhotosContainer.dart';
 class GroupCreationScreen extends StatelessWidget {
   var controller = Get.put(GroupCreationController());
   RxList<Uint8List> images = RxList();
- GroupCreationScreen({super.key});
+  GroupCreationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,9 +23,11 @@ class GroupCreationScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Color(0xFF242424),
         leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: Icon(Icons.arrow_back_ios),
             color: Colors.white,
-            onPressed: () {}),
+            onPressed: () {
+              Get.back();
+            }),
         title: Text(
           'Social Dance Tribe',
           textAlign: TextAlign.center,
@@ -115,13 +117,32 @@ class GroupCreationScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
-        child: CustardButton(
-            onPressed: () async {
-              Get.to(AddParticipationsScreens());
-            },
-            buttonType: ButtonType.NEGATIVE,
-            label: "Add Participants"),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+              child: CustardButton(
+                  onPressed: () async {
+                    Get.to(AddParticipationsScreens());
+                  },
+                  buttonType: ButtonType.NEGATIVE,
+                  label: "Add Participants"),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+              child: CustardButton(
+                  onPressed: () async {
+                    print("Start Uploading");
+                    await controller.uploadMutipleImages();
+                    print("End uploading");
+                  },
+                  buttonType: ButtonType.NEGATIVE,
+                  label: "Upload Images"),
+            ),
+          ],
+        ),
       ),
     );
   }

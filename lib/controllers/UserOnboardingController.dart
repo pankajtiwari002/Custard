@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import '../data/models/user.dart';
 
 class UserOnboardingController extends GetxController {
+  Rx<int> currPage = 0.obs;
   var nameController = TextEditingController();
   var bioController = TextEditingController();
   Rx<String?> gender = Rxn();

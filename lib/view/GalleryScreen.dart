@@ -5,6 +5,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'AddParticipants.dart';
+
 class GalleryScreen extends StatelessWidget {
 
   const GalleryScreen({super.key});
@@ -48,7 +50,7 @@ class GalleryScreen extends StatelessWidget {
             ),
             TextButton(
                 onPressed: () {
-                  Get.to(GroupImageScreen());
+                  Get.to(() => GroupCreationScreen());
                 },
                 child: Text(
                   'View all',
