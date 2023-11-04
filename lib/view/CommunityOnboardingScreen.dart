@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:custard_flutter/components/CommunityCard.dart';
 import 'package:custard_flutter/components/CustardTextField.dart';
 import 'package:custard_flutter/components/SlideShowContainer.dart';
+import 'package:custard_flutter/utils/CustardColors.dart';
 import 'package:custard_flutter/view/ChapterOboardingScreen.dart';
 import 'package:custard_flutter/view/CongratsScreen.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,6 +12,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../components/CustardButton.dart';
 import '../components/TitleBodyContainer.dart';
 import '../controllers/CommunityOnboardingController.dart';
 import '../utils/utils.dart';
@@ -20,33 +22,52 @@ class CommunityOnboardingScreen extends StatelessWidget {
   var selectedImage = Rxn<File>();
   CommunityOnboardingScreen({super.key});
 
+  void onFinish() {
+    Get.to(CongratsScreen(
+      backgroundColor: Colors.red,
+      image: const AssetImage('assets/avatar.png'),
+      next: ChapterOboardingScreen(),
+      message: 'Congratulation! \n Your profile is created',
+      label: 'Join a Community',
+      onPressed: onPressed,
+    ));
+  }
+
   Future<void> onPressed() async {
     bool res = await controller.createCommunity();
-    if(res){
+    if (res) {
       Get.to(() => ChapterOboardingScreen());
-    }
-    else{
+    } else {
       print("failed.........");
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-        child: SlideShowContainer(
+    return SafeArea(
+      child: Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(12),
+          child: SlideShowContainer(
             widgets: [_infoScreen(), _photoUploadScreen(), _tags()],
-            onFinish: () {
-              Get.to(CongratsScreen(
-                backgroundColor: Colors.red,
-                image: const AssetImage('assets/avatar.png'),
-                next: ChapterOboardingScreen(),
-                message: 'Congratulation! \n Your profile is created',
-                label: 'Join a Community',
-                onPressed: onPressed,
-              ));
-            }),
+            onFinish: () {},
+            controller: controller,
+          ),
+        ),
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: CustardButton(
+              onPressed: () {
+                if (controller.currPage.value < 2) {
+                  controller.currPage.value = controller.currPage.value + 1;
+                } else {
+                  onFinish();
+                  Get.snackbar("title", "message");
+                }
+              },
+              buttonType: ButtonType.NEGATIVE,
+              label: "Next"),
+        ),
       ),
     );
   }
@@ -80,6 +101,15 @@ class CommunityOnboardingScreen extends StatelessWidget {
   _photoUploadScreen() {
     return Column(
       children: [
+        Container(
+          alignment: Alignment.topLeft,
+          child: IconButton(
+            onPressed: () {
+              controller.currPage.value = controller.currPage.value - 1;
+            },
+            icon: Icon(Icons.arrow_back_ios),
+          ),
+        ),
         TitleBodyContainer("Hi! Priya Bhatt",
             "It’s your brand new profile! Wanna change it up? You can do that from your account settings."),
         Obx(() => controller.image.value == null
@@ -112,6 +142,15 @@ class CommunityOnboardingScreen extends StatelessWidget {
   _tags() {
     return Column(
       children: [
+        Container(
+          alignment: Alignment.topLeft,
+          child: IconButton(
+            onPressed: () {
+              controller.currPage.value = controller.currPage.value - 1;
+            },
+            icon: Icon(Icons.arrow_back_ios),
+          ),
+        ),
         Text(
           'Tags',
           textAlign: TextAlign.center,
@@ -133,7 +172,9 @@ class CommunityOnboardingScreen extends StatelessWidget {
               controller.tags.add(value);
               controller.tagController.text = "";
             }),
-            SizedBox(height: 15,),
+        SizedBox(
+          height: 15,
+        ),
         Obx(() => Wrap(
               children: controller.tags
                   .map(
@@ -141,13 +182,18 @@ class CommunityOnboardingScreen extends StatelessWidget {
                       margin: const EdgeInsets.all(8),
                       child: Chip(
                         label: Text(ele),
-                        deleteIcon: Icon(Icons.remove,color: Colors.white,),
-                        onDeleted: (){
-                          controller.tags.removeWhere((element) => (element==ele));
+                        deleteIcon: Icon(
+                          Icons.remove,
+                          color: Colors.white,
+                        ),
+                        onDeleted: () {
+                          controller.tags
+                              .removeWhere((element) => (element == ele));
                         },
                         backgroundColor:
-                            Colors.blue, // Background color of the chip
-                        labelStyle: TextStyle(color: Colors.white), // Text color
+                            Colors.purple.withOpacity(0.3), // Background color of the chip
+                        labelStyle:
+                            TextStyle(color: CustardColors.appTheme), // Text color
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(
                               20.0), // Adjust the border radius as needed

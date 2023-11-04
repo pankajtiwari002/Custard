@@ -34,17 +34,23 @@ class StorageMethods {
 
   Future<void> uploadImageToStorageByPath(List<String> imagePaths) async {
     try {
+      print("1");
       var storage = FirebaseStorage.instance;
+      print("2");
       for (String imagePath in imagePaths) {
         File file = File(imagePath);
         String fileName = imagePath.split('/').last;
 
+        print("3");
         Reference ref = storage.ref().child('Gallery/$fileName');
+        print("4");
         await ref.putFile(file);
+        print("5");
         print('$fileName uploaded successfully!');
       }
     } catch (e) {
       print('Error uploading files: $e');
+      throw e;
     }
   }
 }

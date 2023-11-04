@@ -5,6 +5,8 @@ import 'package:custard_flutter/controllers/PhoneAuthController.dart';
 import 'package:custard_flutter/firebase_options.dart';
 import 'package:custard_flutter/repo/AuthRepo.dart';
 import 'package:custard_flutter/repo/StorageMethods.dart';
+import 'package:custard_flutter/view/ChapterOboardingScreen.dart';
+import 'package:custard_flutter/view/CommunityOnboardingScreen.dart';
 import 'package:custard_flutter/view/HomeScreen.dart';
 import 'package:custard_flutter/view/LoginScreen.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -31,7 +33,11 @@ void callbackDispatcher() {
     switch (task) {
       case Constants.photosUpload:
         List<String> imagePaths = inputData!['imagePaths'].cast<String>();
-        StorageMethods().uploadImageToStorageByPath(imagePaths);
+        try{
+          await StorageMethods().uploadImageToStorageByPath(imagePaths);
+        }catch(e){
+          return Future.error(e);
+        }
         // List<String> imageUrls = [];
         // List<Uint8List> images = convertStringsToUint8ListImages(inputData!['images']);
         // print("deconversion successfull");
@@ -74,7 +80,7 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.light,
-      home: HomeScreen(),
+      home: CommunityOnboardingScreen(),
     );
   }
 }

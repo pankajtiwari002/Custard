@@ -12,12 +12,14 @@ class SlideShowContainer extends StatelessWidget {
   var currPage = 0.obs;
   late var totalPages;
   Function() onFinish;
-  UserOnboardingController userOnboardingController = Get.find();
+  // UserOnboardingController userOnboardingController = Get.find();
+  var controller;
   
   SlideShowContainer({
     super.key,
     required this.widgets,
-    required this.onFinish
+    required this.onFinish,
+    required this.controller
   }) {
     totalPages = widgets.length;
   }
@@ -52,7 +54,7 @@ class SlideShowContainer extends StatelessWidget {
                 ),
               )],
           ),
-          Obx(() => widgets[userOnboardingController.currPage.value]),
+          Obx(() => widgets[controller.currPage.value]),
           // const Spacer(flex: 1),
           SizedBox(height: 20,),
         ],
@@ -68,7 +70,7 @@ class SlideShowContainer extends StatelessWidget {
           margin: const EdgeInsets.all(5),
           decoration: BoxDecoration(
               borderRadius: const BorderRadius.all(Radius.circular(25)),
-              color: i <= userOnboardingController.currPage.value ? CustardColors.appTheme : CustardColors.buttonLight
+              color: i <= controller.currPage.value ? CustardColors.appTheme : CustardColors.buttonLight
           )
       )),
     )

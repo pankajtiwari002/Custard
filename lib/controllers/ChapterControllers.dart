@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../repo/FirestoreMethods.dart';
 
 class ChapterControllers extends GetxController {
+  Rx<int> currPage = 0.obs;
   var locationController = TextEditingController();
   var bioController = TextEditingController();
   var priceController = TextEditingController();

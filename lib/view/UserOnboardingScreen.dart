@@ -65,6 +65,7 @@ class UserOnboardingScreen extends StatelessWidget {
                   _locationScreen()
                 ],
                 onFinish: () {},
+                controller: controller,
               ),
             ),
         bottomNavigationBar: Padding(

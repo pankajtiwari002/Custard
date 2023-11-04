@@ -17,6 +17,17 @@ import 'CongratsScreen.dart';
 class ChapterOboardingScreen extends StatelessWidget {
   var controller = Get.put(ChapterControllers());
 
+  void onFinish() {
+    Get.to(CongratsScreen(
+      backgroundColor: Colors.red,
+      image: const AssetImage('assets/avatar.png'),
+      next: HomeScreen(),
+      message: 'Congratulation! \n Your Chapter is created',
+      label: 'Create a Chapter',
+      onPressed: onPressed,
+    ));
+  }
+
   Future<void> onPressed() async {
     bool res = await controller.createChapter();
     if (res) {
@@ -28,27 +39,35 @@ class ChapterOboardingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.all(12),
-        child: SlideShowContainer(
-          widgets: [
-            _locationScreen(),
-            _bioScreen(),
-            _communityPrice(),
-            _processingFees(),
-            _themeCard()
-          ],
-          onFinish: () {
-            Get.to(CongratsScreen(
-              backgroundColor: Colors.red,
-              image: const AssetImage('assets/avatar.png'),
-              next: HomeScreen(),
-              message: 'Congratulation! \n Your Chapter is created',
-              label: 'Create a Chapter',
-              onPressed: onPressed,
-            ));
-          },
+    return SafeArea(
+      child: Scaffold(
+        body: Padding(
+          padding: EdgeInsets.all(12),
+          child: SlideShowContainer(
+            widgets: [
+              _locationScreen(),
+              _bioScreen(),
+              _communityPrice(),
+              _processingFees(),
+              _themeCard()
+            ],
+            onFinish: () {},
+            controller: controller,
+          ),
+        ),
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: CustardButton(
+              onPressed: () {
+                if (controller.currPage.value < 4) {
+                  controller.currPage.value = controller.currPage.value + 1;
+                } else {
+                  onFinish();
+                  Get.snackbar("title", "message");
+                }
+              },
+              buttonType: ButtonType.NEGATIVE,
+              label: "Next"),
         ),
       ),
     );
@@ -233,17 +252,22 @@ class ChapterOboardingScreen extends StatelessWidget {
                 controller.tabSelected.value = index;
               },
             )),
-            SizedBox(height: 20,),
+        SizedBox(
+          height: 20,
+        ),
         Obx(
           () => Visibility(
-            visible: controller.tabSelected.value==0,
+            visible: controller.tabSelected.value == 0,
             child: TextFormField(
               controller: controller.priceController,
               decoration: InputDecoration(
-                label: Text("Enter Price"),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
-                suffix: const Text('INR',style: TextStyle(color: Colors.grey),)
-              ),
+                  label: Text("Enter Price"),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30)),
+                  suffix: const Text(
+                    'INR',
+                    style: TextStyle(color: Colors.grey),
+                  )),
               keyboardType: TextInputType.number,
             ),
           ),

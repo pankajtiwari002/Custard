@@ -8,6 +8,7 @@ import '../repo/FirestoreMethods.dart';
 import '../repo/StorageMethods.dart';
 
 class CommunityOnboardingController extends GetxController {
+  Rx<int> currPage = 0.obs;
   var communityName = TextEditingController();
   var aboutCommunity = TextEditingController();
   var tagController = TextEditingController();
