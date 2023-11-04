@@ -33,7 +33,7 @@ class UserOnboardingController extends GetxController {
 
   Future<bool> joinUser() async {
     try {
-      String imageUrl = await StorageMethods().uploadImageToStorage("profile", image.value!);
+      String imageUrl = await StorageMethods.uploadImageToStorage("profile", "SDD", image.value!);
       User user = User(
           name: nameController.text,
           bio: bioController.text,
