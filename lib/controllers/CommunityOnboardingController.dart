@@ -18,7 +18,7 @@ class CommunityOnboardingController extends GetxController {
   Future<bool> createCommunity() async {
     try {
       String communityImageUrl =
-          await StorageMethods().uploadImageToStorage("profile", image.value!);
+          await StorageMethods.uploadImageToStorage("profile", "SD", image.value!);
       String galleryId = Uuid().v1();
       Community community = Community(
         benefits: "benefits",

@@ -2,6 +2,7 @@ import 'package:custard_flutter/components/AnalyticsButtonCard.dart';
 import 'package:custard_flutter/components/CommunityTile.dart';
 import 'package:custard_flutter/components/CustardAppBar.dart';
 import 'package:custard_flutter/components/CustardButton.dart';
+import 'package:custard_flutter/controllers/HomeController.dart';
 import 'package:custard_flutter/utils/CustardColors.dart';
 import 'package:custard_flutter/view/CommunityScreen.dart';
 import 'package:custard_flutter/view/GalleryScreen.dart';
@@ -12,6 +13,7 @@ import 'package:get/get.dart';
 class HomeScreen extends StatelessWidget {
   var currentPageIndex = 0.obs;
   final globalKey = GlobalKey<ScaffoldState>();
+  HomeController controller = Get.put(HomeController());
 
   @override
   Widget build(BuildContext context) {

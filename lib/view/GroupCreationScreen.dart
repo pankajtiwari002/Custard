@@ -3,12 +3,15 @@ import 'dart:typed_data';
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/components/CustardTextField.dart';
 import 'package:custard_flutter/components/UserPhotosContainer.dart';
+import 'package:custard_flutter/constants.dart';
 import 'package:custard_flutter/controllers/GroupCreationController.dart';
+import 'package:custard_flutter/repo/notificationservice/LocaNotificationService.dart';
 import 'package:custard_flutter/view/AddParticipants.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+// import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 import '../components/PhotosContainer.dart';
 
@@ -125,7 +128,8 @@ class GroupCreationScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
               child: CustardButton(
                   onPressed: () async {
-                    Get.to(AddParticipationsScreens());
+                    // Get.to(AddParticipationsScreens());
+                    LocalNotificationService().showProgressNotification();
                   },
                   buttonType: ButtonType.NEGATIVE,
                   label: "Add Participants"),
@@ -134,6 +138,7 @@ class GroupCreationScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
               child: CustardButton(
                   onPressed: () async {
+                    // OneSignal.Notifications.displayNotification(Constants.fCMToken);
                     print("Start Uploading");
                     await controller.uploadMutipleImages();
                     print("End uploading");

@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:custard_flutter/repo/StorageMethods.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
 
 import '../controllers/GroupCreationController.dart';
 
@@ -12,16 +15,20 @@ class PhotosContainer extends StatelessWidget {
   Future<void> _pickMultiImages() async {
     List<XFile>? pickedImages = await ImagePicker().pickMultiImage();
     List<Uint8List> pImages = [];
+    var uid = const Uuid();
+
     if (pickedImages != null) {
-      print("Not NULL");
       for (XFile file in pickedImages) {
         Uint8List bytes = await file.readAsBytes();
-        String path = file.path;
-        controller.imagePaths.add(path);
+        var path = await StorageMethods.saveImageToCache(
+          bytes,
+          "${uid.v1()}.${file.path.split('.').last}"
+        );
+        controller.imagePaths.add(path!);
         pImages.add(bytes);
       }
       controller.images.addAll(pImages);
-      print("images length: " + controller.images.length.toString());
+      print("images length: " + controller.images.length.toString() + "path: ${controller.imagePaths.toString()}");
     }
   }
 
