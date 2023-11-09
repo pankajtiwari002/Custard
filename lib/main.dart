@@ -6,9 +6,11 @@ import 'package:custard_flutter/constants.dart';
 import 'package:custard_flutter/controllers/PhoneAuthController.dart';
 import 'package:custard_flutter/firebase_options.dart';
 import 'package:custard_flutter/repo/AuthRepo.dart';
+import 'package:custard_flutter/repo/FirestoreMethods.dart';
 import 'package:custard_flutter/repo/StorageMethods.dart';
 import 'package:custard_flutter/view/ChapterOboardingScreen.dart';
 import 'package:custard_flutter/view/CommunityOnboardingScreen.dart';
+import 'package:custard_flutter/view/DiscussionScreen.dart';
 import 'package:custard_flutter/view/HomeScreen.dart';
 import 'package:custard_flutter/view/LoginScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,6 +23,8 @@ import 'package:get/get.dart';
 // import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:workmanager/workmanager.dart';
+import 'controllers/GroupCreationController.dart';
+import 'data/models/gallery.dart';
 import 'view/UserOnboardingScreen.dart';
 import './repo/notificationservice/LocaNotificationService.dart';
 
@@ -42,34 +46,54 @@ void callbackDispatcher() {
     switch (task) {
       case Constants.photosUpload:
         // TODO: Remove this
-        var user = await FirebaseAuth.instance.signInAnonymously();
-        List<String> imagePaths = inputData!['imagePaths'].cast<String>();
-        var uid = const Uuid();
-        var map = { for (var v in imagePaths) "${user.user!.uid}_${uid.v1()}" : v};
-        var s = await StorageMethods.uploadImageToStorageByPath(
-          FirebaseStorage.instance,
-          "gallery/",
-          map
-        );
-        print(s);
-        return Future.value(true);
-      default: {
-        return Future.value(false);
-      }
+        try {
+          print("hello");
+          var user = await FirebaseAuth.instance.signInAnonymously();
+          List<String> imagePaths = inputData!['imagePaths'].cast<String>();
+          var uid = const Uuid();
+          var map = {
+            for (var v in imagePaths) "${user.user!.uid}_${uid.v1()}": v
+          };
+          log("tiwari");
+          List<String> s = await StorageMethods.uploadImageToStorageByPath(
+              FirebaseStorage.instance, "gallery/", map);
+          print("pankaj");
+          String galleryId = Uuid().v1();
+          Gallery gallery = Gallery(
+              chapterId: "467f0590-d529-1d71-a532-11007c9f039a",
+              communityId: "bRDU2SzTa6qhmaLN5gkt",
+              eventId: "eventId",
+              galleryId: galleryId,
+              createdOn: DateTime.now(),
+              participants: [],
+              thumbnails: "thumbnails",
+              urls: s);
+          // log("firestore calls");
+          await FirestoreMethods()
+              .onSave("gallery", gallery.toJson(), galleryId);
+          return Future.value(true);
+        } catch (e) {
+          print("XXX $e");
+          return Future.error(e);
+        }
+      default:
+        {
+          print("pankaj");
+          return Future.value(false);
+        }
     }
   });
 }
 
 Future<void> backgroundHandler(RemoteMessage message) async {
-  	print(message.data.toString());
- 	  print(message.notification!.title);
-	}
+  print(message.data.toString());
+  print(message.notification!.title);
+}
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform
-  ).then((value) => Get.put(AuthRepo()));
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)
+      .then((value) => Get.put(AuthRepo()));
 
   // Notification
   Constants.fCMToken = await FirebaseMessaging.instance.getToken();
@@ -77,7 +101,6 @@ void main() async{
   FirebaseMessaging.onBackgroundMessage(backgroundHandler);
   // LocalNotificationService().initNotification();
   LocalNotificationService.initialize();
-
 
   // await OneSignal.Notifications.requestPermission(true);
   // await OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
@@ -95,7 +118,7 @@ void main() async{
   // OneSignal.Notifications.addPermissionObserver((state) {
   //   print("Has permission " + state.toString());
   // });
-  
+
   // await OneSignal.Notifications.requestPermission(true);
 
   // OneSignal.Notifications.addForegroundWillDisplayListener((event){
@@ -118,7 +141,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, background: Colors.white),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.deepPurple, background: Colors.white),
         useMaterial3: true,
         brightness: Brightness.light,
       ),

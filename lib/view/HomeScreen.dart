@@ -5,6 +5,7 @@ import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/controllers/HomeController.dart';
 import 'package:custard_flutter/utils/CustardColors.dart';
 import 'package:custard_flutter/view/CommunityScreen.dart';
+import 'package:custard_flutter/view/DiscussionScreen.dart';
 import 'package:custard_flutter/view/GalleryScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       key: globalKey,
-      appBar: CustardAppBar.homeAppBar(_onAvatarTap),
+      // appBar: CustardAppBar.homeAppBar(_onAvatarTap),
       // appBar: Obx(() => [
       //   CustardAppBar.homeAppBar(_onAvatarTap),
       //   CustardAppBar.homeAppBar(_onAvatarTap),
@@ -195,11 +196,7 @@ class HomeScreen extends StatelessWidget {
           child: const Text('Page 3'),
         ),
         const GalleryScreen(),
-        Container(
-          color: Colors.blue,
-          alignment: Alignment.center,
-          child: const Text('Page 5'),
-        )
+        DiscussionScreen(),
       ][currentPageIndex.value]),
     );
   }

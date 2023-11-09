@@ -128,8 +128,8 @@ class GroupCreationScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
               child: CustardButton(
                   onPressed: () async {
-                    // Get.to(AddParticipationsScreens());
-                    LocalNotificationService().showProgressNotification();
+                    Get.to(AddParticipationsScreens());
+                    // LocalNotificationService().showProgressNotification();
                   },
                   buttonType: ButtonType.NEGATIVE,
                   label: "Add Participants"),

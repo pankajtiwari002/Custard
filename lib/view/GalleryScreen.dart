@@ -8,16 +8,34 @@ import 'package:get/get.dart';
 import 'AddParticipants.dart';
 
 class GalleryScreen extends StatelessWidget {
-
   const GalleryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        _yourPhoto(),
-        _groups()
-      ],
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: Text(
+          'Gallery',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontFamily: 'Gilroy',
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.20,
+          ),
+        ),
+        actions: [
+          IconButton(onPressed: (){
+            Get.to(() => GroupCreationScreen());
+          }, icon: Icon(Icons.add,color: Colors.white,)),
+          IconButton(onPressed: (){}, icon: Icon(Icons.search,color: Colors.white,)),
+        ],
+      ),
+      body: ListView(
+        children: [_yourPhoto(), _groups()],
+      ),
     );
   }
 
@@ -33,9 +51,8 @@ class GalleryScreen extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
-      child: Column(
-        children: [
-          Row(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
@@ -45,12 +62,11 @@ class GalleryScreen extends StatelessWidget {
                   color: Color(0xFF090B0E),
                   fontSize: 18,
                   fontFamily: 'Gilroy',
-                  fontWeight: FontWeight.w700
-              ),
+                  fontWeight: FontWeight.w700),
             ),
             TextButton(
                 onPressed: () {
-                  Get.to(() => GroupCreationScreen());
+                  Get.to(() => GroupImageScreen());
                 },
                 child: Text(
                   'View all',
@@ -59,24 +75,20 @@ class GalleryScreen extends StatelessWidget {
                       color: CustardColors.appTheme,
                       fontSize: 12,
                       fontFamily: 'Gilroy',
-                      fontWeight: FontWeight.w700
-                  ),
-                )
-            )
+                      fontWeight: FontWeight.w700),
+                ))
           ],
         ),
-          Container(
-            height: 200,
-            child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: photos.length,
-                shrinkWrap: true,
-                itemBuilder: (BuildContext context, int index) =>
-                    _photoCardUI(photos[index])
-            ),
-          ),
-        ]
-      ),
+        Container(
+          height: 200,
+          child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: photos.length,
+              shrinkWrap: true,
+              itemBuilder: (BuildContext context, int index) =>
+                  _photoCardUI(photos[index])),
+        ),
+      ]),
     );
   }
 
@@ -88,8 +100,7 @@ class GalleryScreen extends StatelessWidget {
         height: 150,
         margin: EdgeInsets.fromLTRB(4, 0, 4, 0),
         decoration: BoxDecoration(
-          image: DecorationImage(image: AssetImage(data),fit: BoxFit.cover)
-        ),
+            image: DecorationImage(image: AssetImage(data), fit: BoxFit.cover)),
         // child: Image(image: NetworkImage("https://via.placeholder.com/150x150")),
       ),
     );
@@ -112,12 +123,31 @@ class GalleryScreen extends StatelessWidget {
               height: 0,
             ),
           ),
-          _groupsTile(GalleryTileData(grpIcon: "https://via.placeholder.com/150x150", name: "name", recentImage: "https://t3.ftcdn.net/jpg/02/48/42/64/360_F_248426448_NVKLywWqArG2ADUxDq6QprtIzsF82dMF.jpg")),
-          _groupsTile(GalleryTileData(grpIcon: "https://via.placeholder.com/150x150", name: "name", recentImage: "https://via.placeholder.com/150x150")),
-          _groupsTile(GalleryTileData(grpIcon: "https://via.placeholder.com/150x150", name: "name", recentImage: "https://via.placeholder.com/150x150")),
-          _groupsTile(GalleryTileData(grpIcon: "https://via.placeholder.com/150x150", name: "name", recentImage: "https://via.placeholder.com/150x150")),
-          _groupsTile(GalleryTileData(grpIcon: "https://via.placeholder.com/150x150", name: "name", recentImage: "https://via.placeholder.com/150x150")),
-          _groupsTile(GalleryTileData(grpIcon: "https://via.placeholder.com/150x150", name: "name", recentImage: "https://via.placeholder.com/150x150")),
+          _groupsTile(GalleryTileData(
+              grpIcon: "https://via.placeholder.com/150x150",
+              name: "name",
+              recentImage:
+                  "https://t3.ftcdn.net/jpg/02/48/42/64/360_F_248426448_NVKLywWqArG2ADUxDq6QprtIzsF82dMF.jpg")),
+          _groupsTile(GalleryTileData(
+              grpIcon: "https://via.placeholder.com/150x150",
+              name: "name",
+              recentImage: "https://via.placeholder.com/150x150")),
+          _groupsTile(GalleryTileData(
+              grpIcon: "https://via.placeholder.com/150x150",
+              name: "name",
+              recentImage: "https://via.placeholder.com/150x150")),
+          _groupsTile(GalleryTileData(
+              grpIcon: "https://via.placeholder.com/150x150",
+              name: "name",
+              recentImage: "https://via.placeholder.com/150x150")),
+          _groupsTile(GalleryTileData(
+              grpIcon: "https://via.placeholder.com/150x150",
+              name: "name",
+              recentImage: "https://via.placeholder.com/150x150")),
+          _groupsTile(GalleryTileData(
+              grpIcon: "https://via.placeholder.com/150x150",
+              name: "name",
+              recentImage: "https://via.placeholder.com/150x150")),
         ],
       ),
     );
@@ -150,9 +180,9 @@ class GalleryScreen extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Container(
-              height: 60,
-              child: Image.network("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLMI5YxZE03Vnj-s-sth2_JxlPd30Zy7yEGg&usqp=CAU")
-            ),
+                height: 60,
+                child: Image.network(
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLMI5YxZE03Vnj-s-sth2_JxlPd30Zy7yEGg&usqp=CAU")),
           ),
         ],
       ),
@@ -165,9 +195,6 @@ class GalleryTileData {
   String name;
   String recentImage;
 
-  GalleryTileData({
-    required this.grpIcon,
-    required this.name,
-    required this.recentImage
-  });
+  GalleryTileData(
+      {required this.grpIcon, required this.name, required this.recentImage});
 }

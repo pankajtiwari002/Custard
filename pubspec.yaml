@@ -59,6 +59,7 @@ dependencies:
   workmanager: ^0.5.2
   path_provider: ^2.1.1
   flutter_local_notifications: ^16.1.0
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:

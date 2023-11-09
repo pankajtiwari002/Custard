@@ -42,7 +42,7 @@ class StorageMethods {
     }
   }
 
-  static Future<List> uploadImageToStorageByPath(
+  static Future<List<String>> uploadImageToStorageByPath(
     FirebaseStorage storage,
     String location,
     Map<String, String> imagePaths,
@@ -73,10 +73,10 @@ class StorageMethods {
         data.add(url);
         // await NotificationMethods().sendNotificationWithProgressBar(c,total);
         // OneSignal.Notifications.displayNotification(Constants.fCMToken);
-        log("upload $c");
+        // log("upload $c");
         // await FirebaseMessagingMethods().sendNotificationToUser("Uploading", "$c out of $total", Constants.fCMToken);
         await LocalNotificationService().showNotification(
-            title: "Uploading",
+            title: "Uploading Image",
             body: '$c out of $total',
             progress: c,
             maxProgress: total);
