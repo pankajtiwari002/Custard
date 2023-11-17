@@ -18,6 +18,7 @@ import 'package:uuid/uuid.dart';
 import '../constants.dart';
 
 class StorageMethods {
+
   static Future<String> uploadImageToStorage(
       String location, String fileName, Uint8List file,
       [bool isFeed = false]) async {
@@ -107,6 +108,21 @@ class StorageMethods {
     } catch (e) {
       print('Error saving image to cache: $e');
       return null;
+    }
+  }
+
+  static Future<String> uploadDocument(String location,String filename,File file) async{
+    try {
+      final reference = FirebaseStorage.instance.ref().child("$location/$filename");
+      final uploadTask = reference.putFile(file);
+      TaskSnapshot snap = await uploadTask;
+      final downloadUrl = await snap.ref.getDownloadURL();
+
+      return downloadUrl;
+    } catch (e) {
+      print("pankaj");
+      print("error: $e");
+      return "error";
     }
   }
 }

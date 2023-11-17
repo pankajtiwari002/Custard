@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -48,6 +51,21 @@ class DiscussionController extends GetxController {
     // Add more messages as needed...
   ]);
   RxInt totalSelected = 0.obs;
-  RxMap<String,dynamic> reply = RxMap<String,dynamic>({});
+  RxMap<String, dynamic> reply = RxMap<String, dynamic>({});
   TextEditingController messageController = TextEditingController();
+  Rx<Uint8List?> image = Rx<Uint8List?>(null);
+  Rx<File?> document = Rxn();
+  final isCompleteAudioRecording = false.obs, isRecording = false.obs;
+  final isRecordingPlay = false.obs;
+  final isRecordingIndex = -1.obs;
+
+  final isMultipleOption = false.obs;
+  final isHideLisveResult = false.obs;
+
+  final questionController = TextEditingController();
+  List<TextEditingController> options = [
+    TextEditingController(),
+    TextEditingController()
+  ];
+  // AudioP
 }
