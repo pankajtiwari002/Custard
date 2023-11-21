@@ -66,6 +66,12 @@ dependencies:
   permission_handler: ^11.0.1
   flutter_polls: ^0.1.5
   open_filex: ^4.3.4
+  video_editor: ^3.0.0
+  video_player: ^2.8.1
+  flutter_svg: ^2.0.9
+  video_thumbnail: ^0.5.3
+  chewie: ^1.7.1
+
 
 dev_dependencies:
   flutter_test:

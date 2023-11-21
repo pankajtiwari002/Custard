@@ -2,15 +2,12 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:custard_flutter/WorkManagerMethods.dart';
 import 'package:custard_flutter/constants.dart';
 import 'package:custard_flutter/controllers/PhoneAuthController.dart';
 import 'package:custard_flutter/firebase_options.dart';
 import 'package:custard_flutter/repo/AuthRepo.dart';
-import 'package:custard_flutter/repo/FirestoreMethods.dart';
 import 'package:custard_flutter/repo/StorageMethods.dart';
-import 'package:custard_flutter/view/ChapterOboardingScreen.dart';
-import 'package:custard_flutter/view/CommunityOnboardingScreen.dart';
-import 'package:custard_flutter/view/DiscussionScreen.dart';
 import 'package:custard_flutter/view/HomeScreen.dart';
 import 'package:custard_flutter/view/LoginScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,22 +17,22 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:firebase_database/firebase_database.dart';
 // import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:workmanager/workmanager.dart';
-import 'controllers/GroupCreationController.dart';
-import 'data/models/gallery.dart';
-import 'view/UserOnboardingScreen.dart';
 import './repo/notificationservice/LocaNotificationService.dart';
+import 'data/models/gallery.dart';
+import 'repo/FirestoreMethods.dart';
 
-List<Uint8List> convertStringsToUint8ListImages(List<String> stringImages) {
-  List<Uint8List> decodedImages = [];
-  for (var strImg in stringImages) {
-    Uint8List decodedImage = base64Decode(strImg);
-    decodedImages.add(decodedImage);
-  }
-  return decodedImages;
-}
+// List<Uint8List> convertStringsToUint8ListImages(List<String> stringImages) {
+//   List<Uint8List> decodedImages = [];
+//   for (var strImg in stringImages) {
+//     Uint8List decodedImage = base64Decode(strImg);
+//     decodedImages.add(decodedImage);
+//   }
+//   return decodedImages;
+// }
 
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
@@ -54,7 +51,7 @@ void callbackDispatcher() {
           var map = {
             for (var v in imagePaths) "${user.user!.uid}_${uid.v1()}": v
           };
-          log("tiwari");
+          // log("tiwari");
           List<String> s = await StorageMethods.uploadImageToStorageByPath(
               FirebaseStorage.instance, "gallery/", map);
           print("pankaj");
@@ -76,8 +73,181 @@ void callbackDispatcher() {
           print("XXX $e");
           return Future.error(e);
         }
+      case Constants.chatDocumentUpload:
+        try {
+          print("Document WorkManager");
+          String uid = Uuid().v1();
+          String type = "TEXT";
+          String? documentUrl;
+          print("documentPath: ${inputData!["documentPath"]}");
+          if (inputData!["documentPath"] != null) {
+            type = "DOCUMENT";
+            File document = File(inputData["documentPath"]);
+            documentUrl = await StorageMethods.uploadDocument(
+                'chat/document', Uuid().v1(), document);
+          }
+          final DatabaseReference databaseReference = FirebaseDatabase.instance
+              .ref()
+              .child("communityChats/chapterId/messages");
+          DatabaseReference newMessage = databaseReference.push();
+          String messageId = newMessage.key!;
+          DateTime time = DateTime.now();
+          int epochTime = time.millisecondsSinceEpoch;
+          Map<String, dynamic> messageJson = {
+            "document": documentUrl,
+            "from": "userId",
+            "messageId": messageId,
+            "text": inputData!["text"],
+            "time": epochTime,
+            "type": type
+          };
+          print("Document Json Form");
+
+          await newMessage.set(messageJson);
+          print("data upload");
+          return Future.value(true);
+        } catch (e) {
+          print("errore: $e");
+          return Future.error(e);
+        }
+      case Constants.chatVideoUpload:
+        try {
+          String uid = Uuid().v1();
+          String type = "TEXT";
+          String? videoUrl;
+          print("videoPath: ${inputData!["videoPath"]}");
+          if (inputData!["videoPath"] != null) {
+            type = "VIDEO";
+            File file = File(inputData["videoPath"]);
+            Uint8List video = await file.readAsBytes();
+            videoUrl = await StorageMethods.uploadImageToStorage(
+                'chat/video', Uuid().v1(), video);
+          }
+          final DatabaseReference databaseReference = FirebaseDatabase.instance
+              .ref()
+              .child("communityChats/chapterId/messages");
+          DatabaseReference newMessage = databaseReference.push();
+          String messageId = newMessage.key!;
+          DateTime time = DateTime.now();
+          int epochTime = time.millisecondsSinceEpoch;
+          Map<String, dynamic> messageJson = {
+            "from": "userId",
+            "video": videoUrl,
+            "messageId": messageId,
+            "text": inputData["text"],
+            "time": epochTime,
+            "type": type
+          };
+          print("Json Form");
+
+          await newMessage.set(messageJson);
+          print("data upload");
+          return Future.value(true);
+        } catch (e) {
+          print("errore: $e");
+          return Future.error(e);
+        }
+      case Constants.chatAudioUpload:
+        try {
+          print("audio workmanager");
+          String uid = Uuid().v1();
+          String type = "Text";
+          String? audioUrl;
+          if (inputData!["audioPath"] != null) {
+            type = "AUDIO";
+            File audio = File(inputData["audioPath"]);
+            audioUrl = await StorageMethods.uploadDocument(
+                'chat/audio', Uuid().v1(), audio);
+          }
+          final DatabaseReference databaseReference = FirebaseDatabase.instance
+              .ref()
+              .child("communityChats/chapterId/messages");
+          DatabaseReference newMessage = databaseReference.push();
+          String messageId = newMessage.key!;
+          DateTime time = DateTime.now();
+          int epochTime = time.millisecondsSinceEpoch;
+          Map<String, dynamic> messageJson = {
+            "audio": audioUrl,
+            "audioLen": inputData["audioLen"],
+            "from": "userId",
+            "messageId": messageId,
+            "time": epochTime,
+            "type": type
+          };
+          print("Json Form");
+          await newMessage.set(messageJson);
+          print("data upload");
+          return Future.value(true);
+        } catch (e) {
+          print("errore: $e");
+          return Future.error(e);
+        }
+      case Constants.chatImageUpload:
+        // step1: upload image
+        //2. get image url
+        //3 create a message(messageId)
+        //4 create a json that we are going to store in a realtime database
+        //5 save data in a realtime database
+        try {
+          // String uid = Uuid().v1();
+          String type = "TEXT";
+          String? imageUrl, videoUrl, documentUrl;
+          print("imagePath: ${inputData!["imagePath"]}");
+          print("videoPath: ${inputData!["videoPath"]}");
+          print("documentPath: ${inputData!["documentPath"]}");
+          if (inputData!["imagePath"] != null) {
+            type = "IMAGE";
+            File file = File(inputData["imagePath"]);
+            Uint8List image = await file.readAsBytes();
+            imageUrl = await StorageMethods.uploadImageToStorage(
+                'chat/images', Uuid().v1(), image);
+          } else if (inputData["videoPath"] != null) {
+            type = "VIDEO";
+            File file = File(inputData["videoPath"]);
+            Uint8List video = await file.readAsBytes();
+            videoUrl = await StorageMethods.uploadImageToStorage(
+                'chats/video', Uuid().v1(), video);
+          } else if (inputData["documentPath"] != null) {
+            type = "DOCUMENT";
+            File document = File(inputData["documentPath"]);
+            documentUrl = await StorageMethods.uploadDocument(
+                'chats/document', Uuid().v1(), document);
+          }
+          print("imageUrl: $imageUrl");
+          print("videoUrl: $videoUrl");
+          print("documentUrl: $documentUrl");
+
+          final DatabaseReference databaseReference = FirebaseDatabase.instance
+              .ref()
+              .child("communityChats/chapterId/messages");
+          DatabaseReference newMessage = databaseReference.push();
+          String messageId = newMessage.key!;
+          DateTime time = DateTime.now();
+          int epochTime = time.millisecondsSinceEpoch;
+          print("messageId: $messageId");
+          Map<String, dynamic> messageJson = {
+            "from": "userId",
+            "image": imageUrl,
+            "video": videoUrl,
+            "document": documentUrl,
+            "messageId": messageId,
+            "text": inputData["text"],
+            "time": epochTime,
+            "type": type
+          };
+          print("Json Form");
+
+          await newMessage.set(messageJson);
+          print("data upload");
+          return Future.value(true);
+        } catch (e) {
+          print("errore: $e");
+          return Future.error(e);
+        }
+
       default:
         {
+          print("case : $task");
           print("pankaj");
           return Future.value(false);
         }

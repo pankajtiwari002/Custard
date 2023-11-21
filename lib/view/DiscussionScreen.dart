@@ -1,6 +1,13 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:custard_flutter/constants.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:custard_flutter/controllers/LocationController.dart';
+import 'package:custard_flutter/view/MembersScreen.dart';
 import 'package:custard_flutter/view/PollsScreen.dart';
+import 'package:custard_flutter/view/ReportScreen.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -12,6 +19,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:record_mp3/record_mp3.dart';
 import 'package:uuid/uuid.dart';
+import 'package:workmanager/workmanager.dart';
 
 import '../components/MessageCard.dart';
 
@@ -19,6 +27,18 @@ class DiscussionScreen extends StatelessWidget {
   DiscussionController controller = Get.put(DiscussionController());
   FocusNode focusNode = FocusNode();
   String? recordFilePath;
+  final DatabaseReference _messagesRef = FirebaseDatabase.instance
+      .reference()
+      .child("communityChats/chapterId/messages");
+
+  String formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+
+    String hours = twoDigits(duration.inHours);
+    String minutes = twoDigits(duration.inMinutes.remainder(60));
+    String seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$hours:$minutes:$seconds';
+  }
 
   Future<bool> checkPermission() async {
     if (!await Permission.microphone.isGranted) {
@@ -48,11 +68,19 @@ class DiscussionScreen extends StatelessWidget {
       controller.isRecording.value = true;
       recordFilePath = await getFilePath();
       RecordMp3.instance.start(recordFilePath!, (type) {});
+      controller.start = DateTime.now();
+      // while(true){
+      //   if(controller.isCompleteAudioRecording.value) break;
+      //   Future.delayed(Duration(seconds: 1)).then((value){
+      //     controller.currentDuration.value = controller.currentDuration.value+ Duration(seconds: 1);
+      //   });
+      // }
     }
   }
 
   void stopRecord() {
     bool s = RecordMp3.instance.stop();
+    controller.end = DateTime.now();
     if (s) {
       controller.isCompleteAudioRecording.value = true;
     }
@@ -63,42 +91,114 @@ class DiscussionScreen extends StatelessWidget {
       Container(
         color: Colors.white,
         padding: EdgeInsets.all(16.0),
-        child: Row(
-          // mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            buildInkWell(
-                'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHIPpKB7-_-sIXNlCRuBzwH_pxHp1uAwoXUA&usqp=CAU',
-                () async {
-              try {
-                controller.image.value = await pickImage(ImageSource.gallery);
-                Get.back();
-                focusNode.requestFocus();
-                print("successfull selected");
-              } catch (e) {
-                print("select image error: ");
-                print(e.toString());
-              }
-            }),
-            buildInkWell(
-                'https://static.vecteezy.com/system/resources/previews/006/692/271/non_2x/document-icon-template-black-color-editable-document-icon-symbol-flat-illustration-for-graphic-and-web-design-free-vector.jpg',
-                () async {
-              try {
-                controller.document.value = await pickDocument();
-                Get.back();
-                focusNode.requestFocus();
-              } catch (e) {
-                print("Select document error: ");
-                print(e.toString());
-              }
-            }),
-            buildInkWell(
-                'https://cdn-icons-png.flaticon.com/512/535/535239.png', () {}),
-            buildInkWell(
-                'https://static-00.iconduck.com/assets.00/poll-icon-2048x2048-yi03citz.png',
-                () {
+            Obx(
+              () => Visibility(
+                visible: controller.selectedButton.value == 1,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.image),
+                      title: Text('Image'),
+                      onTap: () async {
+                        try {
+                          // controller.image.value =
+                          //     await pickImage(ImageSource.gallery);
+                          XFile? file = await pickImage(ImageSource.gallery);
+                          if (file != null) {
+                            Uint8List bytes = await file.readAsBytes();
+                            controller.image.value = bytes;
+                            var path = await StorageMethods.saveImageToCache(
+                                bytes,
+                                "${Uuid().v1()}.${file.path.split('.').last}");
+                            controller.imagePath = path;
+                          }
+                          Get.back();
+                          focusNode.requestFocus();
+                          print("successfull selected");
+                        } catch (e) {
+                          print("select image error: ");
+                          print(e.toString());
+                        }
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.video_call_sharp),
+                      title: Text('Video'),
+                      onTap: () async {
+                        try {
+                          XFile? file = await pickVideo(ImageSource.gallery);
+                          if (file != null) {
+                            print("asdf");
+                            controller.video.value = await file.readAsBytes();
+                            var path = await StorageMethods.saveImageToCache(
+                                controller.video.value!,
+                                "${Uuid().v1()}.${file.path.split('.').last}");
+                            controller.videoPath = path;
+                          }
+                          print("successfull selected");
+                        } catch (e) {
+                          print("select image error: ");
+                          print(e.toString());
+                        }
+                      },
+                    ),
+                    // Divider(
+                    //   thickness: 15,
+                    //   color: Color.fromARGB(109, 240, 235, 192),
+                    // )
+                  ],
+                ),
+              ),
+            ),
+            Row(
+              // mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                buildInkWell('assets/images/image.svg', Color(0xFF318FFF), 1,
+                    () {
+                  controller.selectedButton.value = 1;
+                }),
+                buildInkWell(
+                    'assets/images/document-text.svg', Color(0xFFFFCE59), 2,
+                    () async {
+                  controller.selectedButton.value = 2;
+                  try {
+                    controller.documentPath = await pickDocument();
+                    if (controller.documentPath != null) {
+                      controller.document.value =
+                          File(controller.documentPath!);
+                    }
+                    // controller.document.value.path;
+                    Get.back();
+                    focusNode.requestFocus();
+                  } catch (e) {
+                    print("Select document error: ");
+                    print(e.toString());
+                  }
+                }),
+                buildInkWell('assets/images/location.svg', Color(0xFFF5225F), 3,
+                    () async {
+                  controller.selectedButton.value = 3;
+                  Map<String, double>? mp =
+                      await LocationController().getCoordinates();
+                  if (mp != null) {
+                    controller.messageController.text =
+                        mp['latitude'].toString() +
+                            ' ' +
+                            mp['longitude'].toString();
+                  }
+                }),
+                buildInkWell('assets/images/chart.svg', Color(0xFF60C255), 4,
+                    () {
+                  controller.selectedButton.value = 4;
                   Get.to(() => PollsScreen());
                 }),
+              ],
+            ),
           ],
         ),
       ),
@@ -107,25 +207,111 @@ class DiscussionScreen extends StatelessWidget {
     );
   }
 
-  Widget buildInkWell(String imageUrl, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 8.0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12.0),
-          border: Border.all(color: Colors.grey),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12.0),
-          child: Image.network(
-            imageUrl, // Replace with your image URL
-            width: 50.0,
-            // height: 100.0,
-            fit: BoxFit.cover,
+  Widget buildInkWell(
+      String imageUrl, Color backgroundColor, int myId, VoidCallback onTap) {
+    return Obx(() => InkWell(
+          onTap: onTap,
+          child: Container(
+            width: 65,
+            height: 65,
+            padding: EdgeInsets.all(4),
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(100.0),
+                // border: Border.all(color: Colors.grey),
+                color: backgroundColor),
+            child: Container(
+              padding: EdgeInsets.all(10),
+              height: 50,
+              width: 50,
+              margin: EdgeInsets.symmetric(vertical: 8.0),
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(50.0),
+                  border: controller.selectedButton.value == myId
+                      ? Border.all(color: Colors.white, width: 2)
+                      : Border.all(color: Colors.transparent),
+                  color: backgroundColor),
+              child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12.0),
+                  child: SvgPicture.asset(
+                    imageUrl,
+                    fit: BoxFit.contain,
+                  )),
+            ),
+          ),
+        ));
+  }
+
+  _openReportDialogBox() {
+    Get.dialog(
+      AlertDialog(
+        title: const Center(
+          child: Text(
+            'Report Aman Gairola?',
+            style: TextStyle(
+              color: Color(0xFF090B0E),
+              fontSize: 24,
+              fontFamily: 'Gilroy',
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
+        content: Text(
+          'This message will be forwarded to communtiy admin. This contact will not be notified.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFF546881),
+            fontSize: 14,
+            fontFamily: 'Gilroy',
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () {
+                Get.to(() => ReportScreen());
+              },
+              child: Text(
+                'Report',
+                style: TextStyle(color: Colors.white),
+              ),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Color(0xFF665EE0)),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () {},
+              child: Text(
+                'Block this user',
+                style: TextStyle(color: Color(0xFF665EE0)),
+              ),
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(Colors.white),
+                  side: MaterialStateProperty.all(
+                      BorderSide(color: Color(0xFF665EE0)))),
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () {
+                Get.back(); // Close the dialog
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Color(0xFF665EE0)),
+              ),
+            ),
+          ),
+        ],
       ),
+      barrierDismissible:
+          true, // Set this to true if you want to close dialog by tapping outside
     );
   }
 
@@ -251,7 +437,9 @@ class DiscussionScreen extends StatelessWidget {
                     },
                     icon: Icon(Icons.delete_outline, color: Colors.white))
                 : IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Get.to(() => MembersScreen());
+                    },
                     icon: Icon(Icons.people, color: Colors.white)),
           ),
           PopupMenuButton(
@@ -298,6 +486,7 @@ class DiscussionScreen extends StatelessWidget {
                 print('Reply in thread selected');
                 // Add your reply in thread logic here
               } else if (value == 'report') {
+                _openReportDialogBox();
                 print('Report selected');
                 // Add your report logic here
               }
@@ -305,16 +494,63 @@ class DiscussionScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Obx(
-        () => ListView.builder(
-          itemCount: controller.messages.length,
-          itemBuilder: (context, index) {
-            return MessageCard(
-              index: index,
-            );
-          },
-        ),
+      body: StreamBuilder(
+        stream: _messagesRef.onValue,
+        builder: ((context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done ||
+              snapshot.connectionState == ConnectionState.active) {
+            if (!snapshot.hasData) {
+              return Center(child: CircularProgressIndicator());
+            } else {
+              List<dynamic> messages =
+                  snapshot.data!.snapshot.children.toList();
+              return Obx(() => SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        ListView.builder(
+                            shrinkWrap: true,
+                            primary: false,
+                            itemCount: messages.length,
+                            itemBuilder: ((context, index) {
+                              return MessageCard(
+                                index: index,
+                                messages: messages,
+                              );
+                            })),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        if (controller.isImageUploading.value &&
+                            controller.image.value != null)
+                          Container(
+                            height: 200,
+                            width: 200,
+                            decoration: BoxDecoration(
+                                image: DecorationImage(
+                                    image: MemoryImage(controller.image.value!),
+                                    fit: BoxFit.cover),
+                                borderRadius: BorderRadius.circular(30)),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                      ],
+                    ),
+                  ));
+            }
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        }),
       ),
+      // body: Obx(
+      //   () => ListView.builder(
+      //     itemCount: controller.messages.length,
+      //     itemBuilder: (context, index) {
+      //       return MessageCard(
+      //         index: index,
+      //       );
+      //     },
+      //   ),
+      // ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.only(bottom: 10, left: 5, right: 5),
         margin: EdgeInsets.only(
@@ -392,9 +628,14 @@ class DiscussionScreen extends StatelessWidget {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text("time"),
+                                  Text(formatDuration(
+                                      controller.currentDuration.value)),
                                   TextButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      controller.isCompleteAudioRecording
+                                          .value = false;
+                                      controller.isRecording.value = false;
+                                    },
                                     child: Text(
                                       "Delete",
                                       style: TextStyle(color: Colors.red),
@@ -404,9 +645,10 @@ class DiscussionScreen extends StatelessWidget {
                               )
                             : controller.isRecording.value
                                 ? Container(
-                                  height: 50,
-                                  child: Text("time"),
-                                )
+                                    height: 50,
+                                    child: Text(formatDuration(
+                                        controller.currentDuration.value)),
+                                  )
                                 : TextFormField(
                                     focusNode: focusNode,
                                     // autofocus: true,
@@ -416,6 +658,7 @@ class DiscussionScreen extends StatelessWidget {
                                         border: InputBorder.none,
                                         suffix: IconButton(
                                             onPressed: () async {
+                                              Workmanager().cancelAll();
                                               print(controller.reply);
                                               String text = controller
                                                   .messageController.text;
@@ -423,52 +666,171 @@ class DiscussionScreen extends StatelessWidget {
                                                   .messageController.text = "";
                                               FocusManager.instance.primaryFocus
                                                   ?.unfocus();
-                                              Map<String, dynamic> mp =
+                                              print(
+                                                  "\n\n cache imagePath: ${controller.imagePath}");
+                                              print(
+                                                  "cache videoPath: ${controller.videoPath}");
+                                              print(
+                                                  "cache documentPath: ${controller.documentPath} \n\n");
+                                              Map<String, dynamic> reply =
                                                   controller.reply.value;
-                                              String? imageUrl = null;
-                                              String? documentUrl = null;
-                                              if (controller.image.value !=
-                                                  null) {
-                                                String uid = Uuid().v1();
-                                                imageUrl = await StorageMethods
-                                                    .uploadImageToStorage(
-                                                        'chat/image',
-                                                        uid,
-                                                        controller
-                                                            .image.value!);
-                                              }
-                                              if (controller.document.value !=
-                                                  null) {
-                                                String uid = Uuid().v1();
-                                                documentUrl =
-                                                    await StorageMethods
-                                                        .uploadDocument(
-                                                            'chat/document',
-                                                            uid,
-                                                            controller.document
-                                                                .value!);
-                                              }
-                                              controller.messages.add(RxMap({
-                                                'profileUrl':
-                                                    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y3VzdG9tZXIlMjBwcm9maWxlfGVufDB8fDB8fHww&w=1000&q=80',
-                                                'name': 'Pankaj',
-                                                'imageUrl': imageUrl,
-                                                'documentUrl': documentUrl,
-                                                'textMessage': controller
-                                                    .messageController.text,
-                                                'repliedMessage':
-                                                    controller.reply["name"] ==
-                                                            null
-                                                        ? null
-                                                        : mp,
-                                                'date': DateTime.now(),
-                                                'prevDate': DateTime.now()
-                                                    .subtract(
-                                                        Duration(minutes: 2)),
-                                                'owner': true,
-                                                "isSelected": false
-                                              }));
                                               controller.reply.value = {};
+                                              if (controller.imagePath !=
+                                                  null) {
+                                                print("image");
+                                                controller.isImageUploading
+                                                    .value = true;
+                                                await Workmanager()
+                                                    .registerOneOffTask(
+                                                        Uuid().v1(),
+                                                        Constants
+                                                            .chatImageUpload,
+                                                        constraints: Constraints(
+                                                            networkType:
+                                                                NetworkType
+                                                                    .connected),
+                                                        inputData: {
+                                                      "imagePath":
+                                                          controller.imagePath,
+                                                      "text": text,
+                                                    }).then((value) {
+                                                    controller.isImageUploading
+                                                        .value = false;
+                                                    controller.image.value =
+                                                        null;
+                                                });
+                                              } else if (controller.videoPath !=
+                                                  null) {
+                                                controller.video.value = null;
+                                                print("video");
+                                                await Workmanager()
+                                                    .registerOneOffTask(
+                                                        Uuid().v1(),
+                                                        Constants
+                                                            .chatVideoUpload,
+                                                        constraints: Constraints(
+                                                            networkType:
+                                                                NetworkType
+                                                                    .connected),
+                                                        inputData: {
+                                                      "videoPath":
+                                                          controller.videoPath,
+                                                      "text": text,
+                                                    });
+                                              } else if (controller
+                                                      .documentPath !=
+                                                  null) {
+                                                print("document");
+                                                controller.document.value =
+                                                    null;
+
+                                                await Workmanager()
+                                                    .registerOneOffTask(
+                                                        Uuid().v1(),
+                                                        Constants
+                                                            .chatDocumentUpload,
+                                                        constraints: Constraints(
+                                                            networkType:
+                                                                NetworkType
+                                                                    .connected),
+                                                        inputData: {
+                                                      "documentPath": controller
+                                                          .documentPath,
+                                                      "text": text,
+                                                    });
+                                                print("Hey");
+                                              } else {
+                                                print("text");
+                                                final DatabaseReference
+                                                    databaseReference =
+                                                    FirebaseDatabase.instance
+                                                        .ref()
+                                                        .child(
+                                                            "communityChats/chapterId/messages");
+                                                DatabaseReference newMessage =
+                                                    await databaseReference
+                                                        .push();
+                                                String messageId =
+                                                    newMessage.key!;
+                                                DateTime time = DateTime.now();
+                                                int epochTime =
+                                                    time.millisecondsSinceEpoch;
+                                                Map<String, dynamic>
+                                                    messageJson = {
+                                                  "from": "userId",
+                                                  "messageId": messageId,
+                                                  "text": text,
+                                                  "time": epochTime,
+                                                  "type": "TEXT"
+                                                };
+                                                print("Json Form text");
+
+                                                await newMessage
+                                                    .set(messageJson);
+                                              }
+                                              // String? imageUrl = null;
+                                              // String? documentUrl = null;
+                                              // String? videoUrl = null;
+                                              // if (controller.image.value !=
+                                              //     null) {
+                                              //   // imageUrl = controller.imageUrl!;
+                                              //   String uid = Uuid().v1();
+                                              //   imageUrl = await StorageMethods
+                                              //       .uploadImageToStorage(
+                                              //           'chat/image',
+                                              //           uid,
+                                              //           controller
+                                              //               .image.value!);
+                                              // }
+                                              // if (controller.video.value !=
+                                              //     null) {
+                                              //   print("hi");
+                                              //   String uid = Uuid().v1();
+                                              //   videoUrl = await StorageMethods
+                                              //       .uploadImageToStorage(
+                                              //           'chat/video',
+                                              //           uid,
+                                              //           controller
+                                              //               .video.value!);
+                                              //   print("video url: $videoUrl");
+                                              // }
+                                              // if (controller.document.value !=
+                                              //     null) {
+                                              //   String uid = Uuid().v1();
+                                              //   documentUrl =
+                                              //       await StorageMethods
+                                              //           .uploadDocument(
+                                              //               'chat/document',
+                                              //               uid,
+                                              //               controller.document
+                                              //                   .value!);
+                                              // }
+                                              // controller.messages.add(RxMap({
+                                              //   'profileUrl':
+                                              //       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y3VzdG9tZXIlMjBwcm9maWxlfGVufDB8fDB8fHww&w=1000&q=80',
+                                              //   'name': 'Pankaj',
+                                              //   'imageUrl': imageUrl,
+                                              //   'videoUrl': videoUrl,
+                                              //   'documentUrl': documentUrl,
+                                              //   'textMessage': controller
+                                              //       .messageController.text,
+                                              //   'repliedMessage':
+                                              //       controller.reply["name"] ==
+                                              //               null
+                                              //           ? null
+                                              //           : reply,
+                                              //   'date': DateTime.now(),
+                                              //   'prevDate': DateTime.now()
+                                              //       .subtract(
+                                              //           Duration(minutes: 2)),
+                                              //   'owner': true,
+                                              //   "isSelected": false
+                                              // }));
+                                              // print("message send");
+                                              // controller.image.value = null;
+                                              // controller.video.value = null;
+                                              // controller.document.value = null;
+                                              // controller.reply.value = {};
                                             },
                                             icon: Icon(Icons.send))),
                                     style: TextStyle(fontSize: 14),
@@ -479,31 +841,45 @@ class DiscussionScreen extends StatelessWidget {
                       onTap: () async {
                         if (controller.isCompleteAudioRecording.value) {
                           String filename = recordFilePath!.split('/').last;
-                          print("audio path: ${recordFilePath}");
-                          File file = File(recordFilePath!);
-                          print((await file.length()).toString());
-                          String uid = Uuid().v1();
-                          String audioMessageUrl =
-                              await StorageMethods.uploadDocument(
-                                  'chat/audio', uid, file);
-                          print("audio Message Url: $audioMessageUrl");
-                          controller.messages.add(RxMap({
-                            'profileUrl':
-                                'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y3VzdG9tZXIlMjBwcm9maWxlfGVufDB8fDB8fHww&w=1000&q=80',
-                            'name': 'Pankaj',
-                            'imageUrl': null,
-                            'documentUrl': null,
-                            'audioMessageUrl': audioMessageUrl,
-                            'textMessage': controller.messageController.text,
-                            'repliedMessage': null,
-                            'date': DateTime.now(),
-                            'prevDate':
-                                DateTime.now().subtract(Duration(minutes: 2)),
-                            'owner': true,
-                            "isSelected": false
-                          }));
+                          Duration audioLen =
+                              controller.end!.difference(controller.start!);
+                          int audioLength = audioLen.inMilliseconds;
                           controller.isCompleteAudioRecording.value = false;
                           controller.isRecording.value = false;
+                          await Workmanager().registerOneOffTask(
+                              Uuid().v1(), Constants.chatAudioUpload,
+                              constraints: Constraints(
+                                  networkType: NetworkType.connected),
+                              inputData: {
+                                "audioPath": recordFilePath,
+                                "audioLen": audioLength
+                              });
+                          // print("audio path: ${recordFilePath}");
+                          // File file = File(recordFilePath!);
+                          // print((await file.length()).toString());
+                          // String uid = Uuid().v1();
+                          // Duration audioLen =
+                          //     controller.end!.difference(controller.start!);
+                          // String audioMessageUrl =
+                          //     await StorageMethods.uploadDocument(
+                          //         'chat/audio', uid, file);
+                          // print("audio Message Url: $audioMessageUrl");
+                          // controller.messages.add(RxMap({
+                          //   'profileUrl':
+                          //       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y3VzdG9tZXIlMjBwcm9maWxlfGVufDB8fDB8fHww&w=1000&q=80',
+                          //   'name': 'Pankaj',
+                          //   'imageUrl': null,
+                          //   'documentUrl': null,
+                          //   'audioMessageUrl': audioMessageUrl,
+                          //   'audioLen': audioLen,
+                          //   'textMessage': controller.messageController.text,
+                          //   'repliedMessage': null,
+                          //   'date': DateTime.now(),
+                          //   'prevDate':
+                          //       DateTime.now().subtract(Duration(minutes: 2)),
+                          //   'owner': true,
+                          //   "isSelected": false
+                          // }));
                         }
                       },
                       onLongPress: () async {

@@ -54,18 +54,28 @@ class DiscussionController extends GetxController {
   RxMap<String, dynamic> reply = RxMap<String, dynamic>({});
   TextEditingController messageController = TextEditingController();
   Rx<Uint8List?> image = Rx<Uint8List?>(null);
+  String? imagePath;
+  String? imageUrl;
+  Rx<Uint8List?> video = Rx<Uint8List?>(null);
+  String? videoPath;
+  String? videoUrl;
   Rx<File?> document = Rxn();
+  String? documentPath;
   final isCompleteAudioRecording = false.obs, isRecording = false.obs;
   final isRecordingPlay = false.obs;
   final isRecordingIndex = -1.obs;
-
   final isMultipleOption = false.obs;
   final isHideLisveResult = false.obs;
-
   final questionController = TextEditingController();
-  List<TextEditingController> options = [
+  RxList<TextEditingController> options =RxList( [
     TextEditingController(),
     TextEditingController()
-  ];
+  ]);
+  Rx<bool> isImageUploading = false.obs;
+  Rx<int> optionsLen = 2.obs;
+  Rx<int> selectedButton = 0.obs;
+  Rx<Duration> audioListened = Duration(seconds: 0).obs;
+  Rx<Duration> currentDuration = Duration(seconds: 0).obs;
+  DateTime? start,end;
   // AudioP
 }

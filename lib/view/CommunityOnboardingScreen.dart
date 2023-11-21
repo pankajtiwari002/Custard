@@ -127,7 +127,11 @@ class CommunityOnboardingScreen extends StatelessWidget {
           children: [
             TextButton(
                 onPressed: () async {
-                  Uint8List image = await pickImage(ImageSource.gallery);
+                  XFile? file = await pickImage(ImageSource.gallery);
+                  Uint8List? image = null;
+                  if(file!=null){
+                    image = await file.readAsBytes();
+                  }
                   controller.image.value = image;
                 },
                 child: const Row(
