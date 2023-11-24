@@ -4,22 +4,35 @@ import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:custard_flutter/controllers/DiscussionController.dart';
 import 'package:custard_flutter/view/VideoPlayerScreen.dart';
+import 'package:custard_flutter/view/ViewPhotoScreen.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polls/flutter_polls.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_filex/open_filex.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:voice_message_package/voice_message_package.dart';
 
 class MessageCard extends StatelessWidget {
   final int index;
   List<dynamic> messages;
-
-  MessageCard({required this.index, required this.messages});
+  late AudioPlayer player;
+  MessageCard({required this.index, required this.messages}){
+    player = AudioPlayer(playerId:messages[index].value["messageId"]);
+  }
 
   DiscussionController controller = Get.find();
+
+  String formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    // String hours = twoDigits(duration.inHours);
+    String minutes = twoDigits(duration.inMinutes.remainder(60));
+    String seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
+  }
 
   Future<Uint8List?> _generateThumbnail(String videoUrl) async {
     final thumbnail = await VideoThumbnail.thumbnailData(
@@ -78,459 +91,281 @@ class MessageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 15, horizontal: 5),
-      child: Row(
-        mainAxisAlignment: messages[index].value["from"] == "userId"
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!(messages[index].value['from'] == 'userId'))
-            Padding(
-              padding: const EdgeInsets.only(right: 10, left: 8),
-              child: CircleAvatar(
-                backgroundImage:
-                    NetworkImage(messages[index].value["profileUrl"]),
-              ),
-            ),
-          Container(
-            padding: EdgeInsets.all(8),
-            width: size.width - 100,
+    return Obx(() => InkWell(
+          onLongPress: () {
+            print("height: ${size.height}");
+            print("width: ${size.width}");
+            if (controller.selectedMessage
+                .contains(messages[index].value["messageId"])) {
+              controller.selectedMessage.removeWhere(
+                  (e) => (e == messages[index].value["messageId"]));
+              controller.totalSelected.value =
+                  controller.totalSelected.value - 1;
+            } else {
+              controller.selectedMessage
+                  .add(messages[index].value["messageId"]);
+              controller.totalSelected.value =
+                  controller.totalSelected.value + 1;
+            }
+          },
+          child: Container(
+            padding: EdgeInsets.symmetric(
+                vertical: 7, horizontal: size.width * 0.042),
             decoration: BoxDecoration(
-              color: messages[index].value["from"] == "userId"
-                  ? Color(0xFFF2EFFF)
-                  : Color(0xFFF7F9FC),
-              borderRadius: BorderRadius.circular(10),
+              color: controller.selectedMessage
+                      .contains(messages[index].value["messageId"])
+                  ? Color(0x38FFB661)
+                  : Colors.transparent,
             ),
-            child: messages[index].value['type'] == "DOCUMENT"
-                ? Row(
-                    children: [
-                      IconButton(
-                          onPressed: () async {
-                            downloadAndOpenPdf(
-                                messages[index].value["document"]);
-                          },
-                          icon: Icon(
-                            Icons.picture_as_pdf,
-                            color: Colors.orange,
-                          )),
-                      Text('pdf name')
-                    ],
-                  )
-                : messages[index].value['type'] == "AUDIO"
-                    ? Row(
-                        children: [
-                          Obx(
-                            () => IconButton(
-                                onPressed: () async {
-                                  final player =
-                                      AudioPlayer(playerId: index.toString());
-                                  player.onPlayerStateChanged.listen((event) {
-                                    controller.isRecordingPlay.value =
-                                        (event == PlayerState.playing);
-                                  });
-                                  if (controller.isRecordingPlay.value) {
-                                    print("hello");
-                                    await player.pause();
-                                    // await player.stop();
-                                    // player.
-                                    controller.isRecordingPlay.value = false;
-                                  } else {
-                                    player.onPositionChanged.listen((event) {
-                                      controller.audioListened.value = event;
-                                    });
-                                    player.onPlayerComplete.listen((event) {
-                                      controller.audioListened.value =
-                                          Duration(seconds: 0);
-                                      controller.isRecordingPlay.value = false;
-                                    });
-                                    player
-                                        .play(UrlSource(
-                                            messages[index].value["audio"]))
-                                        .whenComplete(() {
-                                      controller.isRecordingPlay.value = false;
-                                    });
-                                    controller.isRecordingPlay.value = true;
-                                  }
-                                },
-                                icon: controller.isRecordingPlay.value
-                                    ? Icon(Icons.pause)
-                                    : Icon(Icons.play_arrow)),
-                          ),
-                          Obx(
-                            () => Expanded(
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 0),
-                                child: Stack(
-                                  clipBehavior: Clip.none,
-                                  alignment: Alignment.center,
-                                  children: [
-                                    LinearProgressIndicator(
-                                      borderRadius: BorderRadius.circular(15),
-                                      minHeight: 5,
-                                      backgroundColor: Colors.grey,
-                                      valueColor: AlwaysStoppedAnimation(
-                                          Color(0xFF7B61FF)),
-                                      value: calculatePercentage(
-                                          controller.audioListened.value,
-                                          Duration(
-                                              milliseconds: messages[index]
-                                                  .value['audioLen'])),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : messages[index].value['type'] == "POLLS"
-                        ? Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+            child: Container(
+              // margin: const EdgeInsets.symmetric(vertical: 15, horizontal: 5),
+              child: Row(
+                mainAxisAlignment: messages[index].value["from"] == "userId"
+                    ? MainAxisAlignment.end
+                    : MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!(messages[index].value['from'] == 'userId'))
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10, left: 8),
+                      child: CircleAvatar(
+                        backgroundImage:
+                            NetworkImage(messages[index].value["profileUrl"]),
+                      ),
+                    ),
+                  Container(
+                    padding: EdgeInsets.all(size.width * 0.037),
+                    width: size.width * 0.765,
+                    decoration: BoxDecoration(
+                      color: messages[index].value["from"] == "userId"
+                          ? Color(0xFFF2EFFF)
+                          : Color(0xFFF7F9FC),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: messages[index].value['type'] == "DOCUMENT"
+                        ? Row(
                             children: [
-                              Text(
-                                messages[index].value['pollQuestion'],
-                                style: TextStyle(
-                                  color: Color(0xFF090B0E),
-                                  fontSize: 14,
-                                  fontFamily: 'Gilroy',
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.20,
-                                ),
-                              ),
-                              SizedBox(
-                                height: 10,
-                              ),
-                              ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: messages[index]
-                                      .value['pollOptions']
-                                      .length,
-                                  itemBuilder: (context, ind) {
-                                    final ele = messages[index]
-                                        .value['pollOptions'][ind];
-                                    return Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        (ele['uids'] != null &&
-                                                ele['uids'].contains('abcd'))
-                                            ? IconButton(
-                                                onPressed: () {
-                                                  int total = messages[index]
-                                                      .value['total'];
-                                                  List<Object?> uids =
-                                                      ele['uids'].toList();
-                                                  uids.removeWhere(
-                                                      (e) => (e == 'abcd'));
-                                                  total--;
-                                                  1;
-                                                  DatabaseReference ref =
-                                                      FirebaseDatabase.instance
-                                                          .ref()
-                                                          .child(
-                                                              "communityChats/chapterId/messages/${messages[index].value['messageId']}");
-                                                  ref.update({
-                                                    'total': total,
-                                                    'pollOptions/$ind/uids':
-                                                        uids
-                                                  });
-                                                },
-                                                icon: Icon(
-                                                  Icons.check_circle,
-                                                  color: Color(0xFF7B61FF),
-                                                ))
-                                            : IconButton(
-                                                onPressed: () {
-                                                  int total = messages[index]
-                                                      .value['total'];
-                                                  List<String> uids =
-                                                      ele['uids'] ?? [];
-                                                  // print(
-                                                  //     "length : ${ele['uids'].length}");
-                                                  if (messages[index].value[
-                                                      'MultipleOptions']) {
-                                                    uids.add('abcd');
-                                                    total++;
-                                                  } else {
-                                                    if (!alreadyVoted(
-                                                        messages[index].value[
-                                                            'pollOptions'],
-                                                        'abcd')) {
-                                                      uids.add('abcd');
-                                                      total++;
-                                                      print("jkl");
-                                                    } else {
-                                                      return;
-                                                    }
-                                                  }
-                                                  DatabaseReference ref =
-                                                      FirebaseDatabase.instance
-                                                          .ref()
-                                                          .child(
-                                                              "communityChats/chapterId/messages/${messages[index].value['messageId']}");
-                                                  ref.update({
-                                                    'total': total,
-                                                    'pollOptions/$ind/uids':
-                                                        uids
-                                                  });
-                                                },
-                                                icon: Icon(
-                                                    Icons.circle_outlined)),
-                                        SizedBox(
-                                          width: 10,
-                                        ),
-                                        Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Container(
-                                              width: 200,
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text(ele['text']),
-                                                  if (alreadyVoted(
-                                                      messages[index]
-                                                          .value['pollOptions'],
-                                                      "abcd"))
-                                                    ele['uids'] == null
-                                                        ? Text('0')
-                                                        : Text(ele['uids']
-                                                            .length
-                                                            .toString()),
-                                                  // Text(
-                                                  //     '${ele['uids']}')
-                                                ],
-                                              ),
-                                            ),
-                                            Container(
-                                              width: 200,
-                                              child: LinearProgressIndicator(
-                                                borderRadius:
-                                                    BorderRadius.circular(15),
-                                                minHeight: 5,
-                                                backgroundColor: Colors.grey,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation(
-                                                        Color(0xFF7B61FF)),
-                                                // value: ele['uids']
-                                                //         .contains('abcd')
-                                                //     ? ele['uids']
-                                                //             .value
-                                                //             .length /
-                                                //         controller
-                                                //             .messages[index]
-                                                //                 ['polls']
-                                                //                 ['total']
-                                                //             .value
-                                                //     : 0,
-                                                value: alreadyVoted(
-                                                        messages[index].value[
-                                                            'pollOptions'],
-                                                        "abcd")
-                                                    ? (ele['uids'] != null)
-                                                        ? ele['uids'].length /
-                                                            messages[index]
-                                                                .value['total']
-                                                        : 0
-                                                    : 0,
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                          ],
-                                        )
-                                      ],
-                                    );
-                                  }),
-                              if (!messages[index].value['HideLiveResult'])
-                                Center(
-                                  child: TextButton(
-                                      onPressed: () {},
-                                      child: Text(
-                                        'View votes',
-                                        style: TextStyle(
-                                          color: Color(0xFF7B61FF),
-                                          fontSize: 14,
-                                          fontFamily: 'Gilroy',
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.20,
-                                        ),
-                                      )),
-                                )
+                              IconButton(
+                                  onPressed: () async {
+                                    downloadAndOpenPdf(
+                                        messages[index].value["document"]);
+                                  },
+                                  icon: Icon(
+                                    Icons.picture_as_pdf,
+                                    color: Colors.orange,
+                                  )),
+                              Text('pdf name')
                             ],
                           )
-                        : messages[index].value['type'] == "LOCATION"
-                            ? Container()
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                        : messages[index].value['type'] == "AUDIO"
+                            // ? VoiceMessage(
+                            //   audioSrc: "https://firebasestorage.googleapis.com/v0/b/custard-kmp.appspot.com/o/chat%2Faudio%2F53772000-b302-1db2-a0e4-f3b21fc846e7?alt=media&token=0ca1a5ec-975f-4cb5-85df-855263cd860d",
+                            //       // audioSrc: messages[index].value["audio"],
+                            //       played: false,
+                            //       // played: true,
+                            //       me: true,
+                            //       onPlay: () {
+                            //       },
+                            //       // showDuration: true,
+                            //     )
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  if (!(messages[index].value['from'] ==
-                                      'userId'))
-                                    Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          "User Name",
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            color: Color(0xFF090B0E),
-                                            fontSize: 14,
-                                            fontFamily: 'Gilroy',
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 0.20,
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          height: 16,
-                                        ),
-                                      ],
+                                  Container(
+                                    width: 50,
+                                    padding: EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Color(0xFF7B61FF),
                                     ),
-                                  if (messages[index].value["type"] == "IMAGE")
-                                    Container(
-                                      width: double.infinity,
-                                      height: 200,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        image: DecorationImage(
-                                          image: NetworkImage(
-                                              messages[index].value["image"]!),
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-                                  if (messages[index].value["type"] == "VIDEO")
-                                    FutureBuilder(
-                                      future: _generateThumbnail(
-                                          messages[index].value["video"]),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return Container(height: 200);
-                                        } else if (snapshot.hasError) {
-                                          return Text(
-                                              'Error loading thumbnail');
-                                        } else if (snapshot.hasData) {
-                                          return GestureDetector(
-                                            onTap: () {
-                                              Get.to(() => VideoPlayerScreen(
-                                                    videoUrl: messages[index]
-                                                        .value["video"],
-                                                  ));
-                                            },
-                                            child: Container(
-                                              width: double.infinity,
-                                              height: 200,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                image: DecorationImage(
-                                                  image: MemoryImage(
-                                                      snapshot.data!),
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                              alignment: Alignment.center,
-                                              child: Container(
-                                                // padding: EdgeInsets.all(5),
-                                                height: 40,
-                                                width: 40,
-                                                decoration: BoxDecoration(
-                                                    color: Colors.black
-                                                        .withOpacity(0.6),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            30)),
-                                                child: Icon(
-                                                  Icons.play_arrow,
-                                                  size: 35,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        } else {
-                                          return Text('No thumbnail available');
-                                        }
-                                      },
-                                    ),
-                                  SizedBox(
-                                    height: 8,
+                                    child: SvgPicture.asset(
+                                        "assets/images/microphone.svg"),
                                   ),
-                                  Text(
-                                    messages[index].value['text'],
-                                    style: TextStyle(
-                                      color: Color(0xFF090B0E),
-                                      fontSize: 14,
-                                      fontFamily: 'Gilroy',
-                                      fontWeight: FontWeight.w500,
-                                      letterSpacing: 0.20,
-                                    ),
-                                  ),
-                                  Row(
+                                  // SizedBox(width: 10,),
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Chip(
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(30)),
-                                        backgroundColor: Color(0xFFD6CEFF),
-                                        label: const Row(
+                                      Container(
+                                        width: size.width * 0.55,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Text(
-                                              '😊',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14,
-                                                fontFamily: 'Gilroy',
-                                                fontWeight: FontWeight.w500,
-                                                letterSpacing: 0.20,
-                                              ),
-                                            ),
-                                            Text(
-                                              ' 5',
-                                              style: TextStyle(
-                                                color: Color(0xFF7B61FF),
-                                                fontSize: 14,
-                                                fontFamily: 'Gilroy',
-                                                fontWeight: FontWeight.w500,
-                                                letterSpacing: 0.20,
+                                            Obx(() => IconButton(
+                                                  onPressed: () async {
+                                                    if (controller
+                                                                .recordingMessageId !=
+                                                            messages[index]
+                                                                    .value[
+                                                                "messageId"] &&
+                                                        controller
+                                                                .recordingMessageId !=
+                                                            "-1") {
+                                                      return;
+                                                    }
+                                                    
+                                                    player.onPlayerStateChanged
+                                                        .listen((event) {
+                                                      controller.isRecordingPlay
+                                                              .value =
+                                                          (event ==
+                                                              PlayerState
+                                                                  .playing);
+                                                      if (controller
+                                                          .isRecordingPlay
+                                                          .value) {
+                                                        controller
+                                                            .recordingMessageId
+                                                            .value = messages[
+                                                                index]
+                                                            .value["messageId"];
+                                                      } else {
+                                                        // player.
+                                                        print("HEY");
+                                                        player.seek(Duration(seconds:0));
+                                                        controller.isRecordingPlay.value = false;
+                                                        controller
+                                                            .recordingMessageId
+                                                            .value = "-1";
+                                                      }
+                                                    });
+                                                    if (controller
+                                                        .isRecordingPlay
+                                                        .value) {
+                                                      print("hello");
+                                                      if(player.state == PlayerState.playing){
+                                                        print("Jai Shee Ram");
+                                                        await player.pause();
+                                                      }
+                                                      // controller
+                                                      //     .recordingMessageId
+                                                      //     .value = "-1";
+                                                      // await player.pause();
+                                                      // await player.stop();
+                                                      // player.
+                                                      // controller.isRecordingPlay
+                                                      //     .value = false;
+                                                    } else {
+                                                      player.onPositionChanged
+                                                          .listen((event) {
+                                                        controller.audioListened
+                                                            .value = event;
+                                                      });
+                                                      player.onPlayerComplete
+                                                          .listen((event) {
+                                                        controller.audioListened
+                                                                .value =
+                                                            Duration(
+                                                                seconds: 0);
+                                                        controller
+                                                            .isRecordingPlay
+                                                            .value = false;
+                                                      });
+                                                      // controller
+                                                      //     .recordingMessageId
+                                                      //     .value = messages[
+                                                      //         index]
+                                                      //     .value["messageId"];
+                                                      player
+                                                          .play(UrlSource(
+                                                              messages[index]
+                                                                      .value[
+                                                                  "audio"]))
+                                                          .whenComplete(() {
+                                                        controller
+                                                            .isRecordingPlay
+                                                            .value = false;
+                                                      });
+                                                      controller.isRecordingPlay
+                                                          .value = true;
+                                                    }
+                                                  },
+                                                  icon: (!controller
+                                                              .isRecordingPlay
+                                                              .value ||
+                                                          controller.recordingMessageId !=
+                                                              messages[index]
+                                                                      .value[
+                                                                  "messageId"])
+                                                      ? SvgPicture.asset(
+                                                          "assets/images/play.svg")
+                                                      : SvgPicture.asset(
+                                                          "assets/images/pause.svg"),
+                                                )),
+                                            Obx(
+                                              () => Expanded(
+                                                child: Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(horizontal: 0),
+                                                  child: Stack(
+                                                    clipBehavior: Clip.none,
+                                                    alignment: Alignment.center,
+                                                    children: [
+                                                      LinearProgressIndicator(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(15),
+                                                        minHeight: 6,
+                                                        backgroundColor:
+                                                            Colors.grey,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation(
+                                                                Color(
+                                                                    0xFF7B61FF)),
+                                                        value: controller
+                                                                    .recordingMessageId ==
+                                                                messages[
+                                                                            index]
+                                                                        .value[
+                                                                    "messageId"]
+                                                            ? calculatePercentage(
+                                                                controller
+                                                                    .audioListened
+                                                                    .value,
+                                                                Duration(
+                                                                    milliseconds:
+                                                                        messages[index]
+                                                                            .value['audioLen']))
+                                                            : 0,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
                                       SizedBox(
-                                        width: 10,
+                                        height: 9,
                                       ),
-                                      Chip(
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(30)),
-                                        backgroundColor: Color(0xFFD6CEFF),
-                                        label: const Row(
+                                      Container(
+                                        width: size.width * 0.55,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                              '🤯',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14,
-                                                fontFamily: 'Gilroy',
-                                                fontWeight: FontWeight.w500,
-                                                letterSpacing: 0.20,
+                                            Obx(
+                                              () => Text(
+                                                controller.recordingMessageId !=
+                                                        messages[index]
+                                                            .value["messageId"]
+                                                    ? "00:00"
+                                                    : formatDuration(controller
+                                                        .audioListened.value),
+                                                textAlign: TextAlign.right,
+                                                style: TextStyle(
+                                                  color: Color(0xFF546881),
+                                                  fontSize: 14,
+                                                  fontFamily: 'Gilroy',
+                                                  fontWeight: FontWeight.w500,
+                                                ),
                                               ),
                                             ),
                                             Text(
-                                              ' 5',
+                                              '01:50 PM',
                                               style: TextStyle(
-                                                color: Color(0xFF7B61FF),
-                                                fontSize: 14,
+                                                color: Color(0xFF909DAD),
+                                                fontSize: 12,
                                                 fontFamily: 'Gilroy',
                                                 fontWeight: FontWeight.w500,
                                                 letterSpacing: 0.20,
@@ -539,25 +374,445 @@ class MessageCard extends StatelessWidget {
                                           ],
                                         ),
                                       ),
-                                      Spacer(),
+                                    ],
+                                  ),
+                                ],
+                              )
+                            : messages[index].value['type'] == "POLLS"
+                                ? Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
                                       Text(
-                                        '01:50 PM',
+                                        messages[index].value['pollQuestion'],
                                         style: TextStyle(
-                                          color: Color(0xFF909DAD),
-                                          fontSize: 12,
+                                          color: Color(0xFF090B0E),
+                                          fontSize: 14,
                                           fontFamily: 'Gilroy',
-                                          fontWeight: FontWeight.w500,
+                                          fontWeight: FontWeight.w600,
                                           letterSpacing: 0.20,
                                         ),
                                       ),
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                      ListView.builder(
+                                          shrinkWrap: true,
+                                          itemCount: messages[index]
+                                              .value['pollOptions']
+                                              .length,
+                                          itemBuilder: (context, ind) {
+                                            final ele = messages[index]
+                                                .value['pollOptions'][ind];
+                                            return Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                (ele['uids'] != null &&
+                                                        ele['uids']
+                                                            .contains('abcd'))
+                                                    ? IconButton(
+                                                        onPressed: () {
+                                                          int total = messages[
+                                                                  index]
+                                                              .value['total'];
+                                                          List<Object?> uids =
+                                                              ele['uids']
+                                                                  .toList();
+                                                          uids.removeWhere(
+                                                              (e) => (e ==
+                                                                  'abcd'));
+                                                          total--;
+                                                          1;
+                                                          DatabaseReference
+                                                              ref =
+                                                              FirebaseDatabase
+                                                                  .instance
+                                                                  .ref()
+                                                                  .child(
+                                                                      "communityChats/chapterId/messages/${messages[index].value['messageId']}");
+                                                          ref.update({
+                                                            'total': total,
+                                                            'pollOptions/$ind/uids':
+                                                                uids
+                                                          });
+                                                        },
+                                                        icon: Icon(
+                                                          Icons.check_circle,
+                                                          color:
+                                                              Color(0xFF7B61FF),
+                                                        ))
+                                                    : IconButton(
+                                                        onPressed: () {
+                                                          int total = messages[
+                                                                  index]
+                                                              .value['total'];
+                                                          List<String> uids =
+                                                              ele['uids'] ?? [];
+                                                          // print(
+                                                          //     "length : ${ele['uids'].length}");
+                                                          if (messages[index]
+                                                                  .value[
+                                                              'MultipleOptions']) {
+                                                            uids.add('abcd');
+                                                            total++;
+                                                          } else {
+                                                            if (!alreadyVoted(
+                                                                messages[index]
+                                                                        .value[
+                                                                    'pollOptions'],
+                                                                'abcd')) {
+                                                              uids.add('abcd');
+                                                              total++;
+                                                              print("jkl");
+                                                            } else {
+                                                              return;
+                                                            }
+                                                          }
+                                                          DatabaseReference
+                                                              ref =
+                                                              FirebaseDatabase
+                                                                  .instance
+                                                                  .ref()
+                                                                  .child(
+                                                                      "communityChats/chapterId/messages/${messages[index].value['messageId']}");
+                                                          ref.update({
+                                                            'total': total,
+                                                            'pollOptions/$ind/uids':
+                                                                uids
+                                                          });
+                                                        },
+                                                        icon: Icon(Icons
+                                                            .circle_outlined)),
+                                                SizedBox(
+                                                  width: 10,
+                                                ),
+                                                Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Container(
+                                                      width: 200,
+                                                      child: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
+                                                        children: [
+                                                          Text(ele['text']),
+                                                          if (alreadyVoted(
+                                                              messages[index]
+                                                                      .value[
+                                                                  'pollOptions'],
+                                                              "abcd"))
+                                                            ele['uids'] == null
+                                                                ? Text('0')
+                                                                : Text(ele[
+                                                                        'uids']
+                                                                    .length
+                                                                    .toString()),
+                                                          // Text(
+                                                          //     '${ele['uids']}')
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    Container(
+                                                      width: 200,
+                                                      child:
+                                                          LinearProgressIndicator(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(15),
+                                                        minHeight: 5,
+                                                        backgroundColor:
+                                                            Colors.grey,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation(
+                                                                Color(
+                                                                    0xFF7B61FF)),
+                                                        // value: ele['uids']
+                                                        //         .contains('abcd')
+                                                        //     ? ele['uids']
+                                                        //             .value
+                                                        //             .length /
+                                                        //         controller
+                                                        //             .messages[index]
+                                                        //                 ['polls']
+                                                        //                 ['total']
+                                                        //             .value
+                                                        //     : 0,
+                                                        value: alreadyVoted(
+                                                                messages[index]
+                                                                        .value[
+                                                                    'pollOptions'],
+                                                                "abcd")
+                                                            ? (ele['uids'] !=
+                                                                    null)
+                                                                ? ele['uids']
+                                                                        .length /
+                                                                    messages[index]
+                                                                            .value[
+                                                                        'total']
+                                                                : 0
+                                                            : 0,
+                                                      ),
+                                                    ),
+                                                    SizedBox(
+                                                      height: 5,
+                                                    ),
+                                                  ],
+                                                )
+                                              ],
+                                            );
+                                          }),
+                                      if (!messages[index]
+                                          .value['HideLiveResult'])
+                                        Center(
+                                          child: TextButton(
+                                              onPressed: () {},
+                                              child: Text(
+                                                'View votes',
+                                                style: TextStyle(
+                                                  color: Color(0xFF7B61FF),
+                                                  fontSize: 14,
+                                                  fontFamily: 'Gilroy',
+                                                  fontWeight: FontWeight.w600,
+                                                  letterSpacing: 0.20,
+                                                ),
+                                              )),
+                                        )
                                     ],
                                   )
-                                ],
-                              ),
+                                : messages[index].value['type'] == "LOCATION"
+                                    ? Container()
+                                    : Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (!(messages[index].value['from'] ==
+                                              'userId'))
+                                            Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  "User Name",
+                                                  textAlign: TextAlign.center,
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF090B0E),
+                                                    fontSize: 14,
+                                                    fontFamily: 'Gilroy',
+                                                    fontWeight: FontWeight.w600,
+                                                    letterSpacing: 0.20,
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  height: 16,
+                                                ),
+                                              ],
+                                            ),
+                                          if (messages[index].value["type"] ==
+                                              "IMAGE")
+                                            GestureDetector(
+                                              onTap: () {
+                                                Get.to(() => ViewPhotoScreen(
+                                                    imageUrl: messages[index]
+                                                        .value["image"]));
+                                              },
+                                              child: Container(
+                                                width: double.infinity,
+                                                height: 200,
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  image: DecorationImage(
+                                                    image: NetworkImage(
+                                                        messages[index]
+                                                            .value["image"]!),
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          if (messages[index].value["type"] ==
+                                              "VIDEO")
+                                            FutureBuilder(
+                                              future: _generateThumbnail(
+                                                  messages[index]
+                                                      .value["video"]),
+                                              builder: (context, snapshot) {
+                                                if (snapshot.connectionState ==
+                                                    ConnectionState.waiting) {
+                                                  return Container(height: 200);
+                                                } else if (snapshot.hasError) {
+                                                  return Text(
+                                                      'Error loading thumbnail');
+                                                } else if (snapshot.hasData) {
+                                                  return GestureDetector(
+                                                    onTap: () {
+                                                      Get.to(() =>
+                                                          VideoPlayerScreen(
+                                                            videoUrl: messages[
+                                                                    index]
+                                                                .value["video"],
+                                                          ));
+                                                    },
+                                                    child: Container(
+                                                      width: double.infinity,
+                                                      height: 200,
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10),
+                                                        image: DecorationImage(
+                                                          image: MemoryImage(
+                                                              snapshot.data!),
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      ),
+                                                      alignment:
+                                                          Alignment.center,
+                                                      child: Container(
+                                                        // padding: EdgeInsets.all(5),
+                                                        height: 40,
+                                                        width: 40,
+                                                        decoration: BoxDecoration(
+                                                            color: Colors.black
+                                                                .withOpacity(
+                                                                    0.6),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        30)),
+                                                        child: Icon(
+                                                          Icons.play_arrow,
+                                                          size: 35,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                } else {
+                                                  return Text(
+                                                      'No thumbnail available');
+                                                }
+                                              },
+                                            ),
+                                          SizedBox(
+                                            height: 8,
+                                          ),
+                                          Text(
+                                            messages[index].value['text'],
+                                            style: TextStyle(
+                                              color: Color(0xFF090B0E),
+                                              fontSize: 14,
+                                              fontFamily: 'Gilroy',
+                                              fontWeight: FontWeight.w500,
+                                              letterSpacing: 0.20,
+                                            ),
+                                          ),
+                                          Row(
+                                            children: [
+                                              if (messages[index]
+                                                      .value["messageId"] ==
+                                                  "abcd")
+                                                Chip(
+                                                  shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              30)),
+                                                  backgroundColor:
+                                                      Color(0xFFD6CEFF),
+                                                  label: const Row(
+                                                    children: [
+                                                      Text(
+                                                        '😊',
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 14,
+                                                          fontFamily: 'Gilroy',
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          letterSpacing: 0.20,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        ' 5',
+                                                        style: TextStyle(
+                                                          color:
+                                                              Color(0xFF7B61FF),
+                                                          fontSize: 14,
+                                                          fontFamily: 'Gilroy',
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          letterSpacing: 0.20,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              if (messages[index]
+                                                      .value["messageId"] ==
+                                                  "abcd")
+                                                Chip(
+                                                  shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              30)),
+                                                  backgroundColor:
+                                                      Color(0xFFD6CEFF),
+                                                  label: const Row(
+                                                    children: [
+                                                      Text(
+                                                        '🤯',
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 14,
+                                                          fontFamily: 'Gilroy',
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          letterSpacing: 0.20,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        ' 5',
+                                                        style: TextStyle(
+                                                          color:
+                                                              Color(0xFF7B61FF),
+                                                          fontSize: 14,
+                                                          fontFamily: 'Gilroy',
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          letterSpacing: 0.20,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              Spacer(),
+                                              Text(
+                                                '01:50 PM',
+                                                style: TextStyle(
+                                                  color: Color(0xFF909DAD),
+                                                  fontSize: 12,
+                                                  fontFamily: 'Gilroy',
+                                                  fontWeight: FontWeight.w500,
+                                                  letterSpacing: 0.20,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ],
-      ),
-    );
+        ));
   }
   // String getTimeDifference() {
   //   Duration difference = date.difference(prevDate);

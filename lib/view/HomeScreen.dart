@@ -185,18 +185,18 @@ class HomeScreen extends StatelessWidget {
           alignment: Alignment.center,
           child: const Text('Page 1'),
         ),
-        Container(
-          color: Colors.green,
-          alignment: Alignment.center,
-          child: const Text('Page 2'),
-        ),
+        DiscussionScreen(),
         Container(
           color: Colors.blue,
           alignment: Alignment.center,
           child: const Text('Page 3'),
         ),
         const GalleryScreen(),
-        DiscussionScreen(),
+        Container(
+          color: Colors.green,
+          alignment: Alignment.center,
+          child: const Text('Page 2'),
+        ),
       ][currentPageIndex.value]),
     );
   }

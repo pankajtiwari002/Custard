@@ -2,12 +2,15 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:custard_flutter/constants.dart';
+import 'package:custard_flutter/src/FlowShader.dart';
+import 'package:custard_flutter/src/Global.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:custard_flutter/controllers/LocationController.dart';
 import 'package:custard_flutter/view/MembersScreen.dart';
 import 'package:custard_flutter/view/PollsScreen.dart';
 import 'package:custard_flutter/view/ReportScreen.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -21,7 +24,9 @@ import 'package:record_mp3/record_mp3.dart';
 import 'package:uuid/uuid.dart';
 import 'package:workmanager/workmanager.dart';
 
+import '../components/ChatBox.dart';
 import '../components/MessageCard.dart';
+import '../components/RecordButton.dart';
 
 class DiscussionScreen extends StatelessWidget {
   DiscussionController controller = Get.put(DiscussionController());
@@ -212,11 +217,9 @@ class DiscussionScreen extends StatelessWidget {
     return Obx(() => InkWell(
           onTap: onTap,
           child: Container(
-            width: 65,
-            height: 65,
             padding: EdgeInsets.all(4),
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100.0),
+                shape: BoxShape.circle,
                 // border: Border.all(color: Colors.grey),
                 color: backgroundColor),
             child: Container(
@@ -225,10 +228,10 @@ class DiscussionScreen extends StatelessWidget {
               width: 50,
               margin: EdgeInsets.symmetric(vertical: 8.0),
               decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(50.0),
+                  shape: BoxShape.circle,
                   border: controller.selectedButton.value == myId
                       ? Border.all(color: Colors.white, width: 2)
-                      : Border.all(color: Colors.transparent),
+                      : Border.all(color: Colors.transparent, width: 2),
                   color: backgroundColor),
               child: ClipRRect(
                   borderRadius: BorderRadius.circular(12.0),
@@ -541,6 +544,7 @@ class DiscussionScreen extends StatelessWidget {
           }
         }),
       ),
+
       // body: Obx(
       //   () => ListView.builder(
       //     itemCount: controller.messages.length,
@@ -551,8 +555,9 @@ class DiscussionScreen extends StatelessWidget {
       //     },
       //   ),
       // ),
+
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.only(bottom: 10, left: 5, right: 5),
+        padding: const EdgeInsets.only(bottom: 10, left: 18, right: 18),
         margin: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
@@ -616,25 +621,27 @@ class DiscussionScreen extends StatelessWidget {
                           _openBottomSheet();
                         },
                         icon: Icon(Icons.add)),
+                    SizedBox(width: 12,),
                     Expanded(
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.grey),
-                            color: Color(0xFFF9FAFB)),
+                            border: controller.isRecording.value ? Border.all(color: Colors.transparent) : Border.all(color: Colors.grey),
+                            color: controller.isRecording.value ? Colors.transparent :Color(0xFFF9FAFB),
+                          ),
                         child: controller.isCompleteAudioRecording.value
                             ? Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(formatDuration(
-                                      controller.currentDuration.value)),
+                                  Text(formatDuration(Duration(seconds: controller.seconds.value))),
                                   TextButton(
                                     onPressed: () {
                                       controller.isCompleteAudioRecording
                                           .value = false;
                                       controller.isRecording.value = false;
+                                      File(controller.audioPath!).delete();
                                     },
                                     child: Text(
                                       "Delete",
@@ -644,11 +651,7 @@ class DiscussionScreen extends StatelessWidget {
                                 ],
                               )
                             : controller.isRecording.value
-                                ? Container(
-                                    height: 50,
-                                    child: Text(formatDuration(
-                                        controller.currentDuration.value)),
-                                  )
+                                ? Container()
                                 : TextFormField(
                                     focusNode: focusNode,
                                     // autofocus: true,
@@ -694,10 +697,9 @@ class DiscussionScreen extends StatelessWidget {
                                                           controller.imagePath,
                                                       "text": text,
                                                     }).then((value) {
-                                                    controller.isImageUploading
-                                                        .value = false;
-                                                    controller.image.value =
-                                                        null;
+                                                  controller.isImageUploading
+                                                      .value = false;
+                                                  controller.image.value = null;
                                                 });
                                               } else if (controller.videoPath !=
                                                   null) {
@@ -837,78 +839,86 @@ class DiscussionScreen extends StatelessWidget {
                                   ),
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () async {
-                        if (controller.isCompleteAudioRecording.value) {
-                          String filename = recordFilePath!.split('/').last;
-                          Duration audioLen =
-                              controller.end!.difference(controller.start!);
-                          int audioLength = audioLen.inMilliseconds;
-                          controller.isCompleteAudioRecording.value = false;
-                          controller.isRecording.value = false;
-                          await Workmanager().registerOneOffTask(
-                              Uuid().v1(), Constants.chatAudioUpload,
-                              constraints: Constraints(
-                                  networkType: NetworkType.connected),
-                              inputData: {
-                                "audioPath": recordFilePath,
-                                "audioLen": audioLength
-                              });
-                          // print("audio path: ${recordFilePath}");
-                          // File file = File(recordFilePath!);
-                          // print((await file.length()).toString());
-                          // String uid = Uuid().v1();
-                          // Duration audioLen =
-                          //     controller.end!.difference(controller.start!);
-                          // String audioMessageUrl =
-                          //     await StorageMethods.uploadDocument(
-                          //         'chat/audio', uid, file);
-                          // print("audio Message Url: $audioMessageUrl");
-                          // controller.messages.add(RxMap({
-                          //   'profileUrl':
-                          //       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y3VzdG9tZXIlMjBwcm9maWxlfGVufDB8fDB8fHww&w=1000&q=80',
-                          //   'name': 'Pankaj',
-                          //   'imageUrl': null,
-                          //   'documentUrl': null,
-                          //   'audioMessageUrl': audioMessageUrl,
-                          //   'audioLen': audioLen,
-                          //   'textMessage': controller.messageController.text,
-                          //   'repliedMessage': null,
-                          //   'date': DateTime.now(),
-                          //   'prevDate':
-                          //       DateTime.now().subtract(Duration(minutes: 2)),
-                          //   'owner': true,
-                          //   "isSelected": false
-                          // }));
-                        }
-                      },
-                      onLongPress: () async {
-                        startRecord();
-                      },
-                      onLongPressEnd: (details) {
-                        stopRecord();
-                      },
-                      child: Container(
-                          padding: EdgeInsets.all(8),
-                          margin: EdgeInsets.symmetric(horizontal: 4),
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(30),
-                              color: Color(0xFF7B61FF)),
-                          child: controller.isCompleteAudioRecording.value
-                              ? Icon(
-                                  Icons.send,
-                                  color: Colors.white,
-                                )
-                              : controller.isRecording.value
-                                  ? Icon(
-                                      Icons.stop,
-                                      color: Colors.red,
-                                    )
-                                  : Icon(
-                                      Icons.mic,
-                                      color: Colors.white,
-                                    )),
-                    )
+                    SizedBox(width: 12,),
+                    RecordButton(controller: controller.animationController),
+                    // GestureDetector(
+                    //   onTap: () async {
+                    //     if (controller.isCompleteAudioRecording.value) {
+                    //       String filename = recordFilePath!.split('/').last;
+                    //       Duration audioLen =
+                    //           controller.end!.difference(controller.start!);
+                    //       int audioLength = audioLen.inMilliseconds;
+                    //       controller.isCompleteAudioRecording.value = false;
+                    //       controller.isRecording.value = false;
+                    //       await Workmanager().registerOneOffTask(
+                    //           Uuid().v1(), Constants.chatAudioUpload,
+                    //           constraints: Constraints(
+                    //               networkType: NetworkType.connected),
+                    //           inputData: {
+                    //             "audioPath": recordFilePath,
+                    //             "audioLen": audioLength
+                    //           });
+                    //       // print("audio path: ${recordFilePath}");
+                    //       // File file = File(recordFilePath!);
+                    //       // print((await file.length()).toString());
+                    //       // String uid = Uuid().v1();
+                    //       // Duration audioLen =
+                    //       //     controller.end!.difference(controller.start!);
+                    //       // String audioMessageUrl =
+                    //       //     await StorageMethods.uploadDocument(
+                    //       //         'chat/audio', uid, file);
+                    //       // print("audio Message Url: $audioMessageUrl");
+                    //       // controller.messages.add(RxMap({
+                    //       //   'profileUrl':
+                    //       //       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y3VzdG9tZXIlMjBwcm9maWxlfGVufDB8fDB8fHww&w=1000&q=80',
+                    //       //   'name': 'Pankaj',
+                    //       //   'imageUrl': null,
+                    //       //   'documentUrl': null,
+                    //       //   'audioMessageUrl': audioMessageUrl,
+                    //       //   'audioLen': audioLen,
+                    //       //   'textMessage': controller.messageController.text,
+                    //       //   'repliedMessage': null,
+                    //       //   'date': DateTime.now(),
+                    //       //   'prevDate':
+                    //       //       DateTime.now().subtract(Duration(minutes: 2)),
+                    //       //   'owner': true,
+                    //       //   "isSelected": false
+                    //       // }));
+                    //     }
+                    //   },
+                    //   onLongPress: () async {
+                    //     startRecord();
+                    //   },
+                    //   onLongPressEnd: (details) {
+                    //     stopRecord();
+                    //   },
+                    //   child: Container(
+                    //       padding: EdgeInsets.all(8.86),
+                    //       // margin: EdgeInsets.symmetric(horizontal: 4),
+                    //       height: 40.45459,
+                    //       width: 40.45459,
+                    //       decoration: BoxDecoration(
+                    //           borderRadius: BorderRadius.circular(30),
+                    //           color: Color(0xFF7B61FF)),
+                    //       child: controller.isCompleteAudioRecording.value
+                    //           ? Icon(
+                    //               Icons.send,
+                    //               color: Colors.white,
+                    //             )
+                    //           : controller.isRecording.value
+                    //               ? Icon(
+                    //                   Icons.stop,
+                    //                   color: Colors.red,
+                    //                 )
+                    //               : Container(
+                    //                 height: 22.73725,
+                    //                 width: 22.73725,
+                    //                   child: SvgPicture.asset(
+                    //                     "assets/images/microphone-2.svg",
+                    //                     fit: BoxFit.contain,
+                    //                   ),
+                    //                 )),
+                    // ),
                   ],
                 ),
               ),
