@@ -6,6 +6,7 @@ import 'package:custard_flutter/controllers/HomeController.dart';
 import 'package:custard_flutter/utils/CustardColors.dart';
 import 'package:custard_flutter/view/CommunityScreen.dart';
 import 'package:custard_flutter/view/DiscussionScreen.dart';
+import 'package:custard_flutter/view/EventsScreen.dart';
 import 'package:custard_flutter/view/GalleryScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -186,11 +187,7 @@ class HomeScreen extends StatelessWidget {
           child: const Text('Page 1'),
         ),
         DiscussionScreen(),
-        Container(
-          color: Colors.blue,
-          alignment: Alignment.center,
-          child: const Text('Page 3'),
-        ),
+        EventsScreen(),
         const GalleryScreen(),
         Container(
           color: Colors.green,

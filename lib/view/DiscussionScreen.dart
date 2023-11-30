@@ -640,6 +640,7 @@ class DiscussionScreen extends StatelessWidget {
                                     onPressed: () {
                                       controller.isCompleteAudioRecording
                                           .value = false;
+                                          controller.seconds.value = 0;
                                       controller.isRecording.value = false;
                                       File(controller.audioPath!).delete();
                                     },
