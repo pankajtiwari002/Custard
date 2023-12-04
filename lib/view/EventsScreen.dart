@@ -1,10 +1,15 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:custard_flutter/components/EventScreenCard.dart';
 import 'package:custard_flutter/view/CheckInScreen.dart';
 import 'package:custard_flutter/view/CreateEventScreen.dart';
+import 'package:custard_flutter/view/GroupImageScreen.dart';
 import 'package:custard_flutter/view/ManageEventScreen.dart';
+import 'package:custard_flutter/view/TicketScreen.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import 'RegisterNowScreen.dart';
 
 class EventsScreen extends StatelessWidget {
   const EventsScreen({super.key});
@@ -65,74 +70,146 @@ class EventsScreen extends StatelessWidget {
   }
 
   Widget UpComingTab() {
-    return ListView.builder(
-        itemCount: 2,
-        dragStartBehavior: DragStartBehavior.down,
-        itemBuilder: ((context, index) {
-          return EventsScreenCard(
-            title: "The art of living",
-            description:
-                "Jumping foxes dance swiftly under the moonlit sky, creating a mesmerizing spectacle of nature's beauty.",
-            imageUrl:
-                "https://images.unsplash.com/photo-1524601500432-1e1a4c71d692?auto=format&fit=crop&q=80&w=1000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGdyb3VwfGVufDB8fDB8fHww",
-            text_TextButton: "Manage Event",
-            onTapTextButton: () {
-              Get.to(() => ManageEventScreen());
-            },
-            onTapElevatedButton: () {
-              Get.to(() => CheckInScreen());
-            },
-            elevatedButton_icon: Icon(Icons.qr_code_scanner,color: Colors.white,),
-            elevatedButton_text: "Check-In",
-          );
-        }));
+    return FutureBuilder(
+      future: FirebaseFirestore.instance
+          .collection('events')
+          .where('dateTime',
+              isGreaterThanOrEqualTo: DateTime.now().millisecondsSinceEpoch)
+          .orderBy('dateTime', descending: false)
+          .get(),
+      builder: ((context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.active ||
+            snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasData) {
+            List<dynamic> events = snapshot.data!.docs;
+            return ListView.builder(
+                itemCount: events.length,
+                dragStartBehavior: DragStartBehavior.down,
+                itemBuilder: ((context, index) {
+                  return EventsScreenCard(
+                    title: events[index]['title'],
+                    description: events[index]['description'],
+                    imageUrl: events[index]['coverPhotoUrl'],
+                    text_TextButton: "Manage Event",
+                    onTapTextButton: () {
+                      Get.to(() => ManageEventScreen(snapshot: snapshot,index: index,));
+                    },
+                    onTapElevatedButton: () {
+                      Get.to(() => CheckInScreen());
+                    },
+                    elevatedButton_icon: Icon(
+                      Icons.qr_code_scanner,
+                      color: Colors.white,
+                    ),
+                    elevatedButton_text: "Check-In",
+                    dateTime: events[index]['dateTime'],
+                    capacity: events[index]['capacity'],
+                    price: events[index]['ticketPrice'],
+                  );
+                }));
+          } else {
+            return Container();
+          }
+        } else {
+          return Container();
+        }
+      }),
+    );
   }
 
   Widget EnrolledTab() {
-    return ListView.builder(
-        itemCount: 1,
-        dragStartBehavior: DragStartBehavior.down,
-        itemBuilder: ((context, index) {
-          return EventsScreenCard(
-            title: "The art of living",
-            description:
-                "Jumping foxes dance swiftly under the moonlit sky, creating a mesmerizing spectacle of nature's beauty.",
-            imageUrl:
-                "https://images.unsplash.com/photo-1524601500432-1e1a4c71d692?auto=format&fit=crop&q=80&w=1000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGdyb3VwfGVufDB8fDB8fHww",
-            text_TextButton: "View Tickets",
-            onTapTextButton: () {
-              print("Text Button");
-            },
-            onTapElevatedButton: () {
-              Get.to(() => CheckInScreen());
-            },
-            elevatedButton_icon: Icon(Icons.qr_code_scanner,color: Colors.white,),
-            elevatedButton_text: "Check-In",
-          );
-        }));
+    return FutureBuilder(
+      future: FirebaseFirestore.instance
+          .collection('events')
+          .where('dateTime',
+              isGreaterThanOrEqualTo: DateTime.now().millisecondsSinceEpoch)
+          .orderBy('dateTime', descending: false)
+          .get(),
+      builder: ((context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.active ||
+            snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasData) {
+            List<dynamic> events = snapshot.data!.docs;
+            return ListView.builder(
+                itemCount: events.length,
+                dragStartBehavior: DragStartBehavior.down,
+                itemBuilder: ((context, index) {
+                  return EventsScreenCard(
+                    title: events[index]['title'],
+                    description: events[index]['description'],
+                    imageUrl: events[index]['coverPhotoUrl'],
+                    text_TextButton: "View Ticket",
+                    onTapTextButton: () {
+                      Get.to(() => TicketScreen(snapshot: snapshot,index: index,));
+                    },
+                    onTapElevatedButton: () {
+                      // Get.to(() => CheckInScreen());
+                      Get.to(() => RegisterNowScreen());
+                    },
+                    elevatedButton_icon: Icon(
+                      Icons.qr_code_scanner,
+                      color: Colors.white,
+                    ),
+                    elevatedButton_text: "Register Now",
+                    dateTime: events[index]['dateTime'],
+                    capacity: events[index]['capacity'],
+                    price: events[index]['ticketPrice'],
+                  );
+                }));
+          } else {
+            return Container();
+          }
+        } else {
+          return Container();
+        }
+      }),
+    );
   }
 
   Widget PastEvent() {
-    return ListView.builder(
-        itemCount: 1,
-        dragStartBehavior: DragStartBehavior.down,
-        itemBuilder: ((context, index) {
-          return EventsScreenCard(
-            title: "The art of living",
-            description:
-                "Jumping foxes dance swiftly under the moonlit sky, creating a mesmerizing spectacle of nature's beauty.",
-            imageUrl:
-                "https://images.unsplash.com/photo-1524601500432-1e1a4c71d692?auto=format&fit=crop&q=80&w=1000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGdyb3VwfGVufDB8fDB8fHww",
-            text_TextButton: "View FeedBack",
-            onTapTextButton: () {
-              print("Text Button");
-            },
-            elevatedButton_icon: null,
-            elevatedButton_text: "Open Gallery",
-            onTapElevatedButton: () {
-              print("Elevated Button");
-            },
-          );
-        }));
+    return FutureBuilder(
+      future: FirebaseFirestore.instance
+          .collection('events')
+          .where('dateTime', isLessThan: DateTime.now().millisecondsSinceEpoch)
+          .orderBy('dateTime', descending: true)
+          .get(),
+      builder: ((context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.active ||
+            snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasData) {
+            List<dynamic> events = snapshot.data!.docs;
+            return ListView.builder(
+                itemCount: events.length,
+                dragStartBehavior: DragStartBehavior.down,
+                itemBuilder: ((context, index) {
+                  return EventsScreenCard(
+                    title: events[index]['title'],
+                    description: events[index]['description'],
+                    imageUrl: events[index]['coverPhotoUrl'],
+                    text_TextButton: "Manage Event",
+                    onTapTextButton: () {
+                      Get.to(() => ManageEventScreen(snapshot: snapshot,index: index,));
+                    },
+                    onTapElevatedButton: () {
+                      Get.to(() => CheckInScreen());
+                    },
+                    elevatedButton_icon: Icon(
+                      Icons.qr_code_scanner,
+                      color: Colors.white,
+                    ),
+                    elevatedButton_text: "Check-In",
+                    dateTime: events[index]['dateTime'],
+                    capacity: events[index]['capacity'],
+                    price: events[index]['ticketPrice'],
+                  );
+                }));
+          } else {
+            return Container();
+          }
+        } else {
+          return Container();
+        }
+      }),
+    );
   }
 }

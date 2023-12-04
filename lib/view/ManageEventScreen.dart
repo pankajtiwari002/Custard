@@ -1,13 +1,21 @@
 import 'package:custard_flutter/controllers/ManageEventController.dart';
 import 'package:custard_flutter/view/EditEventScreen.dart';
+// import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 class ManageEventScreen extends StatelessWidget {
-  ManageEventScreen({super.key});
+  final snapshot;
+  int index;
+  ManageEventScreen({super.key, required this.snapshot,required this.index});
 
   final controller = Get.put(ManageEventController());
+
+  DateTime convertMillisecondsToDateTime(int millisecondsSinceEpoch) {
+    return DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +30,9 @@ class ManageEventScreen extends StatelessWidget {
           ),
           backgroundColor: Colors.black,
           leading: IconButton(
-              onPressed: () {},
+              onPressed: () {
+                Get.back();
+              },
               icon: Icon(
                 Icons.arrow_back_ios,
                 color: Colors.white,
@@ -30,6 +40,9 @@ class ManageEventScreen extends StatelessWidget {
           actions: [
             TextButton(
                 onPressed: () {
+                  controller.titleController.text = controller.data["title"];
+                  controller.descriptionController.text =
+                      controller.data["description"];
                   Get.to(() => EditEventsScreen());
                 },
                 child: Text(
@@ -55,9 +68,7 @@ class ManageEventScreen extends StatelessWidget {
                     // Overview Tab Content
                     OverviewTab(),
                     RegistrationTab(context),
-                    Center(
-                      child: Text('Insight Tab Content'),
-                    ),
+                    insightsTab()
                   ],
                 ),
               ),
@@ -99,8 +110,7 @@ class ManageEventScreen extends StatelessWidget {
             height: 150,
             decoration: BoxDecoration(
               image: DecorationImage(
-                  image: NetworkImage(
-                      "https://images.unsplash.com/photo-1524601500432-1e1a4c71d692?auto=format&fit=crop&q=80&w=1000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGdyb3VwfGVufDB8fDB8fHww"),
+                  image: NetworkImage(snapshot.data.docs[index]['coverPhotoUrl']),
                   fit: BoxFit.cover),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -131,15 +141,16 @@ class ManageEventScreen extends StatelessWidget {
 
           // 3. Bold Text 'The Art of Living'
           Text(
-            'The Art of Living',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF090B0E),
-              fontSize: 24,
-              fontFamily: 'Gilroy',
-              fontWeight: FontWeight.w600,
+              snapshot.data.docs[index]['title'],
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xFF090B0E),
+                fontSize: 24,
+                fontFamily: 'Gilroy',
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
+          
 
           SizedBox(height: 16.0),
           Divider(),
@@ -158,25 +169,27 @@ class ManageEventScreen extends StatelessWidget {
 
           // 5. Text Description
           Text(
-            " Jumping foxes dance swiftly under the moonlit sky, creating a mesmerizing spectacle of nature's beauty. Jumping foxes dance swiftly under the moonlit sky, creating a mesmerizing spectacle of nature's beauty.",
-            style: TextStyle(
-              color: Color(0xFF546881),
-              fontSize: 14,
-              fontFamily: 'Gilroy',
-              fontWeight: FontWeight.w500,
+              snapshot.data.docs[index]['description'],
+              style: TextStyle(
+                color: Color(0xFF546881),
+                fontSize: 14,
+                fontFamily: 'Gilroy',
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
 
           SizedBox(height: 16.0),
 
           // 6. Two Rows with Icon and Text
-          buildRowWithIcon(Icons.calendar_month, 'Friday, 17 November',
-              '10:00 AM - 09:00PM'),
+          buildRowWithIcon(Icons.calendar_month, DateFormat('EEEE, MMMM d')
+                            .format(convertMillisecondsToDateTime(snapshot.data.docs[index]['dateTime'])),
+              DateFormat.jm()
+                            .format(convertMillisecondsToDateTime(snapshot.data.docs[index]['dateTime']))),
           SizedBox(
             height: 24,
           ),
           buildRowWithIcon(Icons.location_on, '2, Jawahar Lal Nehru Marg',
-              '10:00 AM - 09:00PM'),
+              'Opposite Opp Commerce College, Jhalana Doongri, Jaipur, Rajasthan 302004'),
 
           SizedBox(height: 16.0),
 
@@ -430,7 +443,9 @@ class ManageEventScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: 16,),
+                    SizedBox(
+                      height: 16,
+                    ),
                     TextField(
                       decoration: InputDecoration(
                         prefixIcon: Icon(Icons.search),
@@ -684,6 +699,49 @@ class ManageEventScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget insightsTab() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("hi")
+          // LineChart(
+          //   LineChartData(
+          //     gridData: FlGridData(show: false),
+          //     titlesData: FlTitlesData(show: false),
+          //     borderData: FlBorderData(
+          //       show: true,
+          //       border: Border.all(color: const Color(0xff37434d), width: 1),
+          //     ),
+          //     minX: 0,
+          //     maxX: 7,
+          //     minY: 0,
+          //     maxY: 6,
+          //     lineBarsData: [
+          //       LineChartBarData(
+          //         spots: [
+          //           FlSpot(0, 3),
+          //           FlSpot(1, 1),
+          //           FlSpot(2, 4),
+          //           FlSpot(3, 2),
+          //           FlSpot(4, 5),
+          //           FlSpot(5, 1),
+          //           FlSpot(6, 4),
+          //         ],
+          //         isCurved: true,
+          //         color: Colors.blue,
+          //         dotData: FlDotData(show: false),
+          //         belowBarData: BarAreaData(show: false),
+          //       ),
+          //     ],
+          //   ),
+          // ),
+        ],
+      ),
+    );
+  }
 }
 
 // Widget for Rounded Rectangle Chip
@@ -770,13 +828,17 @@ Widget buildRowWithIcon(IconData icon, String labelText, String normalText) {
               height: 0,
             ),
           ),
-          Text(
-            normalText,
-            style: TextStyle(
-              color: Color(0xFF546881),
-              fontSize: 14,
-              fontFamily: 'Gilroy',
-              fontWeight: FontWeight.w500,
+          SizedBox(
+            width: 300,
+            child: Text(
+              normalText,
+              style: TextStyle(
+                color: Color(0xFF546881),
+                fontSize: 14,
+                fontFamily: 'Gilroy',
+                fontWeight: FontWeight.w500,
+              ),
+              softWrap: true,
             ),
           ),
         ],

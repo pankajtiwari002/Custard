@@ -1,11 +1,12 @@
 import 'package:custard_flutter/components/CustardButton.dart';
+import 'package:custard_flutter/controllers/ManageEventController.dart';
 import 'package:custard_flutter/view/CancelEventScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class EditEventsScreen extends StatelessWidget {
-  const EditEventsScreen({super.key});
-
+  EditEventsScreen({super.key});
+  ManageEventController controller = Get.find();
   void _showDeleteDialog() {
     Get.dialog(
       AlertDialog(
@@ -61,8 +62,8 @@ class EditEventsScreen extends StatelessWidget {
                 // Add your 'No' button logic here
               },
               style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(Color(0xFF665EE0))
-              ),
+                  backgroundColor:
+                      MaterialStateProperty.all(Color(0xFF665EE0))),
               child: Text(
                 'No',
                 textAlign: TextAlign.center,
@@ -91,7 +92,9 @@ class EditEventsScreen extends StatelessWidget {
           ),
           backgroundColor: Colors.black,
           leading: IconButton(
-              onPressed: () {},
+              onPressed: () {
+                Get.back();
+              },
               icon: Icon(
                 Icons.arrow_back_ios,
                 color: Colors.white,
@@ -120,7 +123,7 @@ class EditEventsScreen extends StatelessWidget {
                         ),
                       ),
                       PopupMenuItem<String>(
-                        onTap: (){
+                        onTap: () {
                           Get.to(() => CancelEventScreen());
                         },
                         value: 'Cancel Event',
@@ -173,8 +176,7 @@ class EditEventsScreen extends StatelessWidget {
                 height: 150,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                      image: NetworkImage(
-                          "https://images.unsplash.com/photo-1524601500432-1e1a4c71d692?auto=format&fit=crop&q=80&w=1000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGdyb3VwfGVufDB8fDB8fHww"),
+                      image: NetworkImage(controller.data["imageUrl"]),
                       fit: BoxFit.cover),
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -204,14 +206,17 @@ class EditEventsScreen extends StatelessWidget {
               SizedBox(height: 16.0),
 
               // 3. Bold Text 'The Art of Living'
-              Text(
-                'The Art of Living',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Color(0xFF090B0E),
-                  fontSize: 24,
-                  fontFamily: 'Gilroy',
-                  fontWeight: FontWeight.w600,
+              TextFormField(
+                controller: controller.titleController,
+                // initialValue: controller.data["title"],
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                decoration: InputDecoration(
+                  hintText: "Add Event Name",
+                  hintStyle: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold),
+                  border: InputBorder.none,
                 ),
               ),
 
@@ -231,14 +236,27 @@ class EditEventsScreen extends StatelessWidget {
               SizedBox(height: 8.0),
 
               // 5. Text Description
-              Text(
-                " Jumping foxes dance swiftly under the moonlit sky, creating a mesmerizing spectacle of nature's beauty. Jumping foxes dance swiftly under the moonlit sky, creating a mesmerizing spectacle of nature's beauty.",
+              TextFormField(
+                controller: controller.descriptionController,
+                // initialValue: controller.data["description"],
                 style: TextStyle(
                   color: Color(0xFF546881),
                   fontSize: 14,
                   fontFamily: 'Gilroy',
                   fontWeight: FontWeight.w500,
                 ),
+                decoration: InputDecoration(
+                  hintText: "Enter the event description here...",
+                  hintStyle: TextStyle(
+                    color: Color(0xFF909DAD),
+                    fontSize: 14,
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w400,
+                  ),
+                  border: InputBorder.none,
+                ),
+                keyboardType: TextInputType.multiline,
+                maxLines: null,
               ),
 
               SizedBox(height: 16.0),
@@ -310,21 +328,24 @@ class EditEventsScreen extends StatelessWidget {
                         ],
                       ),
                       Container(
-                        width: 180,
-                        child: SwitchListTile(
-                          value: false,
-                          onChanged: (val) {},
-                          title: Text(
-                            'Free event',
-                            style: TextStyle(
-                              color: Color(0xFF546881),
-                              fontSize: 14,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
+                          width: 180,
+                          child: Obx(
+                            () => SwitchListTile(
+                              value: controller.isFreeEvent.value,
+                              onChanged: (val) {
+                                controller.isFreeEvent.value = val;
+                              },
+                              title: Text(
+                                'Free event',
+                                style: TextStyle(
+                                  color: Color(0xFF546881),
+                                  fontSize: 14,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      )
+                          ))
                     ],
                   ),
                   Column(
@@ -376,21 +397,24 @@ class EditEventsScreen extends StatelessWidget {
                         ],
                       ),
                       Container(
-                        width: 180,
-                        child: SwitchListTile(
-                          value: false,
-                          onChanged: (val) {},
-                          title: Text(
-                            'Remove limit',
-                            style: TextStyle(
-                              color: Color(0xFF546881),
-                              fontSize: 14,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
+                          width: 180,
+                          child: Obx(
+                            () => SwitchListTile(
+                              value: controller.isRemoveLimit.value,
+                              onChanged: (val) {
+                                controller.isRemoveLimit.value = val;
+                              },
+                              title: Text(
+                                'Remove limit',
+                                style: TextStyle(
+                                  color: Color(0xFF546881),
+                                  fontSize: 14,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      )
+                          ))
                     ],
                   ),
                 ],
@@ -443,9 +467,16 @@ class EditEventsScreen extends StatelessWidget {
                   },
                 ),
               ),
-              SizedBox(height: 10,),
+              SizedBox(
+                height: 10,
+              ),
               CustardButton(
-                onPressed: () {},
+                onPressed: () {
+                  controller.data["title"] = controller.titleController.text;
+                  controller.data["description"] =
+                      controller.descriptionController.text;
+                  Get.back();
+                },
                 buttonType: ButtonType.POSITIVE,
                 label: "Save Changes",
                 backgroundColor: Color(0xFF7B61FF),

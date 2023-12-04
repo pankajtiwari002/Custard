@@ -1,15 +1,85 @@
 import 'dart:typed_data';
 
 import 'package:custard_flutter/components/CustardButton.dart';
+import 'package:custard_flutter/controllers/CreatedEventController.dart';
 import 'package:custard_flutter/utils/utils.dart';
+import 'package:custard_flutter/view/AddHostScreen.dart';
+import 'package:custard_flutter/view/BankDetailsScreen.dart';
+import 'package:custard_flutter/view/SellingTicketScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 class CreateEventScreen extends StatelessWidget {
   CreateEventScreen({super.key});
-
-  Rx<Uint8List?> image = Rxn();
+  final controller = Get.put(CreatedEventController());
+  DateTime date = DateTime.now();
+  _openDateTimePicker(BuildContext context) {
+    Get.bottomSheet(
+      Container(
+        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(40),
+            topRight: Radius.circular(40),
+          ),
+          color: Colors.white,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Select Start Date",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                    onPressed: () {
+                      Get.back();
+                    },
+                    icon: Icon(Icons.close))
+              ],
+            ),
+            Divider(),
+            Container(
+              height: 300,
+              child: CalendarDatePicker(
+                  initialDate: controller.initialDate,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2101),
+                  onDateChanged: (data) {
+                    date = data;
+                  }),
+            ),
+            CustardButton(
+              onPressed: () async {
+                // controller.isDate.value = false;
+                TimeOfDay? time;
+                time = await showTimePicker(
+                    context: context, initialTime: TimeOfDay.now());
+                if (time != null) {
+                  controller.isDate.value = true;
+                  controller.selectedTime = time;
+                  controller.selectedDate = date;
+                  Get.back();
+                }
+              },
+              buttonType: ButtonType.POSITIVE,
+              label: "Next",
+              backgroundColor: Color(0xFF7B61FF),
+              textColor: Colors.white,
+            ),
+            SizedBox(
+              height: 10,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +91,9 @@ class CreateEventScreen extends StatelessWidget {
           ),
           backgroundColor: Colors.black,
           leading: IconButton(
-              onPressed: () {},
+              onPressed: () {
+                Get.back();
+              },
               icon: Icon(
                 Icons.arrow_back_ios,
                 color: Colors.white,
@@ -81,9 +153,10 @@ class CreateEventScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 150,
                 decoration: BoxDecoration(
-                  image: image.value != null
+                  image: controller.image.value != null
                       ? DecorationImage(
-                          image: MemoryImage(image.value!), fit: BoxFit.cover)
+                          image: MemoryImage(controller.image.value!),
+                          fit: BoxFit.cover)
                       : null,
                   color: Colors.grey,
                   borderRadius: BorderRadius.circular(10),
@@ -96,7 +169,7 @@ class CreateEventScreen extends StatelessWidget {
                         onPressed: () async {
                           XFile? file = await pickImage(ImageSource.gallery);
                           if (file != null) {
-                            image.value = await file.readAsBytes();
+                            controller.image.value = await file.readAsBytes();
                           }
                         },
                         icon: Icon(
@@ -121,7 +194,7 @@ class CreateEventScreen extends StatelessWidget {
 
             // 3. Bold Text 'The Art of Living'
             TextField(
-              showCursor: false,
+              controller: controller.title,
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 hintText: "Add Event Name",
@@ -150,6 +223,7 @@ class CreateEventScreen extends StatelessWidget {
 
             // 5. Text Description
             TextField(
+              controller: controller.description,
               style: TextStyle(
                 color: Color(0xFF546881),
                 fontSize: 14,
@@ -173,24 +247,40 @@ class CreateEventScreen extends StatelessWidget {
             Divider(),
             SizedBox(height: 16.0),
             // 6. Two Rows with Icon and Text
-            buildRowWithIcon(Icons.calendar_month, 'Friday, 17 November',
-                '10:00 AM - 09:00PM'),
+            GestureDetector(onTap: () {
+              _openDateTimePicker(context);
+            }, child: Obx(() {
+              if (!controller.isDate.value) {
+                return buildRowWithIcon(
+                    Icons.calendar_month, 'Select Date and Time', '');
+              } else {
+                return buildRowWithIcon(
+                    Icons.calendar_month,
+                    DateFormat('EEEE, MMMM d, yyyy')
+                        .format(controller.selectedDate),
+                    "${controller.formatTimeOfDay(controller.selectedTime)} - ${controller.formatTimeOfDay(controller.selectedTime)}");
+              }
+            })),
             SizedBox(
               height: 24,
             ),
             buildRowWithIcon(Icons.location_on, '2, Jawahar Lal Nehru Marg',
                 '10:00 AM - 09:00PM'),
 
-            SwitchListTile(
-              value: false,
-              onChanged: (val) {},
-              title: Text(
-                'Approval required',
-                style: TextStyle(
-                  color: Color(0xFF546881),
-                  fontSize: 14,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w500,
+            Obx(
+              () => SwitchListTile(
+                value: controller.isApproved.value,
+                onChanged: (val) {
+                  controller.isApproved.value = val;
+                },
+                title: Text(
+                  'Approval required',
+                  style: TextStyle(
+                    color: Color(0xFF546881),
+                    fontSize: 14,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
@@ -235,33 +325,49 @@ class CreateEventScreen extends StatelessWidget {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        Text(
-                          '200',
-                          style: TextStyle(
-                            color: Color(0xFF090B0E),
-                            fontSize: 14,
-                            fontFamily: 'Gilroy',
-                            fontWeight: FontWeight.w500,
+                        Container(
+                          width: 100,
+                          child: TextField(
+                            controller: controller.price,
+                            style: TextStyle(
+                              color: Color(0xFF090B0E),
+                              fontSize: 14,
+                              fontFamily: 'Gilroy',
+                              fontWeight: FontWeight.w500,
+                            ),
+                            decoration: InputDecoration(
+                                hintText: "200",
+                                hintStyle: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                  fontFamily: 'Gilroy',
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                border: InputBorder.none),
+                            keyboardType: TextInputType.number,
                           ),
                         ),
                       ],
                     ),
                     Container(
-                      width: 180,
-                      child: SwitchListTile(
-                        value: false,
-                        onChanged: (val) {},
-                        title: Text(
-                          'Free event',
-                          style: TextStyle(
-                            color: Color(0xFF546881),
-                            fontSize: 14,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w500,
+                        width: 180,
+                        child: Obx(
+                          () => SwitchListTile(
+                            value: controller.isFreeEvent.value,
+                            onChanged: (val) {
+                              controller.isFreeEvent.value = val;
+                            },
+                            title: Text(
+                              'Free event',
+                              style: TextStyle(
+                                color: Color(0xFF546881),
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    )
+                        ))
                   ],
                 ),
                 Column(
@@ -290,43 +396,69 @@ class CreateEventScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8)),
                           child: Icon(Icons.people, color: Color(0xFF665EE0)),
                         ),
-                        Text(
-                          '  150',
-                          style: TextStyle(
-                            color: Color(0xFF090B0E),
-                            fontSize: 14,
-                            fontFamily: 'Gilroy',
-                            fontWeight: FontWeight.w500,
-                            height: 0.08,
+                        Container(
+                          width: 100,
+                          child: TextField(
+                            controller: controller.capacity,
+                            style: TextStyle(
+                              color: Color(0xFF090B0E),
+                              fontSize: 14,
+                              fontFamily: 'Gilroy',
+                              fontWeight: FontWeight.w500,
+                            ),
+                            decoration: InputDecoration(
+                                hintText: "150",
+                                hintStyle: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                  fontFamily: 'Gilroy',
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                border: InputBorder.none),
+                            keyboardType: TextInputType.number,
                           ),
                         ),
                       ],
                     ),
                     Container(
-                      width: 180,
-                      child: SwitchListTile(
-                        value: false,
-                        onChanged: (val) {},
-                        title: Text(
-                          'Remove limit',
-                          style: TextStyle(
-                            color: Color(0xFF546881),
-                            fontSize: 14,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w500,
+                        width: 180,
+                        child: Obx(
+                          () => SwitchListTile(
+                            value: controller.isRemoveLimit.value,
+                            onChanged: (val) {
+                              controller.isRemoveLimit.value = val;
+                            },
+                            title: Text(
+                              'Remove limit',
+                              style: TextStyle(
+                                color: Color(0xFF546881),
+                                fontSize: 14,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    )
+                        ))
                   ],
                 ),
               ],
             ),
-            SizedBox(height: 16,),
+            SizedBox(
+              height: 16,
+            ),
             Divider(),
-            SizedBox(height: 16,),
-            buildRowWithIcon(IconData(0xe040, fontFamily: 'MaterialIcons'),
-                'Add Payment Options', 'UPI/Bank Account/ PayPal'),
+            SizedBox(
+              height: 16,
+            ),
+            GestureDetector(
+              onTap: () {
+                Get.to(() => SellingTicketScrenn());
+              },
+              child: buildRowWithIcon(
+                  IconData(0xe040, fontFamily: 'MaterialIcons'),
+                  'Add Payment Options',
+                  'UPI/Bank Account/ PayPal'),
+            ),
 
             SizedBox(height: 16.0),
 
@@ -338,50 +470,63 @@ class CreateEventScreen extends StatelessWidget {
 
             // 9. ListView Builder with Horizontal Scroll Direction
             Container(
-              height: 120.0,
-              child: ListView.builder(
-                shrinkWrap: true,
-                scrollDirection: Axis.horizontal,
-                itemCount: 2, // Replace with your actual item count
-                itemBuilder: (context, index) {
-                  if (index == 1) {
-                    // Last item with + icon and text
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircleAvatar(
-                            radius: 35.0,
-                            backgroundColor: Color(0xFFF2EFFF),
-                            child: Icon(Icons.add, color: Color(0xFF7B61FF)),
+                height: 120.0,
+                child: Obx(
+                  () => ListView.builder(
+                    shrinkWrap: true,
+                    scrollDirection: Axis.horizontal,
+                    itemCount: controller.hosted.length +
+                        1, // Replace with your actual item count
+                    itemBuilder: (context, index) {
+                      if (index == controller.hosted.length) {
+                        // Last item with + icon and text
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  Get.to(() => AddHostScreen());
+                                  // controller.hosted.add({
+                                  //   "name": "Pankaj",
+                                  //   "image": "url",
+                                  // });
+                                },
+                                child: CircleAvatar(
+                                  radius: 35.0,
+                                  backgroundColor: Color(0xFFF2EFFF),
+                                  child:
+                                      Icon(Icons.add, color: Color(0xFF7B61FF)),
+                                ),
+                              ),
+                              SizedBox(height: 4.0),
+                              Text('Invite Person',
+                                  style: TextStyle(fontSize: 12)),
+                            ],
                           ),
-                          SizedBox(height: 4.0),
-                          Text('Invite Person', style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    );
-                  } else {
-                    // Other items with circular image and name
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircleAvatar(
-                            radius: 35.0,
-                            backgroundImage: NetworkImage(
-                                "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"),
+                        );
+                      } else {
+                        // Other items with circular image and name
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 35.0,
+                                backgroundImage: NetworkImage(
+                                    "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"),
+                              ),
+                              SizedBox(height: 4.0),
+                              Text('Sonu', style: TextStyle(fontSize: 12)),
+                            ],
                           ),
-                          SizedBox(height: 4.0),
-                          Text('Sonu', style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    );
-                  }
-                },
-              ),
-            ),
+                        );
+                      }
+                    },
+                  ),
+                )),
 
             SizedBox(height: 16.0),
 
@@ -433,14 +578,23 @@ class CreateEventScreen extends StatelessWidget {
                 },
               ),
             ),
-            SizedBox(height: 10,),
-              CustardButton(
-                onPressed: () {},
-                buttonType: ButtonType.POSITIVE,
-                label: "Create Event",
-                backgroundColor: Color(0xFF7B61FF),
-                textColor: Colors.white,
-              )
+            SizedBox(
+              height: 10,
+            ),
+            CustardButton(
+              onPressed: () async {
+                try {
+                  await controller.createEvent();
+                  Get.back();
+                } catch (e) {
+                  print("error Post Event: ${e}");
+                }
+              },
+              buttonType: ButtonType.POSITIVE,
+              label: "Create Event",
+              backgroundColor: Color(0xFF7B61FF),
+              textColor: Colors.white,
+            )
           ],
         ),
       ),

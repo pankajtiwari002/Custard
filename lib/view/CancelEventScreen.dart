@@ -1,5 +1,6 @@
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class CancelEventScreen extends StatelessWidget {
   const CancelEventScreen({super.key});
@@ -14,7 +15,9 @@ class CancelEventScreen extends StatelessWidget {
         ),
         backgroundColor: Colors.black,
         leading: IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Get.back();
+            },
             icon: Icon(
               Icons.arrow_back_ios,
               color: Colors.white,

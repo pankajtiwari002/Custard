@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class EventsScreenCard extends StatelessWidget {
   String title;
@@ -9,6 +10,9 @@ class EventsScreenCard extends StatelessWidget {
   Icon? elevatedButton_icon;
   Function onTapTextButton;
   Function onTapElevatedButton;
+  double price;
+  int capacity;
+  int dateTime;
   EventsScreenCard(
       {required this.title,
       required this.description,
@@ -17,7 +21,15 @@ class EventsScreenCard extends StatelessWidget {
       required this.onTapTextButton,
       required this.onTapElevatedButton,
       required this.elevatedButton_icon,
-      required this.elevatedButton_text});
+      required this.elevatedButton_text,
+      required this.price,
+      required this.dateTime,
+      required this.capacity});
+
+  DateTime convertMillisecondsToDateTime(int millisecondsSinceEpoch) {
+    return DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -76,7 +88,7 @@ class EventsScreenCard extends StatelessWidget {
                   Column(
                     children: [
                       Text(
-                        '₹ 99',
+                        '₹ ${price}',
                         style: TextStyle(
                           color: Color(0xFF546881),
                           fontSize: 14,
@@ -98,7 +110,7 @@ class EventsScreenCard extends StatelessWidget {
                   Column(
                     children: [
                       Text(
-                        '120+',
+                        '${capacity}+',
                         style: TextStyle(
                           color: Color(0xFF546881),
                           fontSize: 14,
@@ -120,7 +132,8 @@ class EventsScreenCard extends StatelessWidget {
                   Column(
                     children: [
                       Text(
-                        'Sun, Sep 24',
+                        DateFormat('EE, MMM d')
+                            .format(convertMillisecondsToDateTime(dateTime)),
                         style: TextStyle(
                           color: Color(0xFF546881),
                           fontSize: 14,

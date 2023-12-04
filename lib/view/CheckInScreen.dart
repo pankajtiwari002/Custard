@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class CheckInScreen extends StatelessWidget {
   const CheckInScreen({super.key});
@@ -14,7 +15,9 @@ class CheckInScreen extends StatelessWidget {
         ),
         backgroundColor: Colors.black,
         leading: IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Get.back();
+            },
             icon: Icon(
               Icons.arrow_back_ios,
               color: Colors.white,
