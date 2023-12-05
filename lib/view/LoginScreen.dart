@@ -86,7 +86,7 @@ class LoginScreen extends StatelessWidget {
                   child: CustardButton(
                       onPressed: () async {
                         try {
-                          // await controller.verifyOtp();
+                          await controller.verifyOtp();
                           Get.to(UserOnboardingScreen());
                         } catch (e) {
                           log(e.toString());

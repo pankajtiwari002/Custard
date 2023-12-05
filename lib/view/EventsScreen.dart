@@ -4,6 +4,7 @@ import 'package:custard_flutter/view/CheckInScreen.dart';
 import 'package:custard_flutter/view/CreateEventScreen.dart';
 import 'package:custard_flutter/view/GroupImageScreen.dart';
 import 'package:custard_flutter/view/ManageEventScreen.dart';
+import 'package:custard_flutter/view/QrScanner.dart';
 import 'package:custard_flutter/view/TicketScreen.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -95,7 +96,8 @@ class EventsScreen extends StatelessWidget {
                       Get.to(() => ManageEventScreen(snapshot: snapshot,index: index,));
                     },
                     onTapElevatedButton: () {
-                      Get.to(() => CheckInScreen());
+                      // Get.to(() => CheckInScreen());
+                      Get.to(() => QrScannerScreen());
                     },
                     elevatedButton_icon: Icon(
                       Icons.qr_code_scanner,
@@ -144,7 +146,7 @@ class EventsScreen extends StatelessWidget {
                     },
                     onTapElevatedButton: () {
                       // Get.to(() => CheckInScreen());
-                      Get.to(() => RegisterNowScreen());
+                      Get.to(() => RegisterNowScreen(snapshot: snapshot,index: index,));
                     },
                     elevatedButton_icon: Icon(
                       Icons.qr_code_scanner,

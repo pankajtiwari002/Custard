@@ -87,6 +87,7 @@ class DiscussionController extends GetxController
   Rx<int> selectedButton = 0.obs;
   Rx<Duration> audioListened = Duration(seconds: 0).obs;
   Rx<Duration> currentDuration = Duration(seconds: 0).obs;
+  Rx<bool> isLocked = false.obs;
   // Rx<String> seconds = "00".obs;
   // Rx<String> minutes = "00".obs;
   DateTime? start, end;

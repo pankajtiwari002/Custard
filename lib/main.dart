@@ -318,7 +318,7 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.light,
-      home: HomeScreen(),
+      home: LoginScreen(),
     );
   }
 }

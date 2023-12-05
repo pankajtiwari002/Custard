@@ -41,7 +41,7 @@ class _RecordButtonState extends State<RecordButton> {
   late Animation<double> timerAnimation;
   late Animation<double> lockerAnimation;
 
-  bool isLocked = false;
+  // bool isLocked = false;
   bool showLottie = false;
 
   String _formatDuration(int seconds) {
@@ -93,6 +93,7 @@ class _RecordButtonState extends State<RecordButton> {
 
   void stopRecord() {
     bool s = RecordMp3.instance.stop();
+    discussionController.stopTimer();
     discussionController.end = DateTime.now();
     if (s) {
       discussionController.isRecording.value = false;
@@ -149,7 +150,7 @@ class _RecordButtonState extends State<RecordButton> {
         lockSlider(),
         cancelSlider(),
         audioButton(),
-        if (isLocked) timerLocked(),
+        // if (isLocked) timerLocked(),
       ],
     );
   }
@@ -265,7 +266,7 @@ class _RecordButtonState extends State<RecordButton> {
               discussionController.isRecording.value = false;
               discussionController.isCompleteAudioRecording.value = false;
               setState(() {
-                isLocked = false;
+                discussionController.isLocked.value = false;
               });
             },
             child: Row(
@@ -310,7 +311,10 @@ class _RecordButtonState extends State<RecordButton> {
                       Icons.send,
                       color: Colors.white,
                     )
-                  : SvgPicture.asset("assets/images/microphone-2.svg"),
+                  : discussionController.isLocked.value ?
+                   Icon(Icons.stop,color: Colors.white,)
+                  :
+              SvgPicture.asset("assets/images/microphone-2.svg"),
               height: size,
               width: size,
               clipBehavior: Clip.hardEdge,
@@ -335,6 +339,14 @@ class _RecordButtonState extends State<RecordButton> {
                     "audioLen": audioLength
                   });
             }
+            else if(discussionController.isLocked.value){
+              stopRecord();
+              // File(discussionController.audioPath!).delete();
+              discussionController.isRecordingPlay.value=false;
+              discussionController.isCompleteAudioRecording.value=true;
+              discussionController.isLocked.value=false;
+
+            }
           },
           onLongPressDown: (_) {
             debugPrint("onLongPressDown");
@@ -342,7 +354,6 @@ class _RecordButtonState extends State<RecordButton> {
           },
           onLongPressEnd: (details) async {
             debugPrint("onLongPressEnd");
-            discussionController.stopTimer();
 
             if (isCancelled(details.localPosition, context)) {
               Vibrate.feedback(FeedbackType.heavy);
@@ -360,18 +371,20 @@ class _RecordButtonState extends State<RecordButton> {
                 discussionController.isCompleteAudioRecording.value = false;
               });
             } else if (checkIsLocked(details.localPosition)) {
-              stopRecord();
-              File(discussionController.audioPath!).delete();
-              discussionController.isRecordingPlay.value=false;
-              discussionController.isCompleteAudioRecording.value=false;
-              widget.controller.reverse();
-
-              Vibrate.feedback(FeedbackType.heavy);
+              // stopRecord();
+              // File(discussionController.audioPath!).delete();
+              // discussionController.isRecordingPlay.value=false;
+              // discussionController.isCompleteAudioRecording.value=false;
+              // widget.controller.reverse();
+              //
+              // Vibrate.feedback(FeedbackType.heavy);
               // debugPrint("Locked recording");
               // debugPrint(details.localPosition.dy.toString());
-              // setState(() {
-              //   isLocked = true;
-              // });
+              widget.controller.reverse();
+              Vibrate.feedback(FeedbackType.heavy);
+              setState(() {
+                discussionController.isLocked.value = true;
+              });
             } else {
               widget.controller.reverse();
               Vibrate.feedback(FeedbackType.success);

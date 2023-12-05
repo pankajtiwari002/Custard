@@ -616,11 +616,20 @@ class DiscussionScreen extends StatelessWidget {
                 height: kToolbarHeight + 5,
                 child: Row(
                   children: [
-                    IconButton(
-                        onPressed: () {
-                          _openBottomSheet();
-                        },
-                        icon: Icon(Icons.add)),
+                    Obx((){
+                      if(!controller.isCompleteAudioRecording.value && !controller.isRecording.value){
+                        return IconButton(
+                            onPressed: () {
+                              _openBottomSheet();
+                            },
+                            icon: Icon(Icons.add));
+                      }
+                      else{
+                        return Container(
+                          width: 40,
+                        );
+                      }
+                    }),
                     SizedBox(width: 12,),
                     Expanded(
                       child: Container(
@@ -652,7 +661,15 @@ class DiscussionScreen extends StatelessWidget {
                                 ],
                               )
                             : controller.isRecording.value
-                                ? Container()
+                                ? controller.isLocked.value ?
+                        Row(
+                          mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(formatDuration(Duration(seconds: controller.seconds.value))),
+                          ],
+                        )
+                            : Container()
                                 : TextFormField(
                                     focusNode: focusNode,
                                     // autofocus: true,
