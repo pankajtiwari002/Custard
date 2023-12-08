@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
-import 'package:custard_flutter/constants.dart';
+import 'package:custard_flutter/utils/constants.dart';
 import 'package:custard_flutter/data/models/gallery.dart';
 import 'package:custard_flutter/repo/FirestoreMethods.dart';
 import 'package:firebase_auth/firebase_auth.dart';

@@ -1,37 +1,44 @@
 import 'dart:convert';
-
+import 'package:custard_flutter/repo/FirestoreMethods.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../Global.dart';
 import '../data/models/user.dart';
 import '../utils/constants.dart';
-// import 'package:onesignal_flutter/onesignal_flutter.dart';
 
-class MainController extends GetxController{
-  Rx<bool> loading = true.obs;
+class ProfileController extends GetxController{
   late SharedPreferences prefs;
-  User? currentUser;
-
+  User? user = User(name: "name", bio: "", gender: "male", isPhoneVerified: true, lastLocation: "", phone: "", profilePic: "https://cdn4.sharechat.com/compressed_gm_40_img_640743_155b79a3_1699902638340_sc.jpg?tenant=sc&referrer=api-gateway&f=340_sc.jpg", communities: [], uid: "");
+  bool isCurrentUser = false;
+  String uid = "";
+  Rx<bool> isLoading = true.obs;
   initializedSharedPreference() async{
     prefs = await SharedPreferences.getInstance();
     bool flag = prefs.getBool(Constants.isUserSignedInPref)!=null && prefs.getBool(Constants.isUserSignedInPref)!;
     print("Het");
     print(flag);
-    if(flag){
+    if(flag && isCurrentUser){
       print("current User");
       String userData = prefs.getString(Constants.usersPref)!;
       print("userData: " + userData);
       // Map<String,dynamic> mp = {"name": "pankaj","profilePic": "https://firebasestorage.googleapis.com/v0/b/custard-kmp.appspot"};
       Map<String,dynamic> data =  jsonDecode(userData);
       print(data["name"].toString());
-      currentUser = User.fromSnap(data);
-      print("user: " + currentUser.toString());
-      loading.value= false;
+      user = User.fromSnap(data);
+      Global.currentUser = user;
+      print("user: " + user.toString());
     }
+    else if(uid != ""){
+      print("uid: $uid");
+      Map<String,dynamic> json = await FirestoreMethods().getData("users",uid);
+      user = User.fromSnap(json);
+    }
+    isLoading.value = false;
   }
 
   @override
   void onInit(){
-    loading.value = true;
+    print("init");
     initializedSharedPreference();
     super.onInit();
   }

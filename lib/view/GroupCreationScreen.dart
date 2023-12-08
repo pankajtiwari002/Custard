@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/components/CustardTextField.dart';
 import 'package:custard_flutter/components/UserPhotosContainer.dart';
-import 'package:custard_flutter/constants.dart';
+import 'package:custard_flutter/utils/constants.dart';
 import 'package:custard_flutter/controllers/GroupCreationController.dart';
 import 'package:custard_flutter/repo/notificationservice/LocaNotificationService.dart';
 import 'package:custard_flutter/view/AddParticipants.dart';

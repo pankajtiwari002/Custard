@@ -1,8 +1,9 @@
+import 'dart:ffi' as ff;
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:custard_flutter/controllers/DiscussionController.dart';
+import 'package:custard_flutter/controllers/MessageCardController.dart';
 import 'package:custard_flutter/view/VideoPlayerScreen.dart';
 import 'package:custard_flutter/view/ViewPhotoScreen.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -16,12 +17,18 @@ import 'package:open_filex/open_filex.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:voice_message_package/voice_message_package.dart';
 
+import '../Global.dart';
+
 class MessageCard extends StatelessWidget {
   final int index;
   List<dynamic> messages;
   late AudioPlayer player;
+  MessageCardController messageCardController = MessageCardController();
   MessageCard({required this.index, required this.messages}){
+    messageCardController.isLoading.value = true;
     player = AudioPlayer(playerId:messages[index].value["messageId"]);
+    print(messages[index].value["from"]);
+    messageCardController.initUser(messages[index].value["from"]);
   }
 
   DiscussionController controller = Get.find();
@@ -120,24 +127,33 @@ class MessageCard extends StatelessWidget {
             child: Container(
               // margin: const EdgeInsets.symmetric(vertical: 15, horizontal: 5),
               child: Row(
-                mainAxisAlignment: messages[index].value["from"] == "userId"
+                mainAxisAlignment: messages[index].value["from"] == Global.currentUser!.uid
                     ? MainAxisAlignment.end
                     : MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (!(messages[index].value['from'] == 'userId'))
+                  if (!(messages[index].value['from'] == Global.currentUser!.uid))
                     Padding(
                       padding: const EdgeInsets.only(right: 10, left: 8),
-                      child: CircleAvatar(
-                        backgroundImage:
-                            NetworkImage(messages[index].value["profileUrl"]),
-                      ),
+                      child: Obx((){
+                        if(messageCardController.isLoading.value){
+                          return CircleAvatar(
+                            backgroundColor: Color(0XFF62c9d5),
+                          );
+                        }
+                        else{
+                          return CircleAvatar(
+                            backgroundImage:
+                            NetworkImage(messageCardController.user!.profilePic),
+                          );
+                        }
+                      })
                     ),
                   Container(
                     padding: EdgeInsets.all(size.width * 0.037),
                     width: size.width * 0.765,
                     decoration: BoxDecoration(
-                      color: messages[index].value["from"] == "userId"
+                      color: messages[index].value["from"] == Global.currentUser!.uid
                           ? Color(0xFFF2EFFF)
                           : Color(0xFFF7F9FC),
                       borderRadius: BorderRadius.circular(10),
@@ -158,16 +174,6 @@ class MessageCard extends StatelessWidget {
                             ],
                           )
                         : messages[index].value['type'] == "AUDIO"
-                            // ? VoiceMessage(
-                            //   audioSrc: "https://firebasestorage.googleapis.com/v0/b/custard-kmp.appspot.com/o/chat%2Faudio%2F53772000-b302-1db2-a0e4-f3b21fc846e7?alt=media&token=0ca1a5ec-975f-4cb5-85df-855263cd860d",
-                            //       // audioSrc: messages[index].value["audio"],
-                            //       played: false,
-                            //       // played: true,
-                            //       me: true,
-                            //       onPlay: () {
-                            //       },
-                            //       // showDuration: true,
-                            //     )
                             ? Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -410,7 +416,7 @@ class MessageCard extends StatelessWidget {
                                               children: [
                                                 (ele['uids'] != null &&
                                                         ele['uids']
-                                                            .contains('abcd'))
+                                                            .contains(Global.currentUser!.uid))
                                                     ? IconButton(
                                                         onPressed: () {
                                                           int total = messages[
@@ -421,7 +427,7 @@ class MessageCard extends StatelessWidget {
                                                                   .toList();
                                                           uids.removeWhere(
                                                               (e) => (e ==
-                                                                  'abcd'));
+                                                                  Global.currentUser!.uid));
                                                           total--;
                                                           1;
                                                           DatabaseReference
@@ -454,15 +460,15 @@ class MessageCard extends StatelessWidget {
                                                           if (messages[index]
                                                                   .value[
                                                               'MultipleOptions']) {
-                                                            uids.add('abcd');
+                                                            uids.add(Global.currentUser!.uid);
                                                             total++;
                                                           } else {
                                                             if (!alreadyVoted(
                                                                 messages[index]
                                                                         .value[
                                                                     'pollOptions'],
-                                                                'abcd')) {
-                                                              uids.add('abcd');
+                                                                Global.currentUser!.uid)) {
+                                                              uids.add(Global.currentUser!.uid);
                                                               total++;
                                                               print("jkl");
                                                             } else {
@@ -505,7 +511,7 @@ class MessageCard extends StatelessWidget {
                                                               messages[index]
                                                                       .value[
                                                                   'pollOptions'],
-                                                              "abcd"))
+                                                              Global.currentUser!.uid))
                                                             ele['uids'] == null
                                                                 ? Text('0')
                                                                 : Text(ele[
@@ -532,7 +538,7 @@ class MessageCard extends StatelessWidget {
                                                                 Color(
                                                                     0xFF7B61FF)),
                                                         // value: ele['uids']
-                                                        //         .contains('abcd')
+                                                        //         .contains(Global.currentUser!.uid)
                                                         //     ? ele['uids']
                                                         //             .value
                                                         //             .length /
@@ -546,7 +552,7 @@ class MessageCard extends StatelessWidget {
                                                                 messages[index]
                                                                         .value[
                                                                     'pollOptions'],
-                                                                "abcd")
+                                                                Global.currentUser!.uid)
                                                             ? (ele['uids'] !=
                                                                     null)
                                                                 ? ele['uids']
@@ -591,21 +597,28 @@ class MessageCard extends StatelessWidget {
                                             CrossAxisAlignment.start,
                                         children: [
                                           if (!(messages[index].value['from'] ==
-                                              'userId'))
+                                              Global.currentUser!.uid))
                                             Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Text(
-                                                  "User Name",
-                                                  textAlign: TextAlign.center,
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF090B0E),
-                                                    fontSize: 14,
-                                                    fontFamily: 'Gilroy',
-                                                    fontWeight: FontWeight.w600,
-                                                    letterSpacing: 0.20,
-                                                  ),
-                                                ),
+                                                Obx((){
+                                                  if(messageCardController.isLoading.value){
+                                                    return Container();
+                                                  }
+                                                  else{
+                                                    return Text(
+                                                      messageCardController.user.name,
+                                                      textAlign: TextAlign.center,
+                                                      style: const TextStyle(
+                                                        color: Color(0xFF090B0E),
+                                                        fontSize: 14,
+                                                        fontFamily: 'Gilroy',
+                                                        fontWeight: FontWeight.w600,
+                                                        letterSpacing: 0.20,
+                                                      ),
+                                                    );
+                                                  }
+                                                }),
                                                 SizedBox(
                                                   height: 16,
                                                 ),
@@ -715,7 +728,7 @@ class MessageCard extends StatelessWidget {
                                             children: [
                                               if (messages[index]
                                                       .value["messageId"] ==
-                                                  "abcd")
+                                                  Global.currentUser!.uid)
                                                 Chip(
                                                   shape: RoundedRectangleBorder(
                                                       borderRadius:
@@ -756,7 +769,7 @@ class MessageCard extends StatelessWidget {
                                               ),
                                               if (messages[index]
                                                       .value["messageId"] ==
-                                                  "abcd")
+                                                  Global.currentUser!.uid)
                                                 Chip(
                                                   shape: RoundedRectangleBorder(
                                                       borderRadius:
@@ -955,12 +968,12 @@ class MessageCard extends StatelessWidget {
   //                                                 mainAxisSize:
   //                                                     MainAxisSize.min,
   //                                                 children: [
-  //                                                   ele['uid'].contains('abcd')
+  //                                                   ele['uid'].contains(Global.currentUser!.uid)
   //                                                       ? IconButton(
   //                                                           onPressed: () {
   //                                                             ele['uid'].removeWhere(
   //                                                                 (e) => (e ==
-  //                                                                     'abcd'));
+  //                                                                     Global.currentUser!.uid));
   //                                                             controller.messages[
   //                                                                         index]
   //                                                                     ['polls']
@@ -981,7 +994,7 @@ class MessageCard extends StatelessWidget {
   //                                                                     ['polls'][
   //                                                                 'MultipleOptions']) {
   //                                                               ele['uid'].add(
-  //                                                                   'abcd'.obs);
+  //                                                                   Global.currentUser!.uid.obs);
   //                                                               controller.messages[
   //                                                                           index]
   //                                                                       [
@@ -994,9 +1007,9 @@ class MessageCard extends StatelessWidget {
   //                                                                           'polls']
   //                                                                       [
   //                                                                       'options'],
-  //                                                                   'abcd')) {
+  //                                                                   Global.currentUser!.uid)) {
   //                                                                 ele['uid'].add(
-  //                                                                     'abcd'
+  //                                                                     Global.currentUser!.uid
   //                                                                         .obs);
   //                                                                 controller.messages[
   //                                                                             index]
@@ -1049,7 +1062,7 @@ class MessageCard extends StatelessWidget {
   //                                                                       0xFF7B61FF)),
   //                                                           value: ele['uid']
   //                                                                   .contains(
-  //                                                                       'abcd')
+  //                                                                       Global.currentUser!.uid)
   //                                                               ? ele['uid']
   //                                                                       .value
   //                                                                       .length /

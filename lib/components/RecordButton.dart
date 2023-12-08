@@ -9,7 +9,9 @@ import 'package:record_mp3/record_mp3.dart';
 import 'package:uuid/uuid.dart';
 import 'package:workmanager/workmanager.dart';
 
-import '../constants.dart';
+import '../Global.dart';
+import '../controllers/MainController.dart';
+import '../utils/constants.dart';
 import '../controllers/DiscussionController.dart';
 import '../src/AudioState.dart';
 import '../src/Global.dart';
@@ -331,12 +333,14 @@ class _RecordButtonState extends State<RecordButton> {
               int audioLength = audioLen.inMilliseconds;
               discussionController.isCompleteAudioRecording.value = false;
               discussionController.isRecording.value = false;
+              MainController mainController = Get.find();
               await Workmanager().registerOneOffTask(
                   Uuid().v1(), Constants.chatAudioUpload,
                   constraints: Constraints(networkType: NetworkType.connected),
                   inputData: {
                     "audioPath": discussionController.audioPath,
-                    "audioLen": audioLength
+                    "audioLen": audioLength,
+                    "uid": mainController.currentUser!.uid
                   });
             }
             else if(discussionController.isLocked.value){

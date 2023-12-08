@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:custard_flutter/Global.dart';
 import 'package:custard_flutter/WorkManagerMethods.dart';
-import 'package:custard_flutter/constants.dart';
+import 'package:custard_flutter/controllers/MainController.dart';
+import 'package:custard_flutter/utils/constants.dart';
 import 'package:custard_flutter/controllers/PhoneAuthController.dart';
 import 'package:custard_flutter/firebase_options.dart';
 import 'package:custard_flutter/repo/AuthRepo.dart';
@@ -18,6 +20,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:workmanager/workmanager.dart';
@@ -95,7 +98,7 @@ void callbackDispatcher() {
           int epochTime = time.millisecondsSinceEpoch;
           Map<String, dynamic> messageJson = {
             "document": documentUrl,
-            "from": "userId",
+            "from": inputData!["uid"],
             "messageId": messageId,
             "text": inputData!["text"],
             "time": epochTime,
@@ -131,7 +134,7 @@ void callbackDispatcher() {
           DateTime time = DateTime.now();
           int epochTime = time.millisecondsSinceEpoch;
           Map<String, dynamic> messageJson = {
-            "from": "userId",
+            "from": inputData!["uid"],
             "video": videoUrl,
             "messageId": messageId,
             "text": inputData["text"],
@@ -169,7 +172,7 @@ void callbackDispatcher() {
           Map<String, dynamic> messageJson = {
             "audio": audioUrl,
             "audioLen": inputData["audioLen"],
-            "from": "userId",
+            "from": inputData!["uid"],
             "messageId": messageId,
             "time": epochTime,
             "type": type
@@ -191,31 +194,16 @@ void callbackDispatcher() {
         try {
           // String uid = Uuid().v1();
           String type = "TEXT";
-          String? imageUrl, videoUrl, documentUrl;
+          String? imageUrl;
           print("imagePath: ${inputData!["imagePath"]}");
-          print("videoPath: ${inputData!["videoPath"]}");
-          print("documentPath: ${inputData!["documentPath"]}");
           if (inputData!["imagePath"] != null) {
             type = "IMAGE";
             File file = File(inputData["imagePath"]);
             Uint8List image = await file.readAsBytes();
             imageUrl = await StorageMethods.uploadImageToStorage(
                 'chat/images', Uuid().v1(), image);
-          } else if (inputData["videoPath"] != null) {
-            type = "VIDEO";
-            File file = File(inputData["videoPath"]);
-            Uint8List video = await file.readAsBytes();
-            videoUrl = await StorageMethods.uploadImageToStorage(
-                'chats/video', Uuid().v1(), video);
-          } else if (inputData["documentPath"] != null) {
-            type = "DOCUMENT";
-            File document = File(inputData["documentPath"]);
-            documentUrl = await StorageMethods.uploadDocument(
-                'chats/document', Uuid().v1(), document);
           }
           print("imageUrl: $imageUrl");
-          print("videoUrl: $videoUrl");
-          print("documentUrl: $documentUrl");
 
           final DatabaseReference databaseReference = FirebaseDatabase.instance
               .ref()
@@ -226,10 +214,8 @@ void callbackDispatcher() {
           int epochTime = time.millisecondsSinceEpoch;
           print("messageId: $messageId");
           Map<String, dynamic> messageJson = {
-            "from": "userId",
+            "from": inputData!["uid"],
             "image": imageUrl,
-            "video": videoUrl,
-            "document": documentUrl,
             "messageId": messageId,
             "text": inputData["text"],
             "time": epochTime,
@@ -301,11 +287,13 @@ void main() async {
     callbackDispatcher,
     isInDebugMode: kDebugMode,
   );
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key});
+
+  MainController controller = Get.put(MainController());
 
   @override
   Widget build(BuildContext context) {
@@ -318,7 +306,14 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.light,
-      home: LoginScreen(),
+      home: Obx((){
+        if(controller.loading.value){
+          return Scaffold();
+        }
+        else{
+          return controller.prefs.getBool(Constants.isUserSignedInPref)!=null && controller.prefs.getBool(Constants.isUserSignedInPref)! ? HomeScreen() : LoginScreen();
+        }
+      }),
     );
   }
 }

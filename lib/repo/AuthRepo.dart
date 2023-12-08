@@ -45,9 +45,9 @@ class AuthRepo extends GetxController {
     );
   }
 
-  Future<bool> verifyOtp(String otp) async {
+  Future<User?> verifyOtp(String otp) async {
     var cred = await _auth
         .signInWithCredential(PhoneAuthProvider.credential(verificationId: verificationID.value, smsCode: otp));
-    return cred.user != null ? true : false;
+    return cred.user;
   }
 }

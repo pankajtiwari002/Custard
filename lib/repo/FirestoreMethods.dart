@@ -18,4 +18,22 @@ class FirestoreMethods extends GetxController{
       throw e;
     }
   }
+
+  Future<Map<String,dynamic>> getData(String collection,String docId) async{
+    try{
+      DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance.collection(collection).doc(docId).get();
+      if(documentSnapshot.exists){
+        Map<String,dynamic> data =  documentSnapshot.data() as Map<String,dynamic>;
+        data['uid'] = docId;
+        return data;
+      }
+      else{
+        print("Not Exist");
+        return {};
+      }
+    }catch(e){
+      print("jkl: " + e.toString());
+      return {};
+    }
+  }
 }

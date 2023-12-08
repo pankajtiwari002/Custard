@@ -1,11 +1,14 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:custard_flutter/controllers/LocationController.dart';
 import 'package:custard_flutter/repo/FirestoreMethods.dart';
 import 'package:custard_flutter/repo/StorageMethods.dart';
+import 'package:custard_flutter/utils/constants.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/models/user.dart';
 
@@ -19,7 +22,9 @@ class UserOnboardingController extends GetxController {
   bool? isVerified;
   late BuildContext context;
   String city = "city";
-  UserOnboardingController({required this.context});
+  String uid;
+
+  UserOnboardingController({required this.uid, required this.context});
 
   @override
   void onInit(){
@@ -33,7 +38,7 @@ class UserOnboardingController extends GetxController {
 
   Future<bool> joinUser() async {
     try {
-      String imageUrl = await StorageMethods.uploadImageToStorage("profile", "SDD", image.value!);
+      String imageUrl = await StorageMethods.uploadImageToStorage("profile", uid, image.value!);
       User user = User(
           name: nameController.text,
           bio: bioController.text,
@@ -42,10 +47,16 @@ class UserOnboardingController extends GetxController {
           lastLocation: city,
           phone: phone!,
           profilePic: imageUrl,
-          communities: []
+          communities: [],
+          uid: uid
           );
+
+      log(user.toJson().toString());
       
-      await FirestoreMethods().onSave("users", user.toJson());
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await FirestoreMethods().onSave("users", user.toJson(),uid);
+      prefs.setString(Constants.usersPref, jsonEncode(user.toJson()));
+      prefs.setBool(Constants.isUserSignedInPref, true);
       return true;
     } catch (e) {
       return false;

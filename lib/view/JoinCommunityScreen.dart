@@ -195,6 +195,150 @@ class JoinCommunityScreen extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                   ),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'INR 99',
+                            style: TextStyle(
+                              color: Color(0xFF546881),
+                              fontSize: 14,
+                              fontFamily: 'Gilroy',
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'Joining Fee',
+                            style: TextStyle(
+                              color: Color(0xFF546881),
+                              fontSize: 12,
+                              fontFamily: 'Gilroy',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            '1200+',
+                            style: TextStyle(
+                              color: Color(0xFF546881),
+                              fontSize: 14,
+                              fontFamily: 'Gilroy',
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'Joined',
+                            style: TextStyle(
+                              color: Color(0xFF546881),
+                              fontSize: 12,
+                              fontFamily: 'Gilroy',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'Social Dance Tribe Host',
+                            style: TextStyle(
+                              color: Color(0xFF546881),
+                              fontSize: 14,
+                              fontFamily: 'Gilroy',
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'Host',
+                            style: TextStyle(
+                              color: Color(0xFF546881),
+                              fontSize: 12,
+                              fontFamily: 'Gilroy',
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Obx(
+                        () => Visibility(
+                      visible: !controller.isCardExpanded.value,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              // Explore Button Pressed
+                              controller.isCardExpanded.value = true;
+                            },
+                            child: Text('Explore the Community'),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFF7B61FF),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10))),
+                            onPressed: () {
+                              openMyDialog();
+                            },
+                            child: Text(
+                              'Join Now',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Obx(
+                        () => Visibility(
+                        visible: controller.isCardExpanded.value,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              mainAxisAlignment:
+                              MainAxisAlignment.spaceEvenly,
+                              children: [
+                                imageCotainer(),
+                                imageCotainer(),
+                                imageCotainer(),
+                                imageCotainer(),
+                                imageCotainer(),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 15,
+                            ),
+                            Container(
+                              width: double.infinity,
+                              margin: EdgeInsets.symmetric(horizontal: 10),
+                              child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF7B61FF),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                        BorderRadius.circular(10)),
+                                  ),
+                                  onPressed: () {
+                                    openMyDialog();
+                                  },
+                                  child: const Text("Join the Community",
+                                      style: TextStyle(color: Colors.white))),
+                            )
+                          ],
+                        )),
+                  ),
                   SizedBox(
                     height: 10,
                   ),
@@ -203,164 +347,6 @@ class JoinCommunityScreen extends StatelessWidget {
             ),
             SizedBox(
               height: 5,
-            ),
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              elevation: 1,
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: <Widget>[
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              'INR 99',
-                              style: TextStyle(
-                                color: Color(0xFF546881),
-                                fontSize: 14,
-                                fontFamily: 'Gilroy',
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              'Joining Fee',
-                              style: TextStyle(
-                                color: Color(0xFF546881),
-                                fontSize: 12,
-                                fontFamily: 'Gilroy',
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              '1200+',
-                              style: TextStyle(
-                                color: Color(0xFF546881),
-                                fontSize: 14,
-                                fontFamily: 'Gilroy',
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              'Joined',
-                              style: TextStyle(
-                                color: Color(0xFF546881),
-                                fontSize: 12,
-                                fontFamily: 'Gilroy',
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              'Social Dance Tribe Host',
-                              style: TextStyle(
-                                color: Color(0xFF546881),
-                                fontSize: 14,
-                                fontFamily: 'Gilroy',
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              'Host',
-                              style: TextStyle(
-                                color: Color(0xFF546881),
-                                fontSize: 12,
-                                fontFamily: 'Gilroy',
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20),
-                    Obx(
-                      () => Visibility(
-                        visible: !controller.isCardExpanded.value,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            TextButton(
-                              onPressed: () {
-                                // Explore Button Pressed
-                                controller.isCardExpanded.value = true;
-                              },
-                              child: Text('Explore the Community'),
-                            ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color(0xFF7B61FF),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10))),
-                              onPressed: () {
-                                openMyDialog();
-                              },
-                              child: Text(
-                                'Join Now',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Obx(
-                      () => Visibility(
-                          visible: controller.isCardExpanded.value,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  imageCotainer(),
-                                  imageCotainer(),
-                                  imageCotainer(),
-                                  imageCotainer(),
-                                  imageCotainer(),
-                                ],
-                              ),
-                              SizedBox(
-                                height: 15,
-                              ),
-                              Container(
-                                width: double.infinity,
-                                margin: EdgeInsets.symmetric(horizontal: 10),
-                                child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF7B61FF),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10)),
-                                    ),
-                                    onPressed: () {
-                                      controller.isCardExpanded.value = false;
-                                    },
-                                    child: const Text("Join the Community",
-                                        style: TextStyle(color: Colors.white))),
-                              )
-                            ],
-                          )),
-                    ),
-                  ],
-                ),
-              ),
             ),
             SizedBox(
               height: 5,

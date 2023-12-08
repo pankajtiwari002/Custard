@@ -12,6 +12,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'ProfileScreen.dart';
+
 class HomeScreen extends StatelessWidget {
   var currentPageIndex = 0.obs;
   final globalKey = GlobalKey<ScaffoldState>();
@@ -189,11 +191,7 @@ class HomeScreen extends StatelessWidget {
         DiscussionScreen(),
         EventsScreen(),
         const GalleryScreen(),
-        Container(
-          color: Colors.green,
-          alignment: Alignment.center,
-          child: const Text('Page 2'),
-        ),
+        ProfileScreen(currentUser: true,),
       ][currentPageIndex.value]),
     );
   }

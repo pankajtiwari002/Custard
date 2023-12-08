@@ -8,6 +8,7 @@ class User{
   final String phone;
   final String profilePic;
   final List<String> communities;
+  final String uid;
   
   User({
     required this.name,
@@ -17,8 +18,22 @@ class User{
     required this.lastLocation,
     required this.phone,
     required this.profilePic,
-    required this.communities
+    required this.communities,
+    required this.uid
   });
+
+  factory User.fromSnap(Map<String,dynamic> json){
+    return User(name: json['name'],
+        bio: json['bio'],
+        gender: json['gender'],
+        isPhoneVerified: true,
+        lastLocation: json['lastLocation'],
+        phone: json['phone'],
+        profilePic: json["profilePic"],
+        communities: [],
+        uid: json["uid"]
+    );
+  }
 
   Map<String,dynamic> toJson() => {
       "name": name,
@@ -28,6 +43,7 @@ class User{
       "isPhoneVerified": isPhoneVerified,
       "lastLocation": lastLocation,
       "phone": phone,
-      "profilePic": profilePic
+      "profilePic": profilePic,
+      "uid": uid
     };
 }

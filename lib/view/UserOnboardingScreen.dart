@@ -48,7 +48,7 @@ class UserOnboardingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    controller = Get.put(UserOnboardingController(context: context));
+    controller = Get.put(UserOnboardingController(uid: phoneAuthController.uid.value, context: context));
     controller.phone = phoneAuthController.phoneNumber.text;
     controller.isVerified = true;
     return SafeArea(

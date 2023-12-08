@@ -1,3 +1,4 @@
+import 'package:custard_flutter/controllers/ProfileController.dart';
 import 'package:custard_flutter/view/ProfileScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -198,8 +199,8 @@ class MembersScreen extends StatelessWidget {
                 itemCount: 1,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    onTap: (){
-                      Get.to(() => ProfileScreen(imageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y3VzdG9tZXIlMjBwcm9maWxlfGVufDB8fDB8fHww&w=1000&q=80"));
+                    onTap: () async{
+                      Get.to(() => ProfileScreen(uid: "cwyeMPylFAXdMACMTL2o",));
                     },
                     leading: CircleAvatar(
                       radius: 20,

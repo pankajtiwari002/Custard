@@ -15,7 +15,7 @@ import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
-import '../constants.dart';
+import '../utils/constants.dart';
 
 class StorageMethods {
 

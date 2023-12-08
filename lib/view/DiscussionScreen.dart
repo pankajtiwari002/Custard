@@ -1,7 +1,8 @@
 import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:custard_flutter/constants.dart';
+import 'package:custard_flutter/controllers/MainController.dart';
+import 'package:custard_flutter/utils/constants.dart';
 import 'package:custard_flutter/src/FlowShader.dart';
 import 'package:custard_flutter/src/Global.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -24,6 +25,7 @@ import 'package:record_mp3/record_mp3.dart';
 import 'package:uuid/uuid.dart';
 import 'package:workmanager/workmanager.dart';
 
+import '../Global.dart';
 import '../components/ChatBox.dart';
 import '../components/MessageCard.dart';
 import '../components/RecordButton.dart';
@@ -395,24 +397,24 @@ class DiscussionScreen extends StatelessWidget {
             style: TextStyle(color: Colors.white),
           ),
         ),
-        leading: Obx(() => IconButton(
-            onPressed: () {
-              if (controller.totalSelected.value > 0) {
-                for (int i = 0; i < controller.messages.length; i++) {
-                  controller.messages[i]['isSelected'] = false;
-                }
-                controller.totalSelected.value = 0;
-              } else {}
-            },
-            icon: controller.totalSelected.value > 0
-                ? const Icon(
-                    Icons.cancel,
-                    color: Colors.white,
-                  )
-                : const Icon(
-                    Icons.arrow_back_ios,
-                    color: Colors.white,
-                  ))),
+        leading: Obx((){
+          if(controller.totalSelected.value > 0){
+            return IconButton(
+                onPressed: () {
+                  for (int i = 0; i < controller.messages.length; i++) {
+                    controller.messages[i]['isSelected'] = false;
+                  }
+                  controller.totalSelected.value = 0;
+                },
+                icon: const Icon(
+                  Icons.cancel,
+                  color: Colors.white,
+                ));
+          }
+          else{
+            return Container();
+          }
+        } ),
         actions: [
           Obx(
             () => controller.totalSelected > 0
@@ -680,6 +682,7 @@ class DiscussionScreen extends StatelessWidget {
                                         suffix: IconButton(
                                             onPressed: () async {
                                               Workmanager().cancelAll();
+                                              MainController mainController = Get.find();
                                               print(controller.reply);
                                               String text = controller
                                                   .messageController.text;
@@ -714,10 +717,12 @@ class DiscussionScreen extends StatelessWidget {
                                                       "imagePath":
                                                           controller.imagePath,
                                                       "text": text,
+                                                       "uid": mainController.currentUser!.uid
                                                     }).then((value) {
                                                   controller.isImageUploading
                                                       .value = false;
                                                   controller.image.value = null;
+                                                  controller.imagePath = null;
                                                 });
                                               } else if (controller.videoPath !=
                                                   null) {
@@ -736,7 +741,9 @@ class DiscussionScreen extends StatelessWidget {
                                                       "videoPath":
                                                           controller.videoPath,
                                                       "text": text,
+                                                      "uid": mainController.currentUser!.uid
                                                     });
+                                                controller.videoPath = null;
                                               } else if (controller
                                                       .documentPath !=
                                                   null) {
@@ -757,7 +764,9 @@ class DiscussionScreen extends StatelessWidget {
                                                       "documentPath": controller
                                                           .documentPath,
                                                       "text": text,
+                                                          "uid": mainController.currentUser!.uid
                                                     });
+                                                controller.documentPath = null;
                                                 print("Hey");
                                               } else {
                                                 print("text");
@@ -777,7 +786,7 @@ class DiscussionScreen extends StatelessWidget {
                                                     time.millisecondsSinceEpoch;
                                                 Map<String, dynamic>
                                                     messageJson = {
-                                                  "from": "userId",
+                                                  "from": mainController.currentUser!.uid,
                                                   "messageId": messageId,
                                                   "text": text,
                                                   "time": epochTime,

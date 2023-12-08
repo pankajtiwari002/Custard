@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 
+import '../Global.dart';
 import '../controllers/DiscussionController.dart';
 
 class PollsScreen extends StatelessWidget {
@@ -180,7 +181,7 @@ class PollsScreen extends StatelessWidget {
                     'HideLiveResult': controller.isHideLisveResult.value,
                     'pollOptions': options,
                     "total": 0,
-                    "from": "userId",
+                    "from": Global.currentUser!.uid,
                     "messageId": messageId,
                     "time": epochTime,
                     "type": "POLLS"
