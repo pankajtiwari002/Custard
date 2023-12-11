@@ -16,6 +16,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      final size = MediaQuery.of(context).size;
     return Scaffold(
       body: Obx((){
         if(controller.isLoading.value){
@@ -25,6 +26,7 @@ class ProfileScreen extends StatelessWidget {
           return Stack(
             children: [
               Container(
+                height: size.height*0.55,
                 width: double.infinity,
                 child: Image.network(
                   controller.user!.profilePic,

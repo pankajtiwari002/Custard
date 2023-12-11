@@ -82,6 +82,9 @@ dependencies:
   share_plus: ^7.2.1
   qr_code_scanner: ^1.0.1
   shared_preferences: ^2.2.2
+  emoji_picker_flutter: ^1.6.3
+  emoji_selector: ^0.0.6
+  cached_network_image: ^3.3.0
 
 dev_dependencies:
   flutter_test:

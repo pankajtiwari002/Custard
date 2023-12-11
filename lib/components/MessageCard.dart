@@ -2,13 +2,20 @@ import 'dart:ffi' as ff;
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:custard_flutter/controllers/DiscussionController.dart';
 import 'package:custard_flutter/controllers/MessageCardController.dart';
 import 'package:custard_flutter/view/VideoPlayerScreen.dart';
 import 'package:custard_flutter/view/ViewPhotoScreen.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:emoji_selector/emoji_selector.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_polls/flutter_polls.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -18,20 +25,43 @@ import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:voice_message_package/voice_message_package.dart';
 
 import '../Global.dart';
+import '../controllers/MainController.dart';
+import '../data/models/user.dart';
+import '../repo/FirestoreMethods.dart';
 
 class MessageCard extends StatelessWidget {
   final int index;
   List<dynamic> messages;
   late AudioPlayer player;
   MessageCardController messageCardController = MessageCardController();
-  MessageCard({required this.index, required this.messages}){
+  MainController mainController = Get.find();
+  MessageCard({required this.index, required this.messages}) {
     messageCardController.isLoading.value = true;
-    player = AudioPlayer(playerId:messages[index].value["messageId"]);
+    player = AudioPlayer(playerId: messages[index].value["messageId"]);
     print(messages[index].value["from"]);
     messageCardController.initUser(messages[index].value["from"]);
   }
 
+  TextEditingController textEditingController = TextEditingController();
+
   DiscussionController controller = Get.find();
+  RxList<User> users = RxList();
+
+  Future<void> extractUser(String key) async {
+    users = RxList();
+    print(messages[index].value["reactions"]['uids']);
+    messages[index].value["reactions"]['uids'].forEach((k, val) async {
+      print(val['emoji']);
+      if (val['emoji'] == key) {
+        Map<String, dynamic> json =
+            await FirestoreMethods().getData("users", val['uid']);
+        User user = User.fromSnap(json);
+        // print("Goku");
+        print(user);
+        users.add(user);
+      }
+    });
+  }
 
   String formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
@@ -64,6 +94,10 @@ class MessageCard extends StatelessWidget {
     return (currentSeconds / totalSeconds);
   }
 
+  DateTime convertMillisecondsToDateTime(int millisecondsSinceEpoch) {
+    return DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
+  }
+
   Future<void> downloadAndOpenPdf(String pdfUrl) async {
     try {
       final response = await http.get(Uri.parse(pdfUrl));
@@ -86,10 +120,13 @@ class MessageCard extends StatelessWidget {
     }
   }
 
-  bool alreadyVoted(List<dynamic> list, String userId) {
+  bool alreadyVoted(List list, String userId) {
     for (int i = 0; i < list.length; i++) {
       final uid = list[i]['uids'];
-      if (uid != null && uid.contains(userId)) return true;
+      if (uid != null && uid.contains(userId)) {
+        print("userId: $userId");
+        return true;
+      }
     }
     return false;
   }
@@ -99,6 +136,63 @@ class MessageCard extends StatelessWidget {
     Size size = MediaQuery.of(context).size;
 
     return Obx(() => InkWell(
+          onTap: () {
+            Get.bottomSheet(Container(
+              height: 380,
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(40),
+                    topRight: Radius.circular(40),
+                  )),
+              child: EmojiSelector(
+                columns: 8,
+                onSelected: (emoji) async {
+                  // print(emoji.char);
+                  DatabaseReference ref = FirebaseDatabase.instance.ref().child(
+                      "communityChats/chapterId/messages/${messages[index].value['messageId']}");
+                  int val = messages[index].value["reactions"] != null
+                      ? messages[index].value["reactions"]["${emoji.char}"] ?? 0
+                      : 0;
+                  int? val1 = -1;
+                  String prevEmoji = "";
+                  if (messages[index].value["reactions"] != null) {
+                    messages[index]
+                        .value["reactions"]["uids"]
+                        .forEach((key, val) {
+                      if (key == mainController.currentUser!.uid) {
+                        val1 = messages[index].value["reactions"]
+                                ["${val['emoji']}"] -
+                            1;
+                        prevEmoji = val["emoji"];
+                      }
+                    });
+                  }
+                  val++;
+                  if (val1 != -1) {
+                    if (val1 == 0) val1 = null;
+                    await ref.update({
+                      "reactions/uids/${mainController.currentUser!.uid}": {
+                        "emoji": emoji.char,
+                        "uid": mainController.currentUser!.uid
+                      },
+                      "reactions/${emoji.char}": val,
+                      "reactions/$prevEmoji": val1,
+                    });
+                  } else {
+                    await ref.update({
+                      "reactions/uids/${mainController.currentUser!.uid}": {
+                        "emoji": emoji.char,
+                        "uid": mainController.currentUser!.uid
+                      },
+                      "reactions/${emoji.char}": val,
+                    });
+                  }
+                  Navigator.of(context).pop(emoji);
+                },
+              ),
+            ));
+          },
           onLongPress: () {
             print("height: ${size.height}");
             print("width: ${size.width}");
@@ -127,33 +221,34 @@ class MessageCard extends StatelessWidget {
             child: Container(
               // margin: const EdgeInsets.symmetric(vertical: 15, horizontal: 5),
               child: Row(
-                mainAxisAlignment: messages[index].value["from"] == Global.currentUser!.uid
-                    ? MainAxisAlignment.end
-                    : MainAxisAlignment.start,
+                mainAxisAlignment:
+                    messages[index].value["from"] == mainController.currentUser!.uid
+                        ? MainAxisAlignment.end
+                        : MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (!(messages[index].value['from'] == Global.currentUser!.uid))
+                  if (!(messages[index].value['from'] ==
+                      mainController.currentUser!.uid))
                     Padding(
-                      padding: const EdgeInsets.only(right: 10, left: 8),
-                      child: Obx((){
-                        if(messageCardController.isLoading.value){
-                          return CircleAvatar(
-                            backgroundColor: Color(0XFF62c9d5),
-                          );
-                        }
-                        else{
-                          return CircleAvatar(
-                            backgroundImage:
-                            NetworkImage(messageCardController.user!.profilePic),
-                          );
-                        }
-                      })
-                    ),
+                        padding: const EdgeInsets.only(right: 10, left: 8),
+                        child: Obx(() {
+                          if (messageCardController.isLoading.value) {
+                            return CircleAvatar(
+                              backgroundColor: Color(0XFF62c9d5),
+                            );
+                          } else {
+                            return CircleAvatar(
+                              backgroundImage: NetworkImage(
+                                  messageCardController.user!.profilePic),
+                            );
+                          }
+                        })),
                   Container(
                     padding: EdgeInsets.all(size.width * 0.037),
                     width: size.width * 0.765,
                     decoration: BoxDecoration(
-                      color: messages[index].value["from"] == Global.currentUser!.uid
+                      color: messages[index].value["from"] ==
+                              Global.currentUser!.uid
                           ? Color(0xFFF2EFFF)
                           : Color(0xFFF7F9FC),
                       borderRadius: BorderRadius.circular(10),
@@ -208,7 +303,7 @@ class MessageCard extends StatelessWidget {
                                                             "-1") {
                                                       return;
                                                     }
-                                                    
+
                                                     player.onPlayerStateChanged
                                                         .listen((event) {
                                                       controller.isRecordingPlay
@@ -227,8 +322,11 @@ class MessageCard extends StatelessWidget {
                                                       } else {
                                                         // player.
                                                         print("HEY");
-                                                        player.seek(Duration(seconds:0));
-                                                        controller.isRecordingPlay.value = false;
+                                                        player.seek(Duration(
+                                                            seconds: 0));
+                                                        controller
+                                                            .isRecordingPlay
+                                                            .value = false;
                                                         controller
                                                             .recordingMessageId
                                                             .value = "-1";
@@ -238,7 +336,8 @@ class MessageCard extends StatelessWidget {
                                                         .isRecordingPlay
                                                         .value) {
                                                       print("hello");
-                                                      if(player.state == PlayerState.playing){
+                                                      if (player.state ==
+                                                          PlayerState.playing) {
                                                         print("Jai Shee Ram");
                                                         await player.pause();
                                                       }
@@ -368,7 +467,10 @@ class MessageCard extends StatelessWidget {
                                               ),
                                             ),
                                             Text(
-                                              '01:50 PM',
+                                              DateFormat.jm().format(
+                                                  convertMillisecondsToDateTime(
+                                                      messages[index]
+                                                          .value['time'])),
                                               style: TextStyle(
                                                 color: Color(0xFF909DAD),
                                                 fontSize: 12,
@@ -405,6 +507,8 @@ class MessageCard extends StatelessWidget {
                                       ),
                                       ListView.builder(
                                           shrinkWrap: true,
+                                          physics:
+                                              NeverScrollableScrollPhysics(),
                                           itemCount: messages[index]
                                               .value['pollOptions']
                                               .length,
@@ -415,8 +519,10 @@ class MessageCard extends StatelessWidget {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 (ele['uids'] != null &&
-                                                        ele['uids']
-                                                            .contains(Global.currentUser!.uid))
+                                                        ele['uids'].contains(
+                                                            mainController
+                                                                .currentUser!
+                                                                .uid))
                                                     ? IconButton(
                                                         onPressed: () {
                                                           int total = messages[
@@ -427,7 +533,9 @@ class MessageCard extends StatelessWidget {
                                                                   .toList();
                                                           uids.removeWhere(
                                                               (e) => (e ==
-                                                                  Global.currentUser!.uid));
+                                                                  mainController
+                                                                      .currentUser!
+                                                                      .uid));
                                                           total--;
                                                           1;
                                                           DatabaseReference
@@ -453,22 +561,36 @@ class MessageCard extends StatelessWidget {
                                                           int total = messages[
                                                                   index]
                                                               .value['total'];
-                                                          List<String> uids =
-                                                              ele['uids'] ?? [];
+                                                          List<Object?> uids =
+                                                              ele['uids'] !=
+                                                                      null
+                                                                  ? ele['uids']
+                                                                      .toList()
+                                                                  : List.empty(
+                                                                      growable:
+                                                                          true);
                                                           // print(
                                                           //     "length : ${ele['uids'].length}");
                                                           if (messages[index]
                                                                   .value[
                                                               'MultipleOptions']) {
-                                                            uids.add(Global.currentUser!.uid);
+                                                            uids.add(
+                                                                mainController
+                                                                    .currentUser!
+                                                                    .uid);
                                                             total++;
                                                           } else {
                                                             if (!alreadyVoted(
                                                                 messages[index]
                                                                         .value[
                                                                     'pollOptions'],
-                                                                Global.currentUser!.uid)) {
-                                                              uids.add(Global.currentUser!.uid);
+                                                                mainController
+                                                                    .currentUser!
+                                                                    .uid)) {
+                                                              uids.add(
+                                                                  mainController
+                                                                      .currentUser!
+                                                                      .uid);
                                                               total++;
                                                               print("jkl");
                                                             } else {
@@ -511,7 +633,9 @@ class MessageCard extends StatelessWidget {
                                                               messages[index]
                                                                       .value[
                                                                   'pollOptions'],
-                                                              Global.currentUser!.uid))
+                                                              mainController
+                                                                  .currentUser!
+                                                                  .uid))
                                                             ele['uids'] == null
                                                                 ? Text('0')
                                                                 : Text(ele[
@@ -552,7 +676,9 @@ class MessageCard extends StatelessWidget {
                                                                 messages[index]
                                                                         .value[
                                                                     'pollOptions'],
-                                                                Global.currentUser!.uid)
+                                                                mainController
+                                                                    .currentUser!
+                                                                    .uid)
                                                             ? (ele['uids'] !=
                                                                     null)
                                                                 ? ele['uids']
@@ -572,6 +698,22 @@ class MessageCard extends StatelessWidget {
                                               ],
                                             );
                                           }),
+                                      Container(
+                                        alignment: Alignment.centerRight,
+                                        child: Text(
+                                          DateFormat.jm().format(
+                                              convertMillisecondsToDateTime(
+                                                  messages[index]
+                                                      .value['time'])),
+                                          style: TextStyle(
+                                            color: Color(0xFF909DAD),
+                                            fontSize: 12,
+                                            fontFamily: 'Gilroy',
+                                            fontWeight: FontWeight.w500,
+                                            letterSpacing: 0.20,
+                                          ),
+                                        ),
+                                      ),
                                       if (!messages[index]
                                           .value['HideLiveResult'])
                                         Center(
@@ -601,19 +743,23 @@ class MessageCard extends StatelessWidget {
                                             Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Obx((){
-                                                  if(messageCardController.isLoading.value){
+                                                Obx(() {
+                                                  if (messageCardController
+                                                      .isLoading.value) {
                                                     return Container();
-                                                  }
-                                                  else{
+                                                  } else {
                                                     return Text(
-                                                      messageCardController.user.name,
-                                                      textAlign: TextAlign.center,
+                                                      messageCardController
+                                                          .user.name,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                       style: const TextStyle(
-                                                        color: Color(0xFF090B0E),
+                                                        color:
+                                                            Color(0xFF090B0E),
                                                         fontSize: 14,
                                                         fontFamily: 'Gilroy',
-                                                        fontWeight: FontWeight.w600,
+                                                        fontWeight:
+                                                            FontWeight.w600,
                                                         letterSpacing: 0.20,
                                                       ),
                                                     );
@@ -725,89 +871,132 @@ class MessageCard extends StatelessWidget {
                                             ),
                                           ),
                                           Row(
+                                            mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              if (messages[index]
-                                                      .value["messageId"] ==
-                                                  Global.currentUser!.uid)
-                                                Chip(
-                                                  shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              30)),
-                                                  backgroundColor:
-                                                      Color(0xFFD6CEFF),
-                                                  label: const Row(
-                                                    children: [
-                                                      Text(
-                                                        '😊',
-                                                        style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 14,
-                                                          fontFamily: 'Gilroy',
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          letterSpacing: 0.20,
+                                              Container(
+                                                // color: Colors.red,
+                                                width: 210,
+                                                child: GridView.builder(
+                                                    shrinkWrap: true,
+                                                    physics:
+                                                        NeverScrollableScrollPhysics(),
+                                                    itemCount: messages[index]
+                                                                    .value[
+                                                                "reactions"] !=
+                                                            null
+                                                        ? messages[index]
+                                                                .value[
+                                                                    "reactions"]
+                                                                .length -
+                                                            1
+                                                        : 0,
+                                                    gridDelegate:
+                                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                                      crossAxisCount: 3,
+                                                    ),
+                                                    itemBuilder: ((context, ind) {
+                                                      String key = messages[index]
+                                                          .value['reactions']
+                                                          .keys
+                                                          .elementAt(ind + 1);
+                                                      int value = messages[index]
+                                                              .value['reactions']
+                                                          [key];
+                                                      return Container(
+                                                        margin:
+                                                            EdgeInsets.symmetric(
+                                                                horizontal: 3,
+                                                                vertical: 3),
+                                                        child: GestureDetector(
+                                                          onTap: () async {
+                                                            await extractUser(
+                                                                key);
+                                                            print("length: " +
+                                                                users.length
+                                                                    .toString());
+                                                            Get.bottomSheet(
+                                                                Container(
+                                                              color: Colors.white,
+                                                              height: 300,
+                                                              child: Obx(() => ListView
+                                                                  .builder(
+                                                                      itemCount: users
+                                                                          .length,
+                                                                      itemBuilder:
+                                                                          (context,
+                                                                              i) {
+                                                                        return ListTile(
+                                                                          title: Text(
+                                                                              users[i].name),
+                                                                          leading:
+                                                                              CircleAvatar(
+                                                                            radius:
+                                                                                20,
+                                                                            backgroundImage:
+                                                                                NetworkImage(users[i].profilePic),
+                                                                          ),
+                                                                        );
+                                                                      })),
+                                                            ));
+                                                          },
+                                                          child: Chip(
+                                                            shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            30)),
+                                                            backgroundColor:
+                                                                Color(0xFFD6CEFF),
+                                                            label: Row(
+                                                              children: [
+                                                                Text(
+                                                                  "$key",
+                                                                  style:
+                                                                      TextStyle(
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize: 12,
+                                                                    fontFamily:
+                                                                        'Gilroy',
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500,
+                                                                    letterSpacing:
+                                                                        0.20,
+                                                                  ),
+                                                                ),
+                                                                Text(
+                                                                  ' $value',
+                                                                  style:
+                                                                      TextStyle(
+                                                                    color: Color(
+                                                                        0xFF7B61FF),
+                                                                    fontSize: 12,
+                                                                    fontFamily:
+                                                                        'Gilroy',
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500,
+                                                                    letterSpacing:
+                                                                        0.20,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
                                                         ),
-                                                      ),
-                                                      Text(
-                                                        ' 5',
-                                                        style: TextStyle(
-                                                          color:
-                                                              Color(0xFF7B61FF),
-                                                          fontSize: 14,
-                                                          fontFamily: 'Gilroy',
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          letterSpacing: 0.20,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              SizedBox(
-                                                width: 10,
+                                                      );
+                                                    })),
                                               ),
-                                              if (messages[index]
-                                                      .value["messageId"] ==
-                                                  Global.currentUser!.uid)
-                                                Chip(
-                                                  shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              30)),
-                                                  backgroundColor:
-                                                      Color(0xFFD6CEFF),
-                                                  label: const Row(
-                                                    children: [
-                                                      Text(
-                                                        '🤯',
-                                                        style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 14,
-                                                          fontFamily: 'Gilroy',
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          letterSpacing: 0.20,
-                                                        ),
-                                                      ),
-                                                      Text(
-                                                        ' 5',
-                                                        style: TextStyle(
-                                                          color:
-                                                              Color(0xFF7B61FF),
-                                                          fontSize: 14,
-                                                          fontFamily: 'Gilroy',
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          letterSpacing: 0.20,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              Spacer(),
+                                              // SizedBox(
+                                              //   width: 10,
+                                              // ),
+                                              // Spacer(),
                                               Text(
-                                                '01:50 PM',
+                                                DateFormat.jm().format(
+                                                    convertMillisecondsToDateTime(
+                                                        messages[index]
+                                                            .value['time'])),
                                                 style: TextStyle(
                                                   color: Color(0xFF909DAD),
                                                   fontSize: 12,
@@ -1434,4 +1623,20 @@ class MessageCard extends StatelessWidget {
   //         ),
   //       ));
   // }
+}
+
+class CustomView extends EmojiPickerBuilder {
+  CustomView(Config config, EmojiViewState state) : super(config, state);
+
+  @override
+  _CustomViewState createState() => _CustomViewState();
+}
+
+class _CustomViewState extends State<CustomView> {
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    // Access widget.config and widget.state
+    return Container();
+  }
 }

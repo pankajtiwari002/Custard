@@ -391,33 +391,30 @@ class DiscussionScreen extends StatelessWidget {
         backgroundColor: Colors.black,
         title: Obx(
           () => Text(
-            controller.totalSelected.value > 0
-                ? "${controller.totalSelected.value}"
+            controller.selectedMessage.length > 0
+                ? "${controller.selectedMessage.length}"
                 : "#General",
             style: TextStyle(color: Colors.white),
           ),
         ),
-        leading: Obx((){
-          if(controller.totalSelected.value > 0){
+        leading: Obx(() {
+          if (controller.selectedMessage.length > 0) {
             return IconButton(
                 onPressed: () {
-                  for (int i = 0; i < controller.messages.length; i++) {
-                    controller.messages[i]['isSelected'] = false;
-                  }
-                  controller.totalSelected.value = 0;
+                  controller.selectedMessage.clear();
+                  // controller.totalSelected.value = 0;
                 },
                 icon: const Icon(
                   Icons.cancel,
                   color: Colors.white,
                 ));
-          }
-          else{
+          } else {
             return Container();
           }
-        } ),
+        }),
         actions: [
           Obx(
-            () => controller.totalSelected > 0
+            () => controller.selectedMessage.length > 0
                 ? IconButton(
                     onPressed: () {},
                     icon: Icon(Icons.star_outline_rounded, color: Colors.white))
@@ -426,7 +423,7 @@ class DiscussionScreen extends StatelessWidget {
                     icon: Icon(Icons.tag, color: Colors.white)),
           ),
           Obx(
-            () => controller.totalSelected > 0
+            () => controller.selectedMessage.length > 0
                 ? IconButton(
                     onPressed: () {},
                     icon: Icon(Icons.copy, color: Colors.white))
@@ -435,7 +432,7 @@ class DiscussionScreen extends StatelessWidget {
                     icon: Icon(Icons.push_pin_rounded, color: Colors.white)),
           ),
           Obx(
-            () => controller.totalSelected > 0
+            () => controller.selectedMessage.length > 0
                 ? IconButton(
                     onPressed: () {
                       _openDeleteDialogBox();
@@ -509,37 +506,49 @@ class DiscussionScreen extends StatelessWidget {
             } else {
               List<dynamic> messages =
                   snapshot.data!.snapshot.children.toList();
-              return Obx(() => SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        ListView.builder(
-                            shrinkWrap: true,
-                            primary: false,
-                            itemCount: messages.length,
-                            itemBuilder: ((context, index) {
-                              return MessageCard(
-                                index: index,
-                                messages: messages,
-                              );
-                            })),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        if (controller.isImageUploading.value &&
-                            controller.image.value != null)
-                          Container(
-                            height: 200,
-                            width: 200,
-                            decoration: BoxDecoration(
-                                image: DecorationImage(
-                                    image: MemoryImage(controller.image.value!),
-                                    fit: BoxFit.cover),
-                                borderRadius: BorderRadius.circular(30)),
-                            child: Center(child: CircularProgressIndicator()),
-                          )
-                      ],
-                    ),
-                  ));
+                  return ListView.builder(
+                          // shrinkWrap: true,
+                          // primary: false,
+                          itemCount: messages.length,
+                          itemBuilder: ((context, index) {
+                            return MessageCard(
+                              index: index,
+                              messages: messages,
+                            );
+                          }));
+              // return Obx(
+              //   () => SingleChildScrollView(
+              //     child: Column(
+              //       children: [
+              //         ListView.builder(
+              //             shrinkWrap: true,
+              //             primary: false,
+              //             itemCount: messages.length,
+              //             itemBuilder: ((context, index) {
+              //               return MessageCard(
+              //                 index: index,
+              //                 messages: messages,
+              //               );
+              //             })),
+              //         SizedBox(
+              //           height: 10,
+              //         ),
+              //         if (controller.isImageUploading.value &&
+              //             controller.image.value != null)
+              //           Container(
+              //             height: 200,
+              //             width: 200,
+              //             decoration: BoxDecoration(
+              //                 image: DecorationImage(
+              //                     image: MemoryImage(controller.image.value!),
+              //                     fit: BoxFit.cover),
+              //                 borderRadius: BorderRadius.circular(30)),
+              //             child: Center(child: CircularProgressIndicator()),
+              //           )
+              //       ],
+              //     ),
+              //   ),
+              // );
             }
           } else {
             return Center(child: CircularProgressIndicator());
@@ -618,40 +627,47 @@ class DiscussionScreen extends StatelessWidget {
                 height: kToolbarHeight + 5,
                 child: Row(
                   children: [
-                    Obx((){
-                      if(!controller.isCompleteAudioRecording.value && !controller.isRecording.value){
+                    Obx(() {
+                      if (!controller.isCompleteAudioRecording.value &&
+                          !controller.isRecording.value) {
                         return IconButton(
                             onPressed: () {
                               _openBottomSheet();
                             },
                             icon: Icon(Icons.add));
-                      }
-                      else{
+                      } else {
                         return Container(
                           width: 40,
                         );
                       }
                     }),
-                    SizedBox(width: 12,),
+                    SizedBox(
+                      width: 12,
+                    ),
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            border: controller.isRecording.value ? Border.all(color: Colors.transparent) : Border.all(color: Colors.grey),
-                            color: controller.isRecording.value ? Colors.transparent :Color(0xFFF9FAFB),
-                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          border: controller.isRecording.value
+                              ? Border.all(color: Colors.transparent)
+                              : Border.all(color: Colors.grey),
+                          color: controller.isRecording.value
+                              ? Colors.transparent
+                              : Color(0xFFF9FAFB),
+                        ),
                         child: controller.isCompleteAudioRecording.value
                             ? Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(formatDuration(Duration(seconds: controller.seconds.value))),
+                                  Text(formatDuration(Duration(
+                                      seconds: controller.seconds.value))),
                                   TextButton(
                                     onPressed: () {
                                       controller.isCompleteAudioRecording
                                           .value = false;
-                                          controller.seconds.value = 0;
+                                      controller.seconds.value = 0;
                                       controller.isRecording.value = false;
                                       File(controller.audioPath!).delete();
                                     },
@@ -663,15 +679,17 @@ class DiscussionScreen extends StatelessWidget {
                                 ],
                               )
                             : controller.isRecording.value
-                                ? controller.isLocked.value ?
-                        Row(
-                          mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(formatDuration(Duration(seconds: controller.seconds.value))),
-                          ],
-                        )
-                            : Container()
+                                ? controller.isLocked.value
+                                    ? Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(formatDuration(Duration(
+                                              seconds:
+                                                  controller.seconds.value))),
+                                        ],
+                                      )
+                                    : Container()
                                 : TextFormField(
                                     focusNode: focusNode,
                                     // autofocus: true,
@@ -682,7 +700,8 @@ class DiscussionScreen extends StatelessWidget {
                                         suffix: IconButton(
                                             onPressed: () async {
                                               Workmanager().cancelAll();
-                                              MainController mainController = Get.find();
+                                              MainController mainController =
+                                                  Get.find();
                                               print(controller.reply);
                                               String text = controller
                                                   .messageController.text;
@@ -717,8 +736,10 @@ class DiscussionScreen extends StatelessWidget {
                                                       "imagePath":
                                                           controller.imagePath,
                                                       "text": text,
-                                                       "uid": mainController.currentUser!.uid
-                                                    }).then((value) {
+                                                      "uid": mainController
+                                                          .currentUser!.uid
+                                                    }).whenComplete(() {
+                                                  print("jio");
                                                   controller.isImageUploading
                                                       .value = false;
                                                   controller.image.value = null;
@@ -741,7 +762,8 @@ class DiscussionScreen extends StatelessWidget {
                                                       "videoPath":
                                                           controller.videoPath,
                                                       "text": text,
-                                                      "uid": mainController.currentUser!.uid
+                                                      "uid": mainController
+                                                          .currentUser!.uid
                                                     });
                                                 controller.videoPath = null;
                                               } else if (controller
@@ -764,7 +786,8 @@ class DiscussionScreen extends StatelessWidget {
                                                       "documentPath": controller
                                                           .documentPath,
                                                       "text": text,
-                                                          "uid": mainController.currentUser!.uid
+                                                      "uid": mainController
+                                                          .currentUser!.uid
                                                     });
                                                 controller.documentPath = null;
                                                 print("Hey");
@@ -786,7 +809,8 @@ class DiscussionScreen extends StatelessWidget {
                                                     time.millisecondsSinceEpoch;
                                                 Map<String, dynamic>
                                                     messageJson = {
-                                                  "from": mainController.currentUser!.uid,
+                                                  "from": mainController
+                                                      .currentUser!.uid,
                                                   "messageId": messageId,
                                                   "text": text,
                                                   "time": epochTime,
@@ -866,7 +890,9 @@ class DiscussionScreen extends StatelessWidget {
                                   ),
                       ),
                     ),
-                    SizedBox(width: 12,),
+                    SizedBox(
+                      width: 12,
+                    ),
                     RecordButton(controller: controller.animationController),
                     // GestureDetector(
                     //   onTap: () async {

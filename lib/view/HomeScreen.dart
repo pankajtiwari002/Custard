@@ -3,13 +3,16 @@ import 'package:custard_flutter/components/CommunityTile.dart';
 import 'package:custard_flutter/components/CustardAppBar.dart';
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/controllers/HomeController.dart';
+import 'package:custard_flutter/controllers/MainController.dart';
 import 'package:custard_flutter/utils/CustardColors.dart';
 import 'package:custard_flutter/view/CommunityScreen.dart';
 import 'package:custard_flutter/view/DiscussionScreen.dart';
 import 'package:custard_flutter/view/EventsScreen.dart';
 import 'package:custard_flutter/view/GalleryScreen.dart';
+import 'package:custard_flutter/view/HomePage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import 'ProfileScreen.dart';
@@ -18,9 +21,10 @@ class HomeScreen extends StatelessWidget {
   var currentPageIndex = 0.obs;
   final globalKey = GlobalKey<ScaffoldState>();
   HomeController controller = Get.put(HomeController());
-
+  MainController mainController = Get.find();
   @override
   Widget build(BuildContext context) {
+    mainController.homeGlobalKey = globalKey;
     return Scaffold(
       key: globalKey,
       // appBar: CustardAppBar.homeAppBar(_onAvatarTap),
@@ -43,30 +47,27 @@ class HomeScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                     image: DecorationImage(
                         image: AssetImage("assets/avatar.png"),
-                        fit: BoxFit.cover
-                    )
-                ),
+                        fit: BoxFit.cover)),
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        IconButton(icon: Icon(Icons.close), onPressed: () {
-                          globalKey.currentState?.closeDrawer();
-                        }),
+                        IconButton(
+                            icon: Icon(Icons.close),
+                            onPressed: () {
+                              mainController.homeGlobalKey.currentState
+                                  ?.closeDrawer();
+                            }),
                         IconButton(icon: Icon(Icons.settings), onPressed: () {})
                       ],
                     ),
                     Expanded(
                         child: ClipRRect(
-                          child: Image(
-                              image: AssetImage('assets/avatar.png')
-                          ),
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                        )
-                    )
-
+                      child: Image(image: AssetImage('assets/avatar.png')),
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ))
                   ],
                 ),
               ),
@@ -74,11 +75,10 @@ class HomeScreen extends StatelessWidget {
                 'The Mountaineers',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFF090B0E),
-                  fontSize: 16,
-                  fontFamily: 'Gilroy',
-                  fontWeight: FontWeight.w600
-                ),
+                    color: Color(0xFF090B0E),
+                    fontSize: 16,
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w600),
               ),
               Padding(
                 padding: EdgeInsets.all(12),
@@ -88,8 +88,7 @@ class HomeScreen extends StatelessWidget {
                       color: Color(0xFF546881),
                       fontSize: 14,
                       fontFamily: 'Gilroy',
-                      fontWeight: FontWeight.w400
-                  ),
+                      fontWeight: FontWeight.w400),
                 ),
               ),
               Padding(
@@ -98,19 +97,19 @@ class HomeScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     AnalyticsButtonCard(
-                        leadingIcon: Icon(Icons.analytics, color: CustardColors.appTheme),
+                        leadingIcon: Icon(Icons.analytics,
+                            color: CustardColors.appTheme),
                         title: "Analytics",
                         mainNum: "3333",
                         hikePercent: "42%",
-                        onPressed: () {}
-                    ),
+                        onPressed: () {}),
                     AnalyticsButtonCard(
-                        leadingIcon: Icon(Icons.money, color: CustardColors.appTheme),
+                        leadingIcon:
+                            Icon(Icons.money, color: CustardColors.appTheme),
                         title: "Money Matrix",
                         mainNum: "3333",
                         hikePercent: "42%",
-                        onPressed: () {}
-                    )
+                        onPressed: () {})
                   ],
                 ),
               ),
@@ -118,7 +117,7 @@ class HomeScreen extends StatelessWidget {
                 padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: CustardButton(
                   onPressed: () {
-                    Get.to(()=> CommunityScreen());
+                    Get.to(() => CommunityScreen());
                   },
                   buttonType: ButtonType.POSITIVE,
                   label: "Open Chapter Page",
@@ -138,65 +137,96 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               CommunityTile(
-                image: AssetImage("assets/avatar.png"),
-                tilte: "Social Dance Tribe"
-              ),
+                  image: AssetImage("assets/avatar.png"),
+                  tilte: "Social Dance Tribe"),
               CommunityTile(
                   image: AssetImage("assets/avatar.png"),
-                  tilte: "Social Dance Tribe"
-              ),
+                  tilte: "Social Dance Tribe"),
               CommunityTile(
                   image: AssetImage("assets/avatar.png"),
-                  tilte: "Social Dance Tribe"
-              )
+                  tilte: "Social Dance Tribe")
             ],
           ),
         ),
       ),
-      bottomNavigationBar: Obx(() => NavigationBar(
-        onDestinationSelected: (idx) {
-          currentPageIndex.value = idx;
-        },
-        indicatorColor: CustardColors.appTheme,
-        selectedIndex: currentPageIndex.value,
-        destinations: [
-          NavigationDestination(
-              icon: Icon(Icons.home,color: currentPageIndex.value==0 ? Colors.white : Colors.black,),
-              label: "Home"
-          ),
-          NavigationDestination(
-              icon: Icon(Icons.group,color: currentPageIndex.value==1 ? Colors.white : Colors.black,),
-              label: "Discussions"
-          ),
-          NavigationDestination(
-              icon: Icon(Icons.event,color: currentPageIndex.value==2 ? Colors.white : Colors.black,),
-              label: "Events"
-          ),
-          NavigationDestination(
-              icon: Icon(Icons.browse_gallery,color: currentPageIndex.value==3 ? Colors.white : Colors.black,),
-              label: "Gallery"
-          ),
-          NavigationDestination(
-              icon: Icon(Icons.verified_user,color: currentPageIndex.value==4 ? Colors.white : Colors.black,),
-              label: "Profile"
-          )
-        ],
-      )),
-      body: Obx(() => [
-        Container(
-          color: Colors.red,
-          alignment: Alignment.center,
-          child: const Text('Page 1'),
+      bottomNavigationBar: Obx(
+        () => CupertinoTabBar(
+          onTap: (value) {
+            currentPageIndex.value = value;
+          },
+          currentIndex: currentPageIndex.value,
+          items: [
+            BottomNavigationBarItem(
+                icon: currentPageIndex.value == 0
+                    ? SvgPicture.asset("assets/images/home_selected.svg")
+                    : SvgPicture.asset("assets/images/home.svg"),
+                label: "home"),
+            BottomNavigationBarItem(
+                icon: currentPageIndex.value == 1
+                    ? SvgPicture.asset("assets/images/people_selected.svg")
+                    : SvgPicture.asset("assets/images/people.svg"),
+                label: "Discussion"),
+            BottomNavigationBarItem(
+                icon: currentPageIndex.value == 2
+                    ? SvgPicture.asset("assets/images/calendar_selected.svg")
+                    : SvgPicture.asset("assets/images/calendar.svg"),
+                label: "Events"),
+            BottomNavigationBarItem(
+                icon: currentPageIndex.value == 3
+                    ? SvgPicture.asset("assets/images/gallery_selected.svg")
+                    : SvgPicture.asset("assets/images/task-square.svg"),
+                label: "Gallery"),
+            BottomNavigationBarItem(
+                icon: currentPageIndex.value == 4
+                    ? SvgPicture.asset("assets/images/profile-circle.svg")
+                    : SvgPicture.asset("assets/images/profile-circle.svg"),
+                label: "Profile"),
+          ],
         ),
-        DiscussionScreen(),
-        EventsScreen(),
-        const GalleryScreen(),
-        ProfileScreen(currentUser: true,),
-      ][currentPageIndex.value]),
+      ),
+
+      // bottomNavigationBar: Obx(() => NavigationBar(
+      //   onDestinationSelected: (idx) {
+      //     currentPageIndex.value = idx;
+      //   },
+      //   indicatorColor: CustardColors.appTheme,
+      //   selectedIndex: currentPageIndex.value,
+      //   destinations: [
+      //     NavigationDestination(
+      //         icon: Icon(Icons.home,color: currentPageIndex.value==0 ? Colors.white : Colors.black,),
+      //         label: "Home"
+      //     ),
+      //     NavigationDestination(
+      //         icon: Icon(Icons.group,color: currentPageIndex.value==1 ? Colors.white : Colors.black,),
+      //         label: "Discussions"
+      //     ),
+      //     NavigationDestination(
+      //         icon: Icon(Icons.event,color: currentPageIndex.value==2 ? Colors.white : Colors.black,),
+      //         label: "Events"
+      //     ),
+      //     NavigationDestination(
+      //         icon: Icon(Icons.browse_gallery,color: currentPageIndex.value==3 ? Colors.white : Colors.black,),
+      //         label: "Gallery"
+      //     ),
+      //     NavigationDestination(
+      //         icon: Icon(Icons.verified_user,color: currentPageIndex.value==4 ? Colors.white : Colors.black,),
+      //         label: "Profile"
+      //     )
+      //   ],
+      // )),
+      body: Obx(() => [
+            HomePage(),
+            DiscussionScreen(),
+            EventsScreen(),
+            const GalleryScreen(),
+            ProfileScreen(
+              currentUser: true,
+            ),
+          ][currentPageIndex.value]),
     );
   }
 
   _onAvatarTap() {
-      globalKey.currentState?.openDrawer();
+    globalKey.currentState?.openDrawer();
   }
 }

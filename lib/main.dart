@@ -12,6 +12,7 @@ import 'package:custard_flutter/repo/AuthRepo.dart';
 import 'package:custard_flutter/repo/StorageMethods.dart';
 import 'package:custard_flutter/view/HomeScreen.dart';
 import 'package:custard_flutter/view/LoginScreen.dart';
+import 'package:custard_flutter/view/SplashScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -308,7 +309,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.light,
       home: Obx((){
         if(controller.loading.value){
-          return Scaffold();
+          return SplashScreen();
         }
         else{
           return controller.prefs.getBool(Constants.isUserSignedInPref)!=null && controller.prefs.getBool(Constants.isUserSignedInPref)! ? HomeScreen() : LoginScreen();

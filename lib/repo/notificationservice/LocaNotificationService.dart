@@ -102,8 +102,8 @@ class LocalNotificationService {
       final id = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       const NotificationDetails notificationDetails = NotificationDetails(
         android: AndroidNotificationDetails(
-          "instagramclone",
-          "instagramclonechannel",
+          "custardapp",
+          "custardchannel",
           importance: Importance.max,
           priority: Priority.high,
         ),
