@@ -3,5 +3,6 @@ import 'package:get/get.dart';
 
 class JoinCommunityController extends GetxController{
   TextEditingController referralController = TextEditingController();
-  Rx<bool> isCardExpanded = false.obs;
+  // Rx<bool> isCardExpanded = false.obs;
+  RxList<String> isCardExpanded = RxList();
 }

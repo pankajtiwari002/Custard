@@ -20,19 +20,18 @@ class OtpContainer extends StatelessWidget {
           fieldWidth: 50,
           mainAxisAlignment: MainAxisAlignment.center,
           borderRadius: const BorderRadius.all(Radius.circular(8.0)),
-          onSubmit: (otp) => {
-            controller.otp.text = otp
-          },
+          onSubmit: (otp) => {controller.otp.text = otp},
         ),
-        Row(
-          children: [
-            Text("00:58"),
-            TextButton(
-                onPressed: (){},
-                child: Text("Resend OTP")
-            )
-          ],
-        )
+        Obx(() => Row(
+              children: [
+                Text("00:${controller.seconds.value}"),
+                TextButton(onPressed: controller.isShown.value ? () {
+                  controller.isShown.value=false;
+                  controller.seconds.value = 59;
+                  controller.startTimer();
+                } : null, child: Text("Resend OTP"))
+              ],
+            ))
       ],
     );
   }

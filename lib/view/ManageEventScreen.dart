@@ -1,17 +1,38 @@
+import 'dart:ui';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/controllers/ManageEventController.dart';
 import 'package:custard_flutter/view/EditEventScreen.dart';
-// import 'package:fl_chart/fl_chart.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:get/get_rx/src/rx_typedefs/rx_typedefs.dart';
 import 'package:intl/intl.dart';
+// import 'package:syncfusion_flutter_charts/charts.dart';
 
 class ManageEventScreen extends StatelessWidget {
   final snapshot;
   int index;
-  ManageEventScreen({super.key, required this.snapshot,required this.index});
-
+  bool isFeedBack;
   final controller = Get.put(ManageEventController());
+  ManageEventScreen(
+      {super.key,
+      required this.snapshot,
+      required this.index,
+      this.isFeedBack = false}) {
+    controller.titleController.text = snapshot[index]['title'];
+    controller.descriptionController.text =
+        snapshot[index]['description'];
+    if (snapshot[index].data().containsKey("registerationStatus") &&
+        snapshot[index]["registerationStatus"] == "close") {
+      controller.isRegistrationOpen.value = false;
+    }
+    if (isFeedBack) {
+      controller.reachToInsight();
+    }
+  }
 
   DateTime convertMillisecondsToDateTime(int millisecondsSinceEpoch) {
     return DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
@@ -39,11 +60,23 @@ class ManageEventScreen extends StatelessWidget {
               )),
           actions: [
             TextButton(
-                onPressed: () {
-                  controller.titleController.text = controller.data["title"];
-                  controller.descriptionController.text =
-                      controller.data["description"];
-                  Get.to(() => EditEventsScreen());
+                onPressed: () async{
+                  controller.price.text =
+                      snapshot[index]['ticketPrice'].toString();
+                  controller.capacity.text =
+                      snapshot[index]['capacity'].toString();
+                  controller.isFreeEvent.value =
+                      snapshot[index]['isFreeEvent'];
+                  controller.isRemoveLimit.value =
+                      snapshot[index]['isRemoveLimit'];
+                  controller.eventId = snapshot[index]["id"];
+                  bool result = await Get.to(() => EditEventsScreen(
+                        snapshot: snapshot,
+                        index: index,
+                      ));
+                  if(result){
+                    controller.update();
+                  }
                 },
                 child: Text(
                   "Edit Event",
@@ -55,6 +88,7 @@ class ManageEventScreen extends StatelessWidget {
           child: Column(
             children: [
               TabBar(
+                controller: controller.tabController,
                 tabs: [
                   Tab(text: 'Overview'),
                   Tab(text: 'Registration'),
@@ -64,6 +98,7 @@ class ManageEventScreen extends StatelessWidget {
               Container(
                 height: size.height * 0.8,
                 child: TabBarView(
+                  controller: controller.tabController,
                   children: [
                     // Overview Tab Content
                     OverviewTab(),
@@ -93,9 +128,10 @@ class ManageEventScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Your rounded rectangle chips with icon and text
-                RoundedRectChip(icon: Icons.message, label: 'Invite Guest'),
-                RoundedRectChip(
-                    icon: Icons.announcement, label: 'Send Announcement'),
+                customChip(Color(0x26FFB661), "assets/images/message.svg",
+                    "Invite Guest", () {}),
+                customChip(Color(0xFFF9E0E2), "assets/images/announcement.svg",
+                    "Announcement", () {}),
                 // ...
               ],
             ),
@@ -104,53 +140,33 @@ class ManageEventScreen extends StatelessWidget {
           SizedBox(height: 16.0),
 
           // 2. Image with Rounded Border and Camera Icon
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-            width: double.infinity,
-            height: 150,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                  image: NetworkImage(snapshot.data.docs[index]['coverPhotoUrl']),
-                  fit: BoxFit.cover),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            alignment: Alignment.center,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.camera_alt,
-                      color: Colors.white,
-                    )),
-                Text(
-                  'Change cover photo',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontFamily: 'Gilroy',
-                    fontWeight: FontWeight.w600,
-                  ),
-                )
-              ],
-            ),
+          Center(
+            child: Container(
+                margin: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                width: Get.size.width * 0.5,
+                height: Get.size.width * 0.5,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                      image: NetworkImage(
+                          snapshot[index]['coverPhotoUrl']),
+                      fit: BoxFit.cover),
+                  borderRadius: BorderRadius.circular(10),
+                )),
           ),
 
           SizedBox(height: 16.0),
 
           // 3. Bold Text 'The Art of Living'
           Text(
-              snapshot.data.docs[index]['title'],
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFF090B0E),
-                fontSize: 24,
-                fontFamily: 'Gilroy',
-                fontWeight: FontWeight.w600,
-              ),
+            snapshot[index]['title'],
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Color(0xFF090B0E),
+              fontSize: 24,
+              fontFamily: 'Gilroy',
+              fontWeight: FontWeight.w600,
             ),
-          
+          ),
 
           SizedBox(height: 16.0),
           Divider(),
@@ -169,22 +185,23 @@ class ManageEventScreen extends StatelessWidget {
 
           // 5. Text Description
           Text(
-              snapshot.data.docs[index]['description'],
-              style: TextStyle(
-                color: Color(0xFF546881),
-                fontSize: 14,
-                fontFamily: 'Gilroy',
-                fontWeight: FontWeight.w500,
-              ),
+            snapshot[index]['description'],
+            style: TextStyle(
+              color: Color(0xFF546881),
+              fontSize: 14,
+              fontFamily: 'Gilroy',
+              fontWeight: FontWeight.w500,
             ),
+          ),
 
           SizedBox(height: 16.0),
 
           // 6. Two Rows with Icon and Text
-          buildRowWithIcon(Icons.calendar_month, DateFormat('EEEE, MMMM d')
-                            .format(convertMillisecondsToDateTime(snapshot.data.docs[index]['dateTime'])),
-              DateFormat.jm()
-                            .format(convertMillisecondsToDateTime(snapshot.data.docs[index]['dateTime']))),
+          buildRowWithIcon(
+              Icons.calendar_month,
+              DateFormat('EEEE, MMMM d').format(convertMillisecondsToDateTime(
+                  snapshot[index]['dateTime'])),
+              "${DateFormat.jm().format(convertMillisecondsToDateTime(snapshot[index]['dateTime']))} - ${DateFormat.jm().format(convertMillisecondsToDateTime(snapshot[index]['dateTime']))}"),
           SizedBox(
             height: 24,
           ),
@@ -321,9 +338,37 @@ class ManageEventScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Your rounded rectangle chips with icon and text
-                RoundedRectChip(icon: Icons.message, label: 'Invite Guest'),
-                RoundedRectChip(
-                    icon: Icons.announcement, label: 'Send Announcement'),
+                customChip(Color(0x26FFB661), "assets/images/message.svg",
+                    "Invite Guest", () {}),
+                Obx(() {
+                  if (controller.isRegistrationOpen.value) {
+                    return customChip(
+                        Color(0xFFF9E0E2),
+                        "assets/images/close-circle.svg",
+                        "Close Registration", () async {
+                      await FirebaseFirestore.instance
+                          .collection("events")
+                          .doc(snapshot[index]['id'])
+                          .update({
+                        "registerationStatus": "close",
+                      });
+                      controller.isRegistrationOpen.value = false;
+                    });
+                  } else {
+                    return customChip(
+                        Color(0x2300BC32),
+                        "assets/images/tick-circle.svg",
+                        "Open Registration", () async {
+                      await FirebaseFirestore.instance
+                          .collection("events")
+                          .doc(snapshot[index]['id'])
+                          .update({
+                        "registerationStatus": "open",
+                      });
+                      controller.isRegistrationOpen.value=true;
+                    });
+                  }
+                })
                 // ...
               ],
             ),
@@ -701,47 +746,271 @@ class ManageEventScreen extends StatelessWidget {
   }
 
   Widget insightsTab() {
+    List<Color> gradientColor = [
+      Color(0xffffb661),
+      Color.fromARGB(255, 248, 192, 128),
+    ];
+    if (isFeedBack) {
+      Future.delayed(Duration(milliseconds: 100)).then((value) {
+        controller.scrollController.animateTo(
+            controller.scrollController.position.maxScrollExtent,
+            duration: Duration(milliseconds: 500),
+            curve: Curves.easeIn);
+      });
+    }
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text("hi")
-          // LineChart(
-          //   LineChartData(
-          //     gridData: FlGridData(show: false),
-          //     titlesData: FlTitlesData(show: false),
-          //     borderData: FlBorderData(
-          //       show: true,
-          //       border: Border.all(color: const Color(0xff37434d), width: 1),
-          //     ),
-          //     minX: 0,
-          //     maxX: 7,
-          //     minY: 0,
-          //     maxY: 6,
-          //     lineBarsData: [
-          //       LineChartBarData(
-          //         spots: [
-          //           FlSpot(0, 3),
-          //           FlSpot(1, 1),
-          //           FlSpot(2, 4),
-          //           FlSpot(3, 2),
-          //           FlSpot(4, 5),
-          //           FlSpot(5, 1),
-          //           FlSpot(6, 4),
-          //         ],
-          //         isCurved: true,
-          //         color: Colors.blue,
-          //         dotData: FlDotData(show: false),
-          //         belowBarData: BarAreaData(show: false),
-          //       ),
-          //     ],
-          //   ),
-          // ),
-        ],
+      child: SingleChildScrollView(
+        controller: controller.scrollController,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Card(
+              elevation: 2,
+              child: Stack(
+                children: [
+                  Container(
+                    height: 200,
+                    color: Colors.white,
+                    child: LineChart(
+                      LineChartData(
+                          minX: 0,
+                          maxX: 8,
+                          minY: 0,
+                          maxY: 6,
+                          gridData: FlGridData(show: false),
+                          borderData: FlBorderData(
+                            show: false,
+                          ),
+                          titlesData: FlTitlesData(
+                              leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                showTitles: false,
+                              )),
+                              topTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                showTitles: false,
+                              )),
+                              rightTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                showTitles: false,
+                              )),
+                              bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                interval: 1,
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  // print(value);
+                                  switch (value.toInt()) {
+                                    case 1:
+                                      return Text("Mon");
+                                    case 2:
+                                      return Text("Tue");
+                                    case 3:
+                                      return Text("Wed");
+                                    case 4:
+                                      return Text("Thu");
+                                    case 5:
+                                      return Text("Fri");
+                                    case 6:
+                                      return Text("Sat");
+                                    case 7:
+                                      return Text("Sun");
+                                  }
+                                  return Text("");
+                                },
+                              ))),
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: [
+                                FlSpot(0, 3),
+                                FlSpot(1, 2),
+                                FlSpot(2, 5),
+                                FlSpot(3, 2.5),
+                                FlSpot(4, 4),
+                                FlSpot(5, 3),
+                                FlSpot(6, 5),
+                                FlSpot(7.9, 4),
+                              ],
+                              isCurved: true,
+                              color: Color(0xffffb661),
+                              barWidth: 5,
+                              dotData: FlDotData(show: false),
+                              belowBarData: BarAreaData(
+                                  show: true,
+                                  // color: Color(0xffffb661).withOpacity(0.3),
+                                  gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Color(0xffffb661).withOpacity(0.4),
+                                        Color(0xffffb661).withOpacity(0.3),
+                                        // Color(0xffffb661).withOpacity(0.1),
+                                        Color(0xffffb661).withOpacity(0.0),
+                                      ])),
+                            )
+                          ]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 24,
+            ),
+            Row(
+              children: [
+                SvgPicture.asset("assets/images/ticket-star.svg"),
+                SizedBox(
+                  width: 16,
+                ),
+                Text(
+                  'Events Analytics',
+                  style: TextStyle(
+                    color: Color(0xFF090B0E),
+                    fontSize: 18,
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.54,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 16,
+            ),
+            Card(
+              elevation: 2,
+              child: Container(
+                color: Colors.white,
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    customRow(
+                        "Event Views", "160", "+2.51%", Color(0xFF00BC32)),
+                    SizedBox(
+                      height: 16,
+                    ),
+                    Divider(),
+                    SizedBox(
+                      height: 16,
+                    ),
+                    customRow(
+                        "Event Views", "160", "+2.51%", Color(0xFF00BC32)),
+                    SizedBox(
+                      height: 16,
+                    ),
+                    Divider(),
+                    SizedBox(
+                      height: 16,
+                    ),
+                    customRow(
+                        "Event Views", "160", "+2.51%", Color(0xFF00BC32)),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 16,
+            ),
+            Row(
+              children: [
+                SvgPicture.asset("assets/images/document.svg"),
+                SizedBox(
+                  width: 16,
+                ),
+                Text(
+                  'Events FeedBacks',
+                  style: TextStyle(
+                    color: Color(0xFF090B0E),
+                    fontSize: 18,
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.54,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 32,
+            ),
+            SvgPicture.asset("assets/images/documentPurple.svg"),
+            Text(
+              'No feedbacks yet',
+              style: TextStyle(
+                color: Color(0xFF090B0E),
+                fontSize: 18,
+                fontFamily: 'Gilroy',
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.20,
+              ),
+            ),
+            Text(
+              'To collect feedback, schedule a post event thankyou announcement and some feedback questions.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xFF909DAD),
+                fontSize: 14,
+                fontFamily: 'Gilroy',
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.20,
+              ),
+            ),
+            CustardButton(
+                onPressed: () {},
+                buttonType: ButtonType.NEGATIVE,
+                label: "+ Create a feedBack Form"),
+            SizedBox(
+              height: 10,
+            )
+          ],
+        ),
       ),
     );
   }
+}
+
+Widget customRow(String title, String num, String percent, Color color) {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(
+        title,
+        style: TextStyle(
+          color: Color(0xFF546881),
+          fontSize: 14,
+          fontFamily: 'Gilroy',
+          fontWeight: FontWeight.w400,
+          letterSpacing: 0.42,
+        ),
+      ),
+      Row(
+        children: [
+          Text(
+            num,
+            style: TextStyle(
+              color: Color(0xFF090B0E),
+              fontSize: 16,
+              fontFamily: 'Gilroy',
+              fontWeight: FontWeight.w600,
+              height: 0,
+            ),
+          ),
+          Text(
+            percent,
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontFamily: 'Gilroy',
+              fontWeight: FontWeight.w700,
+              height: 0.11,
+            ),
+          )
+        ],
+      )
+    ],
+  );
 }
 
 // Widget for Rounded Rectangle Chip
@@ -844,5 +1113,46 @@ Widget buildRowWithIcon(IconData icon, String labelText, String normalText) {
         ],
       ),
     ],
+  );
+}
+
+Widget customChip(
+    Color backgroundColor, String imagePath, String title, Callback onTap) {
+  return InkWell(
+    onTap: onTap,
+    child: Container(
+      margin: EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.all(10),
+      decoration: ShapeDecoration(
+        color: Color(0xFFF7F9FC),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(5),
+            decoration: ShapeDecoration(
+              color: backgroundColor,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5)),
+            ),
+            child: SvgPicture.asset(imagePath),
+          ),
+          SizedBox(
+            width: 8,
+          ),
+          Text(
+            title,
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 14,
+              fontFamily: 'Gilroy',
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.20,
+            ),
+          ),
+        ],
+      ),
+    ),
   );
 }

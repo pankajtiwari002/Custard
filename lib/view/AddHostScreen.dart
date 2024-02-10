@@ -1,9 +1,13 @@
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 
 class AddHostScreen extends StatelessWidget {
-  const AddHostScreen({super.key});
+  AddHostScreen({super.key});
+
+  Rx<bool> show = false.obs;
+  Rx<bool> manage = false.obs;
 
   @override
   Widget build(BuildContext context) {
@@ -77,43 +81,60 @@ class AddHostScreen extends StatelessWidget {
             SizedBox(
               height: 12,
             ),
-            SwitchListTile(
-              value: true,
-              onChanged: (val) {},
-              title: Text(
-                'Show them on event page',
-                style: TextStyle(
-                  color: Color(0xFF090B0E),
-                  fontSize: 14,
-                  fontFamily: 'Gilroy',
-                  fontWeight: FontWeight.w500,
-                  height: 0.10,
-                ),
-              ),
-            ),
-            SwitchListTile(
-              value: true,
-              onChanged: (val) {},
-              title: Text(
-                'Has manage access',
-                style: TextStyle(
-                  color: Color(0xFF090B0E),
-                  fontSize: 14,
-                  fontFamily: 'Gilroy',
-                  fontWeight: FontWeight.w500,
-                  height: 0.10,
-                ),
-              ),
-            ),
+            Obx(() => SwitchListTile(
+                  value: show.value,
+                  onChanged: (val) {
+                    show.value = val;
+                  },
+                  title: Text(
+                    'Show them on event page',
+                    style: TextStyle(
+                      color: Color(0xFF090B0E),
+                      fontSize: 14,
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w500,
+                      height: 0.10,
+                    ),
+                  ),
+                )),
+            Obx(() => SwitchListTile(
+                  value: manage.value,
+                  onChanged: (val) {
+                    manage.value = val;
+                  },
+                  title: Text(
+                    'Has manage access',
+                    style: TextStyle(
+                      color: Color(0xFF090B0E),
+                      fontSize: 14,
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w500,
+                      height: 0.10,
+                    ),
+                  ),
+                )),
           ],
         ),
       ),
-      bottomNavigationBar: CustardButton(
-          onPressed: () {},
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: CustardButton(
+          onPressed: () {
+            Get.back();
+            Fluttertoast.showToast(
+                msg: "Invitation sent",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.red,
+                textColor: Colors.white,
+                fontSize: 16.0);
+          },
           buttonType: ButtonType.POSITIVE,
           label: "Invite Host",
           backgroundColor: Color(0xFF7B61FF),
           textColor: Colors.white,
+        ),
       ),
     );
   }

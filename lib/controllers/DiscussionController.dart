@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class DiscussionController extends GetxController
-    with GetSingleTickerProviderStateMixin {
+    with GetTickerProviderStateMixin {
   RxList<Map<String, dynamic>> messages = RxList<Map<String, dynamic>>([
     RxMap<String, dynamic>({
       'profileUrl':
@@ -53,17 +53,22 @@ class DiscussionController extends GetxController
     // Add more messages as needed...
   ]);
   late AnimationController animationController;
+  late AnimationController lockController;
+  Rx<bool> isPlay = false.obs;
   @override
   void onInit() {
+    super.onInit();
     animationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 600));
-    super.onInit();
+    lockController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 600));
   }
 
   RxList<String> selectedMessage = RxList();
   RxInt totalSelected = 0.obs;
   RxMap<String, dynamic> reply = RxMap<String, dynamic>({});
   TextEditingController messageController = TextEditingController();
+  Rx<String> text = "".obs;
   Rx<Uint8List?> image = Rx<Uint8List?>(null);
   String? imagePath;
   String? imageUrl;
@@ -88,19 +93,25 @@ class DiscussionController extends GetxController
   Rx<Duration> audioListened = Duration(seconds: 0).obs;
   Rx<Duration> currentDuration = Duration(seconds: 0).obs;
   Rx<bool> isLocked = false.obs;
+  FocusNode focusNode = FocusNode();
   // Rx<String> seconds = "00".obs;
   // Rx<String> minutes = "00".obs;
+  Rx<int> shareLiveOption = 0.obs;
   DateTime? start, end;
-
   var isTimerRunning = false.obs;
   var seconds = 0.obs;
+  Rx<String> emojiVisible = "".obs;
 
   void startTimer() {
     isTimerRunning.value = true;
     Timer.periodic(Duration(seconds: 1), (timer) {
       if (!isTimerRunning.value) {
         timer.cancel();
-      } else {
+      }
+      else if(!isPlay.value){
+
+      }
+      else {
         seconds.value++;
       }
     });

@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class CustardButton extends StatelessWidget {
-  void Function() onPressed;
+  void Function()? onPressed;
   ButtonType buttonType;
   String label;
   Color? backgroundColor;

@@ -1,12 +1,165 @@
+import 'dart:developer';
+
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/controllers/ManageEventController.dart';
 import 'package:custard_flutter/view/CancelEventScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+
+import '../utils/utils.dart';
 
 class EditEventsScreen extends StatelessWidget {
-  EditEventsScreen({super.key});
+  final snapshot;
+  int index;
+  EditEventsScreen({super.key, required this.snapshot, required this.index});
+
   ManageEventController controller = Get.find();
+  DateTime date = DateTime.now();
+  FocusNode priceFocusNode = FocusNode();
+  FocusNode capacityFocusNode = FocusNode();
+
+  DateTime convertMillisecondsToDateTime(int millisecondsSinceEpoch) {
+    return DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
+  }
+
+  _openStartDateTimePicker(BuildContext context) {
+    Get.bottomSheet(
+      Container(
+        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(40),
+            topRight: Radius.circular(40),
+          ),
+          color: Colors.white,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Select Start Date",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                    onPressed: () {
+                      Get.back();
+                    },
+                    icon: Icon(Icons.close))
+              ],
+            ),
+            Divider(),
+            Container(
+              height: 300,
+              child: CalendarDatePicker(
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime(2101),
+                  onDateChanged: (data) {
+                    date = data;
+                  }),
+            ),
+            CustardButton(
+              onPressed: () async {
+                // controller.isDate.value = false;
+                TimeOfDay? time;
+                time = await showTimePicker(
+                    context: context, initialTime: TimeOfDay.now());
+                if (time != null) {
+                  // controller.isDate.value = true;
+                  controller.startTime = time;
+                  controller.startDate = date;
+                  Get.back();
+                  _openEndDateTimePicker(context);
+                }
+              },
+              buttonType: ButtonType.POSITIVE,
+              label: "Next",
+              backgroundColor: Color(0xFF7B61FF),
+              textColor: Colors.white,
+            ),
+            SizedBox(
+              height: 10,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  _openEndDateTimePicker(BuildContext context) {
+    Get.bottomSheet(
+      Container(
+        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(40),
+            topRight: Radius.circular(40),
+          ),
+          color: Colors.white,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Select End Date",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                    onPressed: () {
+                      Get.back();
+                    },
+                    icon: Icon(Icons.close))
+              ],
+            ),
+            Divider(),
+            Container(
+              height: 300,
+              child: CalendarDatePicker(
+                  initialDate: controller.startDate,
+                  firstDate: controller.startDate,
+                  lastDate: DateTime(2101),
+                  onDateChanged: (data) {
+                    date = data;
+                  }),
+            ),
+            CustardButton(
+              onPressed: () async {
+                // controller.isDate.value = false;
+                TimeOfDay? time;
+                time = await showTimePicker(
+                    context: context, initialTime: TimeOfDay.now());
+                if (time != null) {
+                  controller.isDate.value = true;
+                  controller.endTime = time;
+                  controller.endDate = date;
+                  Get.back();
+                }
+              },
+              buttonType: ButtonType.POSITIVE,
+              label: "Next",
+              backgroundColor: Color(0xFF7B61FF),
+              textColor: Colors.white,
+            ),
+            SizedBox(
+              height: 10,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showDeleteDialog() {
     Get.dialog(
       AlertDialog(
@@ -134,7 +287,7 @@ class EditEventsScreen extends StatelessWidget {
                               color: Colors.white,
                             ),
                             Text(
-                              ' Cancele Event',
+                              ' Cancel Event',
                               style: TextStyle(color: Colors.white),
                             ),
                           ],
@@ -170,35 +323,78 @@ class EditEventsScreen extends StatelessWidget {
               SizedBox(height: 16.0),
 
               // 2. Image with Rounded Border and Camera Icon
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                width: double.infinity,
-                height: 150,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                      image: NetworkImage(controller.data["imageUrl"]),
-                      fit: BoxFit.cover),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+              Obx(
+                () => Stack(
                   children: [
-                    IconButton(
-                        onPressed: () {},
-                        icon: Icon(
-                          Icons.camera_alt,
-                          color: Colors.white,
-                        )),
-                    Text(
-                      'Change cover photo',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontFamily: 'Gilroy',
-                        fontWeight: FontWeight.w600,
+                    Center(
+                      child: Container(
+                        margin:
+                            EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                        width: Get.size.width * 0.5,
+                        height: Get.size.width * 0.5,
+                        decoration: BoxDecoration(
+                          image: controller.image.value == null
+                              ? DecorationImage(
+                                  image: NetworkImage(snapshot[index]
+                                      ['coverPhotoUrl']),
+                                  fit: BoxFit.cover)
+                              : DecorationImage(
+                                  image: MemoryImage(controller.image.value!)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        alignment: Alignment.center,
                       ),
-                    )
+                    ),
+                    Positioned(
+                        bottom: 0,
+                        right: Get.size.width * 0.17,
+                        child: Container(
+                          alignment: Alignment.center,
+                          height: 40,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(255, 252, 232, 232),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                              onPressed: () async {
+                                XFile? file =
+                                    await pickImage(ImageSource.gallery);
+                                if (file != null) {
+                                  final path = file.path;
+                                  CroppedFile? croppedFile =
+                                      await ImageCropper().cropImage(
+                                    sourcePath: path,
+                                    aspectRatioPresets: [
+                                      CropAspectRatioPreset.square,
+                                    ],
+                                    uiSettings: [
+                                      AndroidUiSettings(
+                                          toolbarTitle: 'Edit',
+                                          toolbarColor: Colors.black,
+                                          toolbarWidgetColor: Colors.white,
+                                          initAspectRatio:
+                                              CropAspectRatioPreset.square,
+                                          lockAspectRatio: true),
+                                      IOSUiSettings(
+                                        title: 'Edit',
+                                      ),
+                                      // WebUiSettings(
+                                      //   context: context,
+                                      // ),
+                                    ],
+                                  );
+                                  if (croppedFile != null) {
+                                    controller.image.value =
+                                        await croppedFile.readAsBytes();
+                                  }
+                                }
+                              },
+                              icon: Icon(
+                                Icons.edit_outlined,
+                                color: Colors.black,
+                              )),
+                        )),
                   ],
                 ),
               ),
@@ -208,7 +404,6 @@ class EditEventsScreen extends StatelessWidget {
               // 3. Bold Text 'The Art of Living'
               TextFormField(
                 controller: controller.titleController,
-                // initialValue: controller.data["title"],
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 decoration: InputDecoration(
                   hintText: "Add Event Name",
@@ -262,13 +457,62 @@ class EditEventsScreen extends StatelessWidget {
               SizedBox(height: 16.0),
 
               // 6. Two Rows with Icon and Text
-              buildRowWithIcon(Icons.calendar_month, 'Friday, 17 November',
-                  '10:00 AM - 09:00PM'),
+              GestureDetector(onTap: () {
+                _openStartDateTimePicker(context);
+              }, child: Obx(() {
+                if (!controller.isDate.value) {
+                  return buildRowWithIcon(
+                  Icons.calendar_month,
+                  DateFormat('EEEE, MMMM d').format(
+                      convertMillisecondsToDateTime(
+                          snapshot[index]['dateTime'])),
+                  "${DateFormat.jm().format(convertMillisecondsToDateTime(snapshot[index]['dateTime']))} - ${DateFormat.jm().format(convertMillisecondsToDateTime(snapshot[index]['dateTime']))}");
+                } else {
+                  return buildRowWithIcon(
+                      Icons.calendar_month,
+                      DateFormat('EEEE, MMMM d, yyyy')
+                          .format(controller.startDate),
+                      "${controller.formatTimeOfDay(controller.startTime)} - ${controller.formatTimeOfDay(controller.endTime)}");
+                }
+              })),
               SizedBox(
                 height: 24,
               ),
-              buildRowWithIcon(Icons.location_on, '2, Jawahar Lal Nehru Marg',
-                  '10:00 AM - 09:00PM'),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                        color: Color(0xFFF2EFFF),
+                        borderRadius: BorderRadius.circular(8)),
+                    child: Icon(Icons.location_on, color: Color(0xFF665EE0)),
+                  ),
+                  SizedBox(width: 8.0),
+                  Container(
+                    width: 200,
+                    child: TextFormField(
+                      style: TextStyle(
+                        color: Color(0xFF090B0E),
+                        fontSize: 16,
+                        fontFamily: 'Gilroy',
+                        fontWeight: FontWeight.w600,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: "Enter Location",
+                        border: InputBorder.none,
+                        hintStyle: TextStyle(
+                          color: Color(0xFF090B0E),
+                          fontSize: 16,
+                          fontFamily: 'Gilroy',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
 
               SizedBox(height: 16.0),
 
@@ -302,33 +546,79 @@ class EditEventsScreen extends StatelessWidget {
                           Container(
                             width: 44,
                             height: 44,
+                            padding: EdgeInsets.all(10),
                             decoration: BoxDecoration(
                                 color: Color(0xFFF2EFFF),
                                 borderRadius: BorderRadius.circular(8)),
-                            child: Icon(Icons.people, color: Color(0xFF665EE0)),
-                          ),
-                          Text(
-                            '  ₹ ',
-                            style: TextStyle(
-                              color: Color(0xFF090B0E),
-                              fontSize: 14,
-                              fontFamily: 'Gilroy',
-                              fontWeight: FontWeight.w500,
+                            child: SvgPicture.asset(
+                              "assets/images/wallet-minus.svg",
                             ),
                           ),
-                          Text(
-                            '200',
-                            style: TextStyle(
-                              color: Color(0xFF090B0E),
-                              fontSize: 14,
-                              fontFamily: 'Gilroy',
-                              fontWeight: FontWeight.w500,
-                            ),
+                          SizedBox(
+                            width: 10,
                           ),
+                          Obx(() {
+                            if (controller.isFreeEvent.value) {
+                              return Container();
+                            } else {
+                              return Text(
+                                '₹ ',
+                                style: TextStyle(
+                                  color: Color(0xFF090B0E),
+                                  fontSize: 14,
+                                  fontFamily: 'Gilroy',
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              );
+                            }
+                          }),
+                          Container(
+                              width: 100,
+                              height: 50,
+                              alignment: Alignment.centerLeft,
+                              child: Obx(() {
+                                if (controller.isFreeEvent.value) {
+                                  return InkWell(
+                                    onTap: () {
+                                      controller.isFreeEvent.value = false;
+                                      priceFocusNode.requestFocus();
+                                    },
+                                    child: Text(
+                                      "Free Event",
+                                      style: TextStyle(
+                                        color: Color(0xFF090B0E),
+                                        fontSize: 14,
+                                        fontFamily: 'Gilroy',
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return TextField(
+                                  focusNode: priceFocusNode,
+                                  controller: controller.price,
+                                  style: TextStyle(
+                                    color: Color(0xFF090B0E),
+                                    fontSize: 14,
+                                    fontFamily: 'Gilroy',
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  decoration: InputDecoration(
+                                      hintText: "Add price",
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14,
+                                        fontFamily: 'Gilroy',
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      border: InputBorder.none),
+                                  keyboardType: TextInputType.number,
+                                );
+                              })),
                         ],
                       ),
                       Container(
-                          width: 180,
+                          width: 170,
                           child: Obx(
                             () => SwitchListTile(
                               value: controller.isFreeEvent.value,
@@ -352,7 +642,7 @@ class EditEventsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Ticket price',
+                        'Total Capacity',
                         style: TextStyle(
                           color: Color(0xFF141414),
                           fontSize: 16,
@@ -374,30 +664,56 @@ class EditEventsScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8)),
                             child: Icon(Icons.people, color: Color(0xFF665EE0)),
                           ),
-                          Text(
-                            '  ₹ ',
-                            style: TextStyle(
-                              color: Color(0xFF090B0E),
-                              fontSize: 14,
-                              fontFamily: 'Gilroy',
-                              fontWeight: FontWeight.w500,
-                              height: 0.08,
-                            ),
+                          SizedBox(
+                            width: 10,
                           ),
-                          Text(
-                            '200',
-                            style: TextStyle(
-                              color: Color(0xFF090B0E),
-                              fontSize: 14,
-                              fontFamily: 'Gilroy',
-                              fontWeight: FontWeight.w500,
-                              height: 0.08,
-                            ),
-                          ),
+                          Container(
+                              width: 100,
+                              height: 50,
+                              alignment: Alignment.centerLeft,
+                              child: Obx(() {
+                                if (controller.isRemoveLimit.value) {
+                                  return InkWell(
+                                    onTap: (){
+                                      controller.isRemoveLimit.value=false;
+                                      capacityFocusNode.requestFocus();
+                                    },
+                                    child: Text(
+                                      "No Limit",
+                                      style: TextStyle(
+                                        color: Color(0xFF090B0E),
+                                        fontSize: 14,
+                                        fontFamily: 'Gilroy',
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return TextField(
+                                  focusNode: capacityFocusNode,
+                                  controller: controller.capacity,
+                                  style: TextStyle(
+                                    color: Color(0xFF090B0E),
+                                    fontSize: 14,
+                                    fontFamily: 'Gilroy',
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  decoration: InputDecoration(
+                                      hintText: "Add Capacity",
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14,
+                                        fontFamily: 'Gilroy',
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      border: InputBorder.none),
+                                  keyboardType: TextInputType.number,
+                                );
+                              })),
                         ],
                       ),
                       Container(
-                          width: 180,
+                          width: 190,
                           child: Obx(
                             () => SwitchListTile(
                               value: controller.isRemoveLimit.value,
@@ -471,11 +787,15 @@ class EditEventsScreen extends StatelessWidget {
                 height: 10,
               ),
               CustardButton(
-                onPressed: () {
-                  controller.data["title"] = controller.titleController.text;
-                  controller.data["description"] =
-                      controller.descriptionController.text;
-                  Get.back();
+                onPressed: () async{
+                  EasyLoading.show(status: "updating...");
+                  try {
+                    await controller.updateEvent();
+                  } catch (e) {
+                    log(e.toString());
+                  }
+                  EasyLoading.dismiss();
+                  Get.back(result: true);
                 },
                 buttonType: ButtonType.POSITIVE,
                 label: "Save Changes",

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/components/CustardTextField.dart';
+import 'package:custard_flutter/controllers/MainController.dart';
 import 'package:custard_flutter/controllers/PhoneAuthController.dart';
 import 'package:custard_flutter/controllers/UserOnboardingController.dart';
 import 'package:custard_flutter/utils/CustardColors.dart';
@@ -12,8 +13,10 @@ import 'package:custard_flutter/view/CongratsScreen.dart';
 import 'package:custard_flutter/view/HomeScreen.dart';
 import 'package:custom_radio_grouped_button/custom_radio_grouped_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../components/SlideShowContainer.dart';
@@ -23,6 +26,7 @@ import 'JoinCommunityScreen.dart';
 class UserOnboardingScreen extends StatelessWidget {
   // var selectedImage = Rxn<File>();
   late UserOnboardingController controller;
+  MainController mainController = Get.find();
   PhoneAuthController phoneAuthController = Get.find();
   UserOnboardingScreen({super.key});
 
@@ -38,36 +42,41 @@ class UserOnboardingScreen extends StatelessWidget {
   }
 
   Future<void> onPressed() async {
+    EasyLoading.show(status: "loading...");
     bool res = await controller.joinUser();
     if (res) {
-      Get.offAll(HomeScreen());
+      mainController.currentUser = controller.user;
+      EasyLoading.dismiss();
+      Get.offAll(() => JoinCommunityScreen());
     } else {
+      EasyLoading.showError("Failed");
       print("failed.........");
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    controller = Get.put(UserOnboardingController(uid: phoneAuthController.uid.value, context: context));
+    controller = Get.put(UserOnboardingController(
+        uid: phoneAuthController.uid.value, context: context));
     controller.phone = phoneAuthController.phoneNumber.text;
     controller.isVerified = true;
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
         body: Padding(
-            padding: const EdgeInsets.all(12),
-            child: SlideShowContainer(
-                widgets: [
-                  _nameScreen(),
-                  _genderScreen(),
-                  _photoScreen(),
-                  _bioScreen(),
-                  _locationScreen()
-                ],
-                onFinish: () {},
-                controller: controller,
-              ),
-            ),
+          padding: const EdgeInsets.all(12),
+          child: SlideShowContainer(
+            widgets: [
+              _nameScreen(),
+              _genderScreen(),
+              _photoScreen(),
+              _bioScreen(),
+              _locationScreen(context)
+            ],
+            onFinish: () {},
+            controller: controller,
+          ),
+        ),
         bottomNavigationBar: Padding(
           padding: const EdgeInsets.all(10.0),
           child: CustardButton(
@@ -79,7 +88,8 @@ class UserOnboardingScreen extends StatelessWidget {
                   Get.snackbar("title", "message");
                 }
               },
-              buttonType: ButtonType.NEGATIVE,
+              buttonType: ButtonType.POSITIVE,
+              backgroundColor: Color(0xFF7B61FF),
               label: "Next"),
         ),
       ),
@@ -141,12 +151,39 @@ class UserOnboardingScreen extends StatelessWidget {
           children: [
             TextButton(
                 onPressed: () async {
-                   XFile? file = await pickImage(ImageSource.gallery);
-                  Uint8List? image = null;
-                  if(file!=null){
-                    image = await file.readAsBytes();
+                  XFile? file = await pickImage(ImageSource.gallery);
+                  // Uint8List? image = null;
+                  if (file != null) {
+                    final path = file.path;
+                    log(path);
+                    CroppedFile? croppedFile = await ImageCropper().cropImage(
+                      sourcePath: path,
+                      aspectRatioPresets: [
+                        CropAspectRatioPreset.square,
+                        // CropAspectRatioPreset.ratio3x2,
+                        // CropAspectRatioPreset.original,
+                        // CropAspectRatioPreset.ratio4x3,
+                        // CropAspectRatioPreset.ratio16x9
+                      ],
+                      uiSettings: [
+                        AndroidUiSettings(
+                            toolbarTitle: 'Edit',
+                            toolbarColor: Color(0xff62c9d5),
+                            toolbarWidgetColor: Colors.white,
+                            initAspectRatio: CropAspectRatioPreset.square,
+                            lockAspectRatio: true),
+                        // IOSUiSettings(
+                        //   title: 'Cropper',
+                        // ),
+                        // WebUiSettings(
+                        //   context: context,
+                        // ),
+                      ],
+                    );
+                    if (croppedFile != null) {
+                      controller.image.value = await croppedFile.readAsBytes();
+                    }
                   }
-                  controller.image.value = image;
                 },
                 child: const Row(
                   children: [Icon(Icons.upload), Text("Upload picture")],
@@ -167,7 +204,7 @@ class UserOnboardingScreen extends StatelessWidget {
     );
   }
 
-  _locationScreen() {
+  _locationScreen(BuildContext context) {
     print("city: ");
     log(controller.city);
     return Column(
@@ -186,6 +223,14 @@ class UserOnboardingScreen extends StatelessWidget {
             border: Border.all(color: Colors.grey),
             borderRadius: BorderRadius.circular(20),
           ),
+        ),
+        CustardButton(
+          onPressed: () async {
+            await controller.getLocation(context);
+          },
+          buttonType: ButtonType.POSITIVE,
+          label: "Get Location",
+          backgroundColor: Color(0xFF7B61FF),
         )
       ],
     );

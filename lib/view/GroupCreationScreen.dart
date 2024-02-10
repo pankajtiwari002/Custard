@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/components/CustardTextField.dart';
 import 'package:custard_flutter/components/UserPhotosContainer.dart';
@@ -95,24 +96,45 @@ class GroupCreationScreen extends StatelessWidget {
                     shrinkWrap: true,
                     itemCount: controller.participants.length,
                     itemBuilder: (context, index) {
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: AssetImage("assets/avatar.png"),
-                          radius: 24,
-                        ),
-                        title: Text(controller.participants[index]['name']),
-                        trailing: Text(
-                          'Added',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Color(0xFF00BC32),
-                            fontSize: 12,
-                            fontFamily: 'Gilroy',
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                      print(controller.participants[index].value);
+                      return FutureBuilder(
+                        future: FirebaseFirestore.instance
+                            .collection("users")
+                            .doc(controller.participants[index].value)
+                            .get(),
+                        builder: ((context, snapshot) {
+                          print("snapshot");
+                          if (snapshot.connectionState ==
+                                  ConnectionState.active ||
+                              snapshot.connectionState ==
+                                  ConnectionState.done) {
+                            if (snapshot.hasData) {
+                              print(snapshot.data!);
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundImage:
+                                      NetworkImage(snapshot.data!['profilePic']),
+                                  radius: 24,
+                                ),
+                                title: Text(snapshot.data!['name']),
+                                trailing: Text(
+                                  'Added',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Color(0xFF00BC32),
+                                    fontSize: 12,
+                                    fontFamily: 'Gilroy',
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                          return Container();
+                        }),
                       );
-                    }),
+                    }
+                  ),
               ),
               // Spacer(),
             ],

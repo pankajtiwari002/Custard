@@ -1,4 +1,10 @@
+import 'dart:developer';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:custard_flutter/controllers/MainController.dart';
 import 'package:custard_flutter/utils/CustardColors.dart';
+import 'package:custard_flutter/view/AllPhotosScreen.dart';
 import 'package:custard_flutter/view/GroupCreationScreen.dart';
 import 'package:custard_flutter/view/GroupImageScreen.dart';
 import 'package:flutter/cupertino.dart';
@@ -27,10 +33,20 @@ class GalleryScreen extends StatelessWidget {
           ),
         ),
         actions: [
-          IconButton(onPressed: (){
-            Get.to(() => GroupCreationScreen());
-          }, icon: Icon(Icons.add,color: Colors.white,)),
-          IconButton(onPressed: (){}, icon: Icon(Icons.search,color: Colors.white,)),
+          IconButton(
+              onPressed: () {
+                Get.to(() => GroupCreationScreen());
+              },
+              icon: Icon(
+                Icons.add,
+                color: Colors.white,
+              )),
+          IconButton(
+              onPressed: () {},
+              icon: Icon(
+                Icons.search,
+                color: Colors.white,
+              )),
         ],
       ),
       body: ListView(
@@ -41,12 +57,12 @@ class GalleryScreen extends StatelessWidget {
 
   _yourPhoto() {
     var photos = [
-      "assets/temp.png",
-      "assets/temp.png",
-      "assets/temp.png",
-      "assets/temp.png",
-      "assets/temp.png",
-      "assets/temp.png"
+      "assets/avatar.png",
+      "assets/avatar.png",
+      "assets/avatar.png",
+      "assets/avatar.png",
+      "assets/avatar.png",
+      "assets/avatar.png"
     ].obs;
 
     return Padding(
@@ -66,7 +82,7 @@ class GalleryScreen extends StatelessWidget {
             ),
             TextButton(
                 onPressed: () {
-                  Get.to(() => GroupImageScreen());
+                  // Get.to(() => GroupImageScreen());
                 },
                 child: Text(
                   'View all',
@@ -80,7 +96,7 @@ class GalleryScreen extends StatelessWidget {
           ],
         ),
         Container(
-          height: 200,
+          height: 100,
           child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: photos.length,
@@ -93,20 +109,19 @@ class GalleryScreen extends StatelessWidget {
   }
 
   _photoCardUI(String data) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(50),
-      child: Container(
-        width: 150,
-        height: 150,
-        margin: EdgeInsets.fromLTRB(4, 0, 4, 0),
-        decoration: BoxDecoration(
-            image: DecorationImage(image: AssetImage(data), fit: BoxFit.cover)),
-        // child: Image(image: NetworkImage("https://via.placeholder.com/150x150")),
-      ),
+    return Container(
+      width: 100,
+      height: 100,
+      margin: EdgeInsets.fromLTRB(4, 0, 4, 0),
+      decoration: BoxDecoration(
+          image: DecorationImage(image: AssetImage(data), fit: BoxFit.cover),
+          borderRadius: BorderRadius.circular(10)),
+      // child: Image(image: NetworkImage("https://via.placeholder.com/150x150")),,
     );
   }
 
   _groups() {
+    MainController mainController = Get.find();
     return Padding(
       padding: EdgeInsets.fromLTRB(12, 6, 12, 6),
       child: Column(
@@ -123,31 +138,164 @@ class GalleryScreen extends StatelessWidget {
               height: 0,
             ),
           ),
-          _groupsTile(GalleryTileData(
-              grpIcon: "https://via.placeholder.com/150x150",
-              name: "name",
-              recentImage:
-                  "https://t3.ftcdn.net/jpg/02/48/42/64/360_F_248426448_NVKLywWqArG2ADUxDq6QprtIzsF82dMF.jpg")),
-          _groupsTile(GalleryTileData(
-              grpIcon: "https://via.placeholder.com/150x150",
-              name: "name",
-              recentImage: "https://via.placeholder.com/150x150")),
-          _groupsTile(GalleryTileData(
-              grpIcon: "https://via.placeholder.com/150x150",
-              name: "name",
-              recentImage: "https://via.placeholder.com/150x150")),
-          _groupsTile(GalleryTileData(
-              grpIcon: "https://via.placeholder.com/150x150",
-              name: "name",
-              recentImage: "https://via.placeholder.com/150x150")),
-          _groupsTile(GalleryTileData(
-              grpIcon: "https://via.placeholder.com/150x150",
-              name: "name",
-              recentImage: "https://via.placeholder.com/150x150")),
-          _groupsTile(GalleryTileData(
-              grpIcon: "https://via.placeholder.com/150x150",
-              name: "name",
-              recentImage: "https://via.placeholder.com/150x150")),
+          StreamBuilder(
+            stream: FirebaseFirestore.instance
+                .collection('events')
+                .where('communityId',
+                    isEqualTo: mainController.currentCommunityId)
+                // .where('dateTime',
+                //     isLessThan: DateTime.now().millisecondsSinceEpoch)
+                // .orderBy('dateTime', descending: true)
+                .snapshots(),
+            builder: ((context,
+                AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+              if (snapshot.connectionState == ConnectionState.active ||
+                  snapshot.connectionState == ConnectionState.done) {
+                if (snapshot.hasData) {
+                  List<dynamic> userEvents = snapshot.data!.docs;
+                  log("length: " + userEvents.length.toString());
+                  print(userEvents[1]['id']);
+                  return ListView.builder(
+                      primary: false,
+                      itemCount: userEvents.length,
+                      shrinkWrap: true,
+                      itemBuilder: ((context, index) {
+                        log(snapshot.data!.docs[index]['communityId']);
+                        // log(index.toString());
+                        // return Text("Hi");
+                        if (snapshot.data!.docs[index]['dateTime'] <
+                            DateTime.now().millisecondsSinceEpoch) {
+                          return Column(
+                            children: [
+                              ListTile(
+                                onTap: () {
+                                  Get.to(() => AllPhotoScreen(
+                                        snapshot: snapshot,
+                                        index: index,
+                                      ));
+                                },
+                                title: Text(
+                                  snapshot.data!.docs[index]['title'],
+                                  textAlign: TextAlign.start,
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 14,
+                                    fontFamily: 'Gilroy',
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                trailing: Container(
+                                  height: 60,
+                                  width: 60,
+                                  decoration: BoxDecoration(
+                                      color: Colors.grey,
+                                      image: DecorationImage(
+                                          image: NetworkImage(
+                                            snapshot.data!.docs[index]
+                                                ['coverPhotoUrl'],
+                                          ),
+                                          fit: BoxFit.cover),
+                                      borderRadius: BorderRadius.circular(10)),
+                                ),
+                              ),
+                              SizedBox(
+                                height: 20,
+                              ),
+                              // Divider()
+                            ],
+                          );
+                        } else {
+                          return SizedBox.shrink();
+                        }
+                      }));
+                } else {
+                  return Container();
+                }
+              } else {
+                return Container();
+              }
+            }),
+          )
+          // FutureBuilder(
+          //     future: FirebaseFirestore.instance
+          //         .collection("gallery")
+          //         .where("communityId",
+          //             isEqualTo: mainController.currentCommunityId)
+          //         .where('chapterId',
+          //             isEqualTo:
+          //                 mainController.currentCommunity.value!.chapters[0])
+          //         .get(),
+          //     builder: ((context, snapshot) {
+          //       if (snapshot.connectionState == ConnectionState.active ||
+          //           snapshot.connectionState == ConnectionState.done) {
+          //         print("snaphot");
+          //         if (snapshot.hasData) {
+          //           print("snaphot has data");
+          //           // print(snapshot.data!.docs[0].id);
+          //           return ListView.builder(
+          //               shrinkWrap: true,
+          //               primary: false,
+          //               itemCount: snapshot.data!.docs.length,
+          //               itemBuilder: (context, index) {
+          //                 return FutureBuilder(
+          //                     future: FirebaseFirestore.instance
+          //                         .collection("events")
+          //                         .doc(snapshot.data!.docs[index]['eventId'])
+          //                         .get(),
+          //                     builder: (context, snap) {
+          //                       if (snap.connectionState ==
+          //                               ConnectionState.active ||
+          //                           snap.connectionState ==
+          //                               ConnectionState.done) {
+          //                         if (snap.hasData) {
+          //                           return InkWell(
+          //                             onTap: () {
+          //                               Get.to(() => GroupImageScreen());
+          //                               // Get.to(() => AllPhotos(
+          //                               //     images: snapshot.data!.docs[index]
+          //                               //         ['urls']));
+          //                             },
+          //                             child: _groupsTile(GalleryTileData(
+          //                                 grpIcon: snap.data!['coverPhotoUrl'],
+          //                                 name: snap.data!['title'],
+          //                                 recentImage: snapshot
+          //                                     .data!.docs[index]['urls'][0])),
+          //                           );
+          //                         }
+          //                       }
+          //                       return Container();
+          //                     });
+          //               });
+          //         }
+          //       }
+          //       print("snapshot has error");
+          //       return Container();
+          //     })),
+          // _groupsTile(GalleryTileData(
+          //     grpIcon: "https://via.placeholder.com/150x150",
+          //     name: "name",
+          //     recentImage:
+          //         "https://t3.ftcdn.net/jpg/02/48/42/64/360_F_248426448_NVKLywWqArG2ADUxDq6QprtIzsF82dMF.jpg")),
+          // _groupsTile(GalleryTileData(
+          //     grpIcon: "https://via.placeholder.com/150x150",
+          //     name: "name",
+          //     recentImage: "https://via.placeholder.com/150x150")),
+          // _groupsTile(GalleryTileData(
+          //     grpIcon: "https://via.placeholder.com/150x150",
+          //     name: "name",
+          //     recentImage: "https://via.placeholder.com/150x150")),
+          // _groupsTile(GalleryTileData(
+          //     grpIcon: "https://via.placeholder.com/150x150",
+          //     name: "name",
+          //     recentImage: "https://via.placeholder.com/150x150")),
+          // _groupsTile(GalleryTileData(
+          //     grpIcon: "https://via.placeholder.com/150x150",
+          //     name: "name",
+          //     recentImage: "https://via.placeholder.com/150x150")),
+          // _groupsTile(GalleryTileData(
+          //     grpIcon: "https://via.placeholder.com/150x150",
+          //     name: "name",
+          //     recentImage: "https://via.placeholder.com/150x150")),
         ],
       ),
     );
@@ -177,12 +325,13 @@ class GalleryScreen extends StatelessWidget {
           Spacer(
             flex: 1,
           ),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-                height: 60,
-                child: Image.network(
-                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLMI5YxZE03Vnj-s-sth2_JxlPd30Zy7yEGg&usqp=CAU")),
+          Container(
+            height: 60,
+            width: 60,
+            decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: NetworkImage(data.recentImage), fit: BoxFit.cover),
+                borderRadius: BorderRadius.circular(15)),
           ),
         ],
       ),

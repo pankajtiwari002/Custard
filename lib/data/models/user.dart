@@ -7,8 +7,10 @@ class User{
   final String lastLocation;
   final String phone;
   final String profilePic;
-  final List<String> communities;
+  final List<dynamic> communities;
+  final bool isFirstTime;
   final String uid;
+  final String role;
   
   User({
     required this.name,
@@ -19,7 +21,9 @@ class User{
     required this.phone,
     required this.profilePic,
     required this.communities,
-    required this.uid
+    required this.uid,
+    required this.isFirstTime,
+    required this.role
   });
 
   factory User.fromSnap(Map<String,dynamic> json){
@@ -30,8 +34,10 @@ class User{
         lastLocation: json['lastLocation'],
         phone: json['phone'],
         profilePic: json["profilePic"],
-        communities: [],
-        uid: json["uid"]
+        communities: json["communities"],
+        uid: json["uid"],
+        isFirstTime: json["isFirstTime"] ?? false,
+        role: json["role"] ?? "user"
     );
   }
 
@@ -44,6 +50,8 @@ class User{
       "lastLocation": lastLocation,
       "phone": phone,
       "profilePic": profilePic,
-      "uid": uid
+      "uid": uid,
+      "isFirstTime": isFirstTime,
+      "role": role
     };
 }

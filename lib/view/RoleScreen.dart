@@ -1,30 +1,47 @@
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/components/CustardTextField.dart';
+import 'package:custard_flutter/controllers/RoleController.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class RoleScreen extends StatelessWidget {
-  const RoleScreen({super.key});
-  
+  RoleScreen({super.key});
+  final controller = Get.put(RoleController());
+
 
   @override
   Widget build(BuildContext context) {
+  List func = [
+    fun1(controller),
+    fun2(controller),
+    fun3(controller),
+    fun4(controller),
+    fun5(controller),
+  ];
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text('School'),
+        title: Obx(() => controller.appBarTitle[controller.index.value]),
         centerTitle: true,
         leading: IconButton(
             onPressed: () {
-              Get.back();
-            }, icon: const Icon(Icons.arrow_back_ios)),
+              if(controller.oldIndex.isEmpty){
+                Get.back();
+              }
+              else{
+                controller.index.value = controller.oldIndex[controller.oldIndex.length-1];
+                controller.oldIndex.removeLast();
+              }
+            },
+            icon: const Icon(Icons.arrow_back_ios)),
       ),
-      body: fun2(),
+      body: Obx(
+        () => func[controller.index.value],
+      ),
     );
   }
 }
-
-fun1() {
+fun1(RoleController controller) {
   return Column(
     mainAxisAlignment: MainAxisAlignment.center,
     crossAxisAlignment: CrossAxisAlignment.center,
@@ -53,7 +70,10 @@ fun1() {
       Padding(
           padding: const EdgeInsets.symmetric(horizontal: 60),
           child: CustardButton(
-            onPressed: () {},
+            onPressed: () {
+              controller.oldIndex.add(controller.index.value);
+              controller.index.value++;
+            },
             buttonType: ButtonType.NEGATIVE,
             label: "+ Create a New Role",
             backgroundColor: Color(0xFF665EE0),
@@ -63,7 +83,7 @@ fun1() {
   );
 }
 
-fun2() {
+fun2(RoleController controller) {
   TextEditingController roleController = new TextEditingController();
   List<String> colorCodes = [
     "0xFF0000",
@@ -191,7 +211,10 @@ fun2() {
         // SizedBox(height: 16.0),
         Spacer(),
         CustardButton(
-          onPressed: () {},
+          onPressed: () {
+            controller.oldIndex.add(controller.index.value);
+            controller.index.value++;
+          },
           buttonType: ButtonType.POSITIVE,
           label: "Create",
           backgroundColor: Color(0xFF7B61FF),
@@ -201,7 +224,7 @@ fun2() {
   );
 }
 
-fun3() {
+fun3(RoleController controller) {
   return Padding(
     padding: const EdgeInsets.all(10.0),
     child: Column(
@@ -236,6 +259,10 @@ fun3() {
             shrinkWrap: true,
             itemBuilder: (context, index) {
               return ListTile(
+                onTap: (){
+                  controller.oldIndex.add(controller.index.value);
+                  controller.index.value = 4;
+                },
                 title: Text("School"),
                 subtitle: Text("12 Members"),
                 leading: CircleAvatar(
@@ -253,7 +280,7 @@ fun3() {
   );
 }
 
-fun4() {
+fun4(RoleController controller) {
   TextEditingController roleController = new TextEditingController();
   List<String> colorCodes = [
     "0xFF0000",
@@ -392,7 +419,9 @@ fun4() {
               ),
               // Adds space between the text and the toggle button
               IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    controller.index.value++;
+                  },
                   icon: Icon(
                     Icons.toggle_on,
                     color: Color(0xFF7B61FF),
@@ -443,7 +472,10 @@ fun4() {
             height: 70,
           ),
           CustardButton(
-            onPressed: () {},
+            onPressed: () {
+              controller.oldIndex.add(controller.index.value);
+              controller.index.value++;
+            },
             buttonType: ButtonType.POSITIVE,
             label: "Save Changes",
             backgroundColor: Color(0xFF7B61FF),
@@ -454,7 +486,7 @@ fun4() {
   );
 }
 
-fun5() {
+fun5(RoleController controller) {
   return Padding(
     padding: const EdgeInsets.all(10.0),
     child: Column(

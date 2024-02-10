@@ -1,12 +1,12 @@
 class Community {
   String benefits;
-  List<String> chapters;
+  List<dynamic> chapters;
   String communityAbout;
   String communityName;
   String communityLink;
   String communityProfilePic;
   String galleryId;
-  List<String> tags;
+  List<dynamic> tags;
   String theme;
 
   Community({
@@ -20,6 +20,20 @@ class Community {
     required this.tags,
     required this.theme,
   });
+
+  factory Community.fromSnap(Map<String, dynamic> json) {
+    return Community(
+      benefits: json["benefits"],
+      chapters: json["chapters"],
+      communityAbout: json["communityAbout"],
+      communityName: json["communityName"],
+      communityLink: json["communityLink"],
+      communityProfilePic: json["communityProfilePic"],
+      galleryId: json["galleryId"],
+      tags: json["tags"],
+      theme: json["theme"],
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {

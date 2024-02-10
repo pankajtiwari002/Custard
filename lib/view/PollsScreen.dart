@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/components/RadioButtonTile.dart';
+import 'package:custard_flutter/controllers/MainController.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,7 +13,7 @@ import '../controllers/DiscussionController.dart';
 
 class PollsScreen extends StatelessWidget {
   DiscussionController controller = Get.find();
-
+  MainController mainController = Get.find();
   isAddNewField() {
     for (int i = 0; i < controller.options.length; i++) {
       if (controller.options[i].text.trim() == "") return false;
@@ -30,6 +31,13 @@ class PollsScreen extends StatelessWidget {
         ),
         leading: IconButton(
             onPressed: () {
+              controller.questionController.text = "";
+              controller.isMultipleOption.value = false;
+              controller.isHideLisveResult.value = false;
+              controller.options.value = [
+                TextEditingController(),
+                TextEditingController()
+              ];
               Get.back();
             },
             icon: Icon(
@@ -160,17 +168,19 @@ class PollsScreen extends StatelessWidget {
                         .add({'text': controller.options[i].text, 'uids': uid});
                   }
                   List<dynamic> options = [];
-                  for(int i=0;i<mp['options'].length;i++){
-                    Map<String,dynamic> option = {
+                  for (int i = 0; i < mp['options'].length; i++) {
+                    Map<String, dynamic> option = {
                       'text': mp['options'][i]['text'],
                       'uids': []
                     };
                     options.add(option);
                   }
-                  final DatabaseReference databaseReference = FirebaseDatabase
-                      .instance
-                      .ref()
-                      .child("communityChats/chapterId/messages");
+                  print("communityId = " + mainController.currentCommunityId!);
+                  print("chapterId = " +
+                      mainController.currentCommunity.value!.chapters[0]);
+                  final DatabaseReference databaseReference =
+                      FirebaseDatabase.instance.ref().child(
+                          "${mainController.currentCommunityId!}/${mainController.currentCommunity.value!.chapters[0]}/messages");
                   DatabaseReference newMessage = await databaseReference.push();
                   String messageId = newMessage.key!;
                   DateTime time = DateTime.now();
@@ -181,28 +191,20 @@ class PollsScreen extends StatelessWidget {
                     'HideLiveResult': controller.isHideLisveResult.value,
                     'pollOptions': options,
                     "total": 0,
-                    "from": Global.currentUser!.uid,
+                    "from": mainController.currentUser!.uid,
                     "messageId": messageId,
                     "time": epochTime,
                     "type": "POLLS"
                   };
 
                   await newMessage.set(messageJson);
-                  controller.messages.add(RxMap({
-                    'profileUrl':
-                        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y3VzdG9tZXIlMjBwcm9maWxlfGVufDB8fDB8fHww&w=1000&q=80',
-                    'name': 'Pankaj',
-                    'imageUrl': null,
-                    'documentUrl': null,
-                    'audioMessageUrl': null,
-                    'polls': mp,
-                    'textMessage': controller.messageController.text,
-                    'repliedMessage': null,
-                    'date': DateTime.now(),
-                    'prevDate': DateTime.now().subtract(Duration(days: 2)),
-                    'owner': true,
-                    "isSelected": false
-                  }));
+                  controller.questionController.text = "";
+                  controller.isMultipleOption.value = false;
+                  controller.isHideLisveResult.value = false;
+                  controller.options.value = [
+                    TextEditingController(),
+                    TextEditingController()
+                  ];
                   Get.back();
                 },
                 buttonType: ButtonType.POSITIVE,

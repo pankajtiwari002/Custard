@@ -1,10 +1,16 @@
+import 'dart:developer';
+import 'dart:ffi';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:custard_flutter/components/CustardButton.dart';
+import 'package:custard_flutter/controllers/InvitePeopleController.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class InvitePeopleScreen extends StatelessWidget {
-  const InvitePeopleScreen({super.key});
+  String eventId;
+  InvitePeopleScreen({super.key, required this.eventId});
 
   _showMoreBottomSheet() {
     Get.bottomSheet(
@@ -14,7 +20,7 @@ class InvitePeopleScreen extends StatelessWidget {
           topRight: Radius.circular(40.0),
         ),
         child: Container(
-          padding: EdgeInsets.only(bottom: 20,top: 15),
+          padding: EdgeInsets.only(bottom: 20, top: 15),
           color: Colors.white,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -48,6 +54,7 @@ class InvitePeopleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(InvitePeopleController(eventId: eventId));
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -64,40 +71,67 @@ class InvitePeopleScreen extends StatelessWidget {
               color: Colors.white,
             )),
       ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 10,
-          ),
-          CustardButton(
-            buttonType: ButtonType.NEGATIVE,
-            label: "+ Invite People",
-            onPressed: () {},
-            textColor: Colors.purple,
-            backgroundColor: Colors.white,
-          ),
-          SizedBox(
-            height: 10,
-          ),
-          ListView.builder(
-              itemCount: 8,
-              shrinkWrap: true,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  leading: CircleAvatar(
-                    radius: 16,
-                    backgroundImage: NetworkImage(
-                        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y3VzdG9tZXIlMjBwcm9maWxlfGVufDB8fDB8fHww&w=1000&q=80"),
-                  ),
-                  title: Text("Priya Bhatt"),
-                  trailing: IconButton(
-                      onPressed: () {
-                        _showMoreBottomSheet();
-                      },
-                      icon: Icon(Icons.more_vert)),
-                );
-              })
-        ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(
+              height: 10,
+            ),
+            CustardButton(
+              buttonType: ButtonType.NEGATIVE,
+              label: "+ Invite People",
+              onPressed: () {},
+              textColor: Colors.purple,
+              backgroundColor: Colors.white,
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Obx(() {
+              if (controller.isLoading.value) {
+                return SizedBox.shrink();
+              } else {
+                // log(controller.userEvents.length.toString());
+                return ListView.builder(
+                    itemCount: controller.userEvents.length,
+                    shrinkWrap: true,
+                    primary: false,
+                    itemBuilder: (context, index) {
+                      log(index.toString());
+                      return FutureBuilder(
+                          future: FirebaseFirestore.instance
+                              .collection("users")
+                              .doc(controller.userEvents[index]['uid'])
+                              .get(),
+                          builder: ((context, snapshot) {
+                            log("data + $index");
+                            if (snapshot.connectionState ==
+                                    ConnectionState.active ||
+                                snapshot.connectionState ==
+                                    ConnectionState.done) {
+                              if (snapshot.hasData) {
+                                return ListTile(
+                                  leading: CircleAvatar(
+                                    radius: 16,
+                                    backgroundImage: NetworkImage(
+                                        snapshot.data!['profilePic']),
+                                  ),
+                                  title: Text(snapshot.data!['name']),
+                                  trailing: IconButton(
+                                      onPressed: () {
+                                        _showMoreBottomSheet();
+                                      },
+                                      icon: Icon(Icons.more_vert)),
+                                );
+                              }
+                            }
+                            return Container();
+                          }));
+                    });
+              }
+            })
+          ],
+        ),
       ),
     );
   }

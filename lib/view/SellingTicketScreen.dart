@@ -33,7 +33,7 @@ class SellingTicketScrenn extends StatelessWidget {
               decoration: BoxDecoration(
                   color: Color(0xFFF2EFFF),
                   borderRadius: BorderRadius.circular(8)),
-              child: Icon(IconData(0xe040, fontFamily: 'MaterialIcons'),
+              child: Icon(const IconData(0xe040, fontFamily: 'MaterialIcons'),
                   color: Color(0xFF665EE0)),
             ),
             title: Text(

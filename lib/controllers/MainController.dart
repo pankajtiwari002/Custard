@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:custard_flutter/data/models/community.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get/get.dart';
 import '../repo/notificationservice/LocaNotificationService.dart';
@@ -8,26 +10,72 @@ import '../utils/constants.dart';
 // import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 class MainController extends GetxController {
+  var currentPageIndex = 0.obs;
   Rx<bool> loading = true.obs;
+  Rx<String> role = "user".obs;
   late SharedPreferences prefs;
+  String? currentCommunityId;
+  Rx<Community?> currentCommunity = Rxn();
   User? currentUser;
   late var homeGlobalKey;
 
-  initializedSharedPreference() async {
+  Future<void> getCommunity(String id) async {
+    currentCommunityId = id;
+    final communityData = await FirebaseFirestore.instance
+        .collection("communities")
+        .doc(currentCommunityId)
+        .get();
+    final snap = await FirebaseFirestore.instance
+        .collection("userCommunities")
+        .where("community_id", isEqualTo: id)
+        .where("uid", isEqualTo: currentUser!.uid)
+        .get();
+    if(snap.docs.length>0){
+      role.value = snap.docs[0]['userRole'];
+    }
+    else{
+      role.value = "admin";
+    }
+    currentCommunity.value = Community.fromSnap(communityData.data()!);
+    print(currentCommunityId);
+    print(currentUser!.uid);
+    // print(currentCommunity.value!.chapters[0]);
+  }
+
+  getAllUsefulData() async {
     prefs = await SharedPreferences.getInstance();
     bool flag = prefs.getBool(Constants.isUserSignedInPref) != null &&
         prefs.getBool(Constants.isUserSignedInPref)!;
     print("Het");
     print(flag);
     if (flag) {
-      print("current User");
-      String userData = prefs.getString(Constants.usersPref)!;
-      print("userData: " + userData);
-      // Map<String,dynamic> mp = {"name": "pankaj","profilePic": "https://firebasestorage.googleapis.com/v0/b/custard-kmp.appspot"};
-      Map<String, dynamic> data = jsonDecode(userData);
-      print(data["name"].toString());
-      currentUser = User.fromSnap(data);
-      print("user: " + currentUser.toString());
+      try {
+        print("current User");
+        String userData = prefs.getString(Constants.usersPref)!;
+        print("userData: " + userData);
+        // Map<String,dynamic> mp = {"name": "pankaj","profilePic": "https://firebasestorage.googleapis.com/v0/b/custard-kmp.appspot"};
+        Map<String, dynamic> data = jsonDecode(userData);
+        print(data["name"].toString());
+        currentUser = User.fromSnap(data);
+        currentCommunityId = prefs.getString(Constants.currentCommunityId);
+        final communityData = await FirebaseFirestore.instance
+            .collection("communities")
+            .doc(currentCommunityId)
+            .get();
+        currentCommunity.value = Community.fromSnap(communityData.data()!);
+        final snap = await FirebaseFirestore.instance
+            .collection("userCommunities")
+            .where("community_id", isEqualTo: currentCommunityId)
+            .where("uid", isEqualTo: currentUser!.uid)
+            .get();
+        role.value = snap.docs.length == 0 ? "user" : snap.docs[0]['userRole'];
+        print("user: " + currentUser.toString());
+        print(currentCommunityId);
+        print(currentCommunity.value!.chapters[0]);
+      } catch (e) {
+        print(15);
+        print(e.toString());
+      }
     }
     loading.value = false;
   }
@@ -84,7 +132,7 @@ class MainController extends GetxController {
       );
     }
 
-    initializedSharedPreference();
+    getAllUsefulData();
     super.onInit();
   }
 }

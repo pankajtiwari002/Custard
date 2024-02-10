@@ -1,4 +1,5 @@
-import 'dart:async';
+// import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter_svg/flutter_svg.dart';
@@ -8,12 +9,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:record_mp3/record_mp3.dart';
 import 'package:uuid/uuid.dart';
 import 'package:workmanager/workmanager.dart';
-
-import '../Global.dart';
+import 'package:record/record.dart';
 import '../controllers/MainController.dart';
 import '../utils/constants.dart';
 import '../controllers/DiscussionController.dart';
-import '../src/AudioState.dart';
 import '../src/Global.dart';
 import '../src/FlowShader.dart';
 import '../src/LottieAnimation.dart';
@@ -22,12 +21,12 @@ import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class RecordButton extends StatefulWidget {
-  const RecordButton({
-    Key? key,
-    required this.controller,
-  }) : super(key: key);
+  const RecordButton(
+      {Key? key, required this.controller, required this.lockController})
+      : super(key: key);
 
   final AnimationController controller;
+  final AnimationController lockController;
 
   @override
   State<RecordButton> createState() => _RecordButtonState();
@@ -35,9 +34,11 @@ class RecordButton extends StatefulWidget {
 
 class _RecordButtonState extends State<RecordButton> {
   static const double size = 55;
+  final record = AudioRecorder();
   DiscussionController discussionController = Get.find();
   final double lockerHeight = 200;
   double timerWidth = 0;
+  double cancelSliderHeight = 65;
 
   late Animation<double> buttonScaleAnimation;
   late Animation<double> timerAnimation;
@@ -80,10 +81,12 @@ class _RecordButtonState extends State<RecordButton> {
     bool hasPermission = await checkPermission();
     if (hasPermission) {
       discussionController.isRecording.value = true;
+      discussionController.isPlay.value = true;
       discussionController.audioPath = await getFilePath();
       discussionController.startTimer();
+      // record.start(RecordConfig(), path:discussionController.audioPath!);
       RecordMp3.instance.start(discussionController.audioPath!, (type) {});
-      discussionController.start = DateTime.now();
+      // discussionController.start = DateTime.now();
       // while(true){
       //   if(controller.isCompleteAudioRecording.value) break;
       //   Future.delayed(Duration(seconds: 1)).then((value){
@@ -93,9 +96,12 @@ class _RecordButtonState extends State<RecordButton> {
     }
   }
 
-  void stopRecord() {
+  Future<void> stopRecord() async {
+    log("Recording stop");
     bool s = RecordMp3.instance.stop();
+    // String? s = await record.stop();
     discussionController.stopTimer();
+    discussionController.isPlay.value = false;
     discussionController.end = DateTime.now();
     if (s) {
       discussionController.isRecording.value = false;
@@ -113,6 +119,9 @@ class _RecordButtonState extends State<RecordButton> {
       ),
     );
     widget.controller.addListener(() {
+      setState(() {});
+    });
+    widget.lockController.addListener(() {
       setState(() {});
     });
   }
@@ -133,7 +142,7 @@ class _RecordButtonState extends State<RecordButton> {
         Tween<double>(begin: lockerHeight + Globals.defaultPadding, end: 0)
             .animate(
       CurvedAnimation(
-        parent: widget.controller,
+        parent: widget.lockController,
         curve: const Interval(0.2, 1, curve: Curves.easeIn),
       ),
     );
@@ -142,6 +151,8 @@ class _RecordButtonState extends State<RecordButton> {
   @override
   void dispose() {
     super.dispose();
+    RecordMp3.instance.stop();
+    discussionController.isLocked.value = false;
   }
 
   @override
@@ -149,8 +160,8 @@ class _RecordButtonState extends State<RecordButton> {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        lockSlider(),
         cancelSlider(),
+        lockSlider(),
         audioButton(),
         // if (isLocked) timerLocked(),
       ],
@@ -205,8 +216,12 @@ class _RecordButtonState extends State<RecordButton> {
   Widget cancelSlider() {
     return Positioned(
       right: -timerAnimation.value - 8,
-      child: Container(
-        height: 65,
+      // right: 0,
+      bottom: 0,
+      child: AnimatedContainer(
+        duration: Duration(seconds: 1),
+        height: cancelSliderHeight,
+        curve: Curves.easeIn,
         width: timerWidth,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
@@ -214,34 +229,135 @@ class _RecordButtonState extends State<RecordButton> {
           color: Colors.white,
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            mainAxisSize: MainAxisSize.max,
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              showLottie
-                  ? const LottieAnimation()
-                  : Obx(() => Text(
-                        '${_formatDuration(discussionController.seconds.value)}',
-                        style: TextStyle(color: Colors.black),
-                      )),
-              FlowShader(
-                child: Row(
-                  children: const [
-                    Icon(
-                      Icons.keyboard_arrow_left,
-                      color: Colors.grey,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  showLottie
+                      ? const LottieAnimation()
+                      : Obx(() => Text(
+                            '${_formatDuration(discussionController.seconds.value)}',
+                            style: TextStyle(color: Colors.black),
+                          )),
+                  FlowShader(
+                    child: Row(
+                      children: const [
+                        Icon(
+                          Icons.keyboard_arrow_left,
+                          color: Colors.grey,
+                        ),
+                        Text(
+                          "Slide to cancel",
+                          style: TextStyle(color: Colors.grey),
+                        )
+                      ],
                     ),
-                    Text(
-                      "Slide to cancel",
-                      style: TextStyle(color: Colors.grey),
-                    )
-                  ],
-                ),
-                duration: const Duration(seconds: 3),
-                flowColors: const [Colors.white, Colors.grey],
+                    duration: const Duration(seconds: 3),
+                    flowColors: const [Colors.white, Colors.grey],
+                  ),
+                  const SizedBox(width: size),
+                ],
               ),
-              const SizedBox(width: size),
+              // SizedBox(
+              //   height: 20,
+              // ),
+              Visibility(
+                visible: discussionController.isLocked.value,
+                child: Container(
+                  // color: Colors.green,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      InkWell(
+                          onTap: () {
+                            log("delete");
+                            print("delete");
+                            discussionController
+                                .isCompleteAudioRecording.value = false;
+                            stopRecord();
+                            discussionController
+                                .isCompleteAudioRecording.value = false;
+                            discussionController.seconds.value = 0;
+                            discussionController.isRecording.value = false;
+                            File(discussionController.audioPath!).delete();
+                            cancelSliderHeight = 65;
+                            setState(() {});
+                            Future.delayed(Duration(seconds: 1)).then((value) {
+                              widget.controller.reverse();
+                              discussionController.isLocked.value = false;
+                            });
+                          },
+                          child: Container(
+                            child: Icon(
+                              Icons.delete,
+                              color: Colors.red,
+                            ),
+                          )),
+                      Obx(() {
+                        if (discussionController.isPlay.value) {
+                          return InkWell(
+                              onTap: () {
+                                log("pause");
+                                RecordMp3.instance.pause();
+                                discussionController.isPlay.value = false;
+                              },
+                              child: Icon(
+                                Icons.pause_circle_outline,
+                                color: Colors.red,
+                                size: 34,
+                              ));
+                        } else {
+                          return InkWell(
+                              onTap: () {
+                                log("resume");
+                                RecordMp3.instance.resume();
+                                discussionController.isPlay.value = true;
+                              },
+                              child: Icon(
+                                Icons.play_circle_outline_outlined,
+                                color: Colors.red,
+                                size: 34,
+                              ));
+                        }
+                      }),
+                      InkWell(
+                        onTap: () async {
+                          log("send");
+                          print("send");
+                          stopRecord();
+                          Duration audioLen = Duration(seconds: discussionController.seconds.value);
+                          int audioLength = audioLen.inMilliseconds;
+                          discussionController.isCompleteAudioRecording.value =
+                              false;
+                          discussionController.isRecording.value = false;
+                          MainController mainController = Get.find();
+                          discussionController.seconds.value = 0;
+                          await Workmanager().registerOneOffTask(
+                              Uuid().v1(), Constants.chatAudioUpload,
+                              constraints: Constraints(
+                                  networkType: NetworkType.connected),
+                              inputData: {
+                                "audioPath": discussionController.audioPath,
+                                "audioLen": audioLength,
+                                "uid": mainController.currentUser!.uid,
+                                "communityId":
+                                    mainController.currentCommunityId,
+                                "chapterId": mainController
+                                    .currentCommunity.value!.chapters[0]
+                              });
+                        },
+                        child: SvgPicture.asset("assets/images/send.svg"),
+                      ),
+                      const SizedBox(width: 0),
+                    ],
+                  ),
+                ),
+              )
             ],
           ),
         ),
@@ -303,7 +419,9 @@ class _RecordButtonState extends State<RecordButton> {
   }
 
   Widget audioButton() {
-    return Obx(() => GestureDetector(
+    return Obx(() {
+      if (!discussionController.isLocked.value) {
+        return GestureDetector(
           child: Transform.scale(
             scale: buttonScaleAnimation.value,
             child: Container(
@@ -313,10 +431,12 @@ class _RecordButtonState extends State<RecordButton> {
                       Icons.send,
                       color: Colors.white,
                     )
-                  : discussionController.isLocked.value ?
-                   Icon(Icons.stop,color: Colors.white,)
-                  :
-              SvgPicture.asset("assets/images/microphone-2.svg"),
+                  : discussionController.isLocked.value
+                      ? Icon(
+                          Icons.stop,
+                          color: Colors.white,
+                        )
+                      : SvgPicture.asset("assets/images/microphone-2.svg"),
               height: size,
               width: size,
               clipBehavior: Clip.hardEdge,
@@ -334,27 +454,35 @@ class _RecordButtonState extends State<RecordButton> {
               discussionController.isCompleteAudioRecording.value = false;
               discussionController.isRecording.value = false;
               MainController mainController = Get.find();
+              discussionController.seconds.value = 0;
               await Workmanager().registerOneOffTask(
                   Uuid().v1(), Constants.chatAudioUpload,
                   constraints: Constraints(networkType: NetworkType.connected),
                   inputData: {
                     "audioPath": discussionController.audioPath,
                     "audioLen": audioLength,
-                    "uid": mainController.currentUser!.uid
+                    "uid": mainController.currentUser!.uid,
+                    "communityId": mainController.currentCommunityId,
+                    "chapterId":
+                        mainController.currentCommunity.value!.chapters[0]
                   });
-            }
-            else if(discussionController.isLocked.value){
-              stopRecord();
+            } else if (discussionController.isLocked.value) {
+              log("stop record");
+              await stopRecord();
               // File(discussionController.audioPath!).delete();
-              discussionController.isRecordingPlay.value=false;
-              discussionController.isCompleteAudioRecording.value=true;
-              discussionController.isLocked.value=false;
-
+              cancelSliderHeight = 65;
+              widget.controller.reverse();
+              // await Future.delayed(Duration(seconds: 1));
+              discussionController.isRecordingPlay.value = false;
+              discussionController.isCompleteAudioRecording.value = true;
+              discussionController.isLocked.value = false;
             }
           },
-          onLongPressDown: (_) {
+          onLongPressDown: (_) async {
             debugPrint("onLongPressDown");
-            widget.controller.forward();
+            bool hasPermission = await checkPermission();
+            if (hasPermission) widget.controller.forward();
+            widget.lockController.forward();
           },
           onLongPressEnd: (details) async {
             debugPrint("onLongPressEnd");
@@ -371,6 +499,7 @@ class _RecordButtonState extends State<RecordButton> {
               Future.delayed(Duration(milliseconds: 1500)).whenComplete(() {
                 discussionController.seconds.value = 0;
                 widget.controller.reverse();
+                widget.lockController.reverse();
                 discussionController.isRecording.value = false;
                 discussionController.isCompleteAudioRecording.value = false;
               });
@@ -384,13 +513,18 @@ class _RecordButtonState extends State<RecordButton> {
               // Vibrate.feedback(FeedbackType.heavy);
               // debugPrint("Locked recording");
               // debugPrint(details.localPosition.dy.toString());
-              widget.controller.reverse();
+              // widget.controller.reverse();
+              widget.lockController.reverse();
+              // widget.controller.reverse();
+              cancelSliderHeight = 90;
               Vibrate.feedback(FeedbackType.heavy);
-              setState(() {
+              Future.delayed(Duration(seconds: 1)).then((val) {
                 discussionController.isLocked.value = true;
+                setState(() {});
               });
             } else {
               widget.controller.reverse();
+              widget.lockController.reverse();
               Vibrate.feedback(FeedbackType.success);
               stopRecord();
             }
@@ -398,12 +532,16 @@ class _RecordButtonState extends State<RecordButton> {
           onLongPressCancel: () {
             debugPrint("onLongPressCancel");
             widget.controller.reverse();
+            widget.lockController.reverse();
           },
           onLongPress: () async {
-            showLottie=false;
-            debugPrint("onLongPress");
-            Vibrate.feedback(FeedbackType.success);
-            startRecord();
+            bool hasPermission = await checkPermission();
+            if (hasPermission) {
+              showLottie = false;
+              debugPrint("onLongPress");
+              Vibrate.feedback(FeedbackType.success);
+              startRecord();
+            }
             // timer = Timer.periodic(const Duration(seconds: 1), (_) {
             //   final minDur = DateTime.now().difference(startTime!).inMinutes;
             //   final secDur =
@@ -415,7 +553,13 @@ class _RecordButtonState extends State<RecordButton> {
             //   });
             // });
           },
-        ));
+        );
+      }
+      return SizedBox(
+        height: 55,
+        width: 55,
+      );
+    });
   }
 
   bool checkIsLocked(Offset offset) {

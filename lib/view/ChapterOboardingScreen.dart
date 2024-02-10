@@ -3,10 +3,15 @@ import 'package:custard_flutter/components/CustardTextField.dart';
 import 'package:custard_flutter/components/RadioButtonTile.dart';
 import 'package:custard_flutter/components/SlideShowContainer.dart';
 import 'package:custard_flutter/controllers/ChapterControllers.dart';
+import 'package:custard_flutter/controllers/CommunityOnboardingController.dart';
+import 'package:custard_flutter/controllers/MainController.dart';
+import 'package:custard_flutter/controllers/PhoneAuthController.dart';
+import 'package:custard_flutter/controllers/UserOnboardingController.dart';
 import 'package:custard_flutter/utils/CustardColors.dart';
 import 'package:custard_flutter/view/HomeScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_toggle_tab/flutter_toggle_tab.dart';
 import 'package:get/get.dart';
 
@@ -16,7 +21,9 @@ import 'CongratsScreen.dart';
 
 class ChapterOboardingScreen extends StatelessWidget {
   var controller = Get.put(ChapterControllers());
-
+  PhoneAuthController phoneAuthController = Get.find();
+  CommunityOnboardingController communityOnboardingController = Get.find();
+  MainController mainController = Get.find();
   void onFinish() {
     Get.to(CongratsScreen(
       backgroundColor: Colors.red,
@@ -29,10 +36,16 @@ class ChapterOboardingScreen extends StatelessWidget {
   }
 
   Future<void> onPressed() async {
-    bool res = await controller.createChapter();
+    EasyLoading.show(status: "Creating...");
+    bool res = await controller.createChapter(phoneAuthController.uid.value,
+        communityOnboardingController.communityId);
     if (res) {
+      mainController.currentUser = controller.user!;
+      await mainController.getAllUsefulData();
+      EasyLoading.dismiss();
       Get.offAll(HomeScreen());
     } else {
+      EasyLoading.showError("failed");
       print("failed.........");
     }
   }
@@ -51,7 +64,7 @@ class ChapterOboardingScreen extends StatelessWidget {
               _processingFees(),
               _themeCard()
             ],
-            onFinish: () {},
+            onFinish: onFinish,
             controller: controller,
           ),
         ),
@@ -66,7 +79,7 @@ class ChapterOboardingScreen extends StatelessWidget {
                   Get.snackbar("title", "message");
                 }
               },
-              buttonType: ButtonType.NEGATIVE,
+              buttonType: ButtonType.POSITIVE,
               label: "Next"),
         ),
       ),
@@ -95,8 +108,13 @@ class ChapterOboardingScreen extends StatelessWidget {
           height: 8,
         ),
         CustardTextField(
-            labelText: "Search Location",
-            controller: controller.locationController)
+          labelText: "Search Location",
+          controller: controller.locationController,
+          prefixIcon: Icon(
+            Icons.location_on,
+            color: Colors.grey,
+          ),
+        )
       ],
     );
   }
@@ -148,11 +166,11 @@ class ChapterOboardingScreen extends StatelessWidget {
             labelText: "Bio", controller: controller.bioController),
         Row(
           children: [
-            Switch(
-                value: controller.memberApproval,
-                onChanged: (value) {
-                  controller.memberApproval = value;
-                }),
+            Obx(() => Switch(
+                value: controller.memberApproval.value,
+                onChanged: (val) {
+                  controller.memberApproval.value = val;
+                })),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

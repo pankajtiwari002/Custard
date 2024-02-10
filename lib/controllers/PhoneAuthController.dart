@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:custard_flutter/repo/AuthRepo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,6 +12,9 @@ class PhoneAuthController extends GetxController {
   var phoneNumber = TextEditingController();
   var otp = TextEditingController();
   var uid = Rxn();
+  Rx<bool> isTimerRunning = false.obs;
+  Rx<int> seconds = 59.obs;
+  Rx<bool> isShown = false.obs;
 
   Future<void> sendOtp() async{
     isOtpSent = true;
@@ -31,5 +36,24 @@ class PhoneAuthController extends GetxController {
     }
     uid.value = user.uid;
     return true;
+  }
+
+  void startTimer() {
+    isTimerRunning.value = true;
+    Timer.periodic(Duration(seconds: 1), (timer) {
+      if (!isTimerRunning.value) {
+        timer.cancel();
+      } else {
+        seconds.value--;
+        if(seconds.value==0){
+          isShown.value=true;
+          stopTimer();
+        }
+      }
+    });
+  }
+
+  void stopTimer() {
+    isTimerRunning.value = false;
   }
 }

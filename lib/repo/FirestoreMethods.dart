@@ -19,6 +19,15 @@ class FirestoreMethods extends GetxController{
     }
   }
 
+  Future<void> updateData(String collection,String docId,Map<String,dynamic> body) async{
+    try {
+        await FirebaseFirestore.instance.collection(collection).doc(docId).update(body);
+    } catch (e) {
+      log(e.toString());
+      throw e;
+    }
+  }
+
   Future<Map<String,dynamic>> getData(String collection,String docId) async{
     try{
       DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance.collection(collection).doc(docId).get();
@@ -36,4 +45,6 @@ class FirestoreMethods extends GetxController{
       return {};
     }
   }
+
+  
 }

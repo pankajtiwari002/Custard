@@ -1,10 +1,14 @@
+import 'package:custard_flutter/controllers/CommunityOnboardingController.dart';
+import 'package:custard_flutter/data/models/community.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import 'DashedBox.dart';
 
 class CommunityCard extends StatelessWidget {
   List<Widget> widgets;
+  CommunityOnboardingController controller = Get.find();
   
   CommunityCard({
     super.key,
@@ -15,9 +19,9 @@ class CommunityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var reqWidgets = [
-      const Image(image: NetworkImage("https://via.placeholder.com/290x110")),
-      const Text(
-        'Social Dance Tribe',
+      Image(image: MemoryImage(controller.image.value!)),
+      Text(
+        controller.communityName.text,
         textAlign: TextAlign.center,
         style: TextStyle(
           color: Color(0xFF061237),

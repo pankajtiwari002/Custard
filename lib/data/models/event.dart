@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Event {
   String id;
+  String communityId;
   String title;
   String description;
   int dateTime;
@@ -16,6 +17,7 @@ class Event {
 
   Event({
     required this.id,
+    required this.communityId,
     required this.title,
     required this.description,
     required this.dateTime,
@@ -44,6 +46,7 @@ class Event {
       isFreeEvent: json["isFreeEvent"],
       isRemoveLimit: json["isRemoveLimit"],
       isApproved: json["isApproved"],
+      communityId: json["communityId"] ?? ""
     );
   }
 
@@ -62,6 +65,7 @@ class Event {
       "isFreeEvent": isFreeEvent,
       "isRemoveLimit": isRemoveLimit,
       "isApproved": isApproved,
+      "communityId": communityId
     };
   }
 }

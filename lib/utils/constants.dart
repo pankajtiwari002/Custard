@@ -10,4 +10,5 @@ class Constants{
   static var fCMToken;
   static const String usersPref = "users";
   static const String isUserSignedInPref = "isUserSignedInPref";
+  static const String currentCommunityId = "currentCommunityId";
 }

@@ -14,9 +14,10 @@ class CommunityTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Padding(
-        padding: EdgeInsets.all(12),
+        padding: EdgeInsets.symmetric(vertical: 5),
         child: CircleAvatar(
           backgroundImage: image,
+          radius: 30,
         ),
       ),
       title: Text(

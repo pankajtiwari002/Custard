@@ -1,11 +1,25 @@
+import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/components/CustardTextField.dart';
 import 'package:custard_flutter/controllers/JoinCommunityController.dart';
+import 'package:custard_flutter/controllers/MainController.dart';
+import 'package:custard_flutter/controllers/PhoneAuthController.dart';
+import 'package:custard_flutter/data/models/UserCommunity.dart';
+import 'package:custard_flutter/repo/FirestoreMethods.dart';
+import 'package:custard_flutter/utils/constants.dart';
+import 'package:custard_flutter/view/HomePage.dart';
+import 'package:custard_flutter/view/HomeScreen.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class JoinCommunityScreen extends StatelessWidget {
   JoinCommunityController controller = Get.put(JoinCommunityController());
+  // PhoneAuthController phoneAuthController = Get.find();
+  MainController mainController = Get.find();
 
   void openMyDialog() {
     Get.dialog(Dialog(
@@ -139,256 +153,315 @@ class JoinCommunityScreen extends StatelessWidget {
       child: Scaffold(
         body: Padding(
           padding: const EdgeInsets.all(15.0),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(
-              'Recommended Communities',
-              style: TextStyle(
-                color: Color(0xFF141414),
-                fontSize: 18,
-                fontFamily: 'Gilroy',
-                fontWeight: FontWeight.w700,
+          child: SingleChildScrollView(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                'Recommended Communities',
+                style: TextStyle(
+                  color: Color(0xFF141414),
+                  fontSize: 18,
+                  fontFamily: 'Gilroy',
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0),
+              SizedBox(
+                height: 10,
               ),
-              color: Colors.white,
-              elevation: 1,
-              child: Column(
-                children: <Widget>[
-                  SizedBox(
-                    height: 15,
-                  ),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.network(
-                      'https://placekitten.com/200/200', // Add your image URL here
-                      fit: BoxFit.cover,
-                      width: 300,
-                      height: 150,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0).copyWith(bottom: 0),
-                    child: Text(
-                      'Social Dance Tribe',
+              SizedBox(
+                height: 5,
+              ),
+              FutureBuilder(
+                  future: FirebaseFirestore.instance
+                      .collection("communities")
+                      .get(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.active ||
+                        snapshot.connectionState == ConnectionState.done) {
+                      if (snapshot.hasData) {
+                        return ListView.builder(
+                            primary: false,
+                            shrinkWrap: true,
+                            itemCount: snapshot.data!.docs.length,
+                            itemBuilder: ((context, index) {
+                              return customCard(snapshot.data!.docs[index]);
+                            }));
+                      } else
+                        return Container();
+                    } else
+                      return Container();
+                  }),
+              SizedBox(
+                height: 5,
+              ),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Start with your 15 days free trial. *',
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
+                        color: Color(0xFF090B0E),
+                        fontSize: 12,
+                        fontFamily: 'Gilroy',
+                        fontWeight: FontWeight.w400,
+                        height: 0,
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0).copyWith(top: 3),
-                    child: Text(
-                      'This is an All Things LatinDance community group, Let’s chacha together to build an inclusive community. Be kind. We’re all growing together.',
+                    TextSpan(
+                      text: 'No Credit Card Needed',
                       style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            'INR 99',
-                            style: TextStyle(
-                              color: Color(0xFF546881),
-                              fontSize: 14,
-                              fontFamily: 'Gilroy',
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            'Joining Fee',
-                            style: TextStyle(
-                              color: Color(0xFF546881),
-                              fontSize: 12,
-                              fontFamily: 'Gilroy',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            '1200+',
-                            style: TextStyle(
-                              color: Color(0xFF546881),
-                              fontSize: 14,
-                              fontFamily: 'Gilroy',
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            'Joined',
-                            style: TextStyle(
-                              color: Color(0xFF546881),
-                              fontSize: 12,
-                              fontFamily: 'Gilroy',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            'Social Dance Tribe Host',
-                            style: TextStyle(
-                              color: Color(0xFF546881),
-                              fontSize: 14,
-                              fontFamily: 'Gilroy',
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            'Host',
-                            style: TextStyle(
-                              color: Color(0xFF546881),
-                              fontSize: 12,
-                              fontFamily: 'Gilroy',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  Obx(
-                        () => Visibility(
-                      visible: !controller.isCardExpanded.value,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          TextButton(
-                            onPressed: () {
-                              // Explore Button Pressed
-                              controller.isCardExpanded.value = true;
-                            },
-                            child: Text('Explore the Community'),
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFF7B61FF),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10))),
-                            onPressed: () {
-                              openMyDialog();
-                            },
-                            child: Text(
-                              'Join Now',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ],
+                        color: Color(0xFF090B0E),
+                        fontSize: 12,
+                        fontFamily: 'Gilroy',
+                        fontWeight: FontWeight.w500,
+                        height: 0,
                       ),
                     ),
-                  ),
-                  Obx(
-                        () => Visibility(
-                        visible: controller.isCardExpanded.value,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              mainAxisAlignment:
-                              MainAxisAlignment.spaceEvenly,
-                              children: [
-                                imageCotainer(),
-                                imageCotainer(),
-                                imageCotainer(),
-                                imageCotainer(),
-                                imageCotainer(),
-                              ],
-                            ),
-                            SizedBox(
-                              height: 15,
-                            ),
-                            Container(
-                              width: double.infinity,
-                              margin: EdgeInsets.symmetric(horizontal: 10),
-                              child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF7B61FF),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(10)),
-                                  ),
-                                  onPressed: () {
-                                    openMyDialog();
-                                  },
-                                  child: const Text("Join the Community",
-                                      style: TextStyle(color: Colors.white))),
-                            )
-                          ],
-                        )),
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(
-              height: 5,
-            ),
-            SizedBox(
-              height: 5,
-            ),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Start with your 15 days free trial. *',
-                    style: TextStyle(
-                      color: Color(0xFF090B0E),
-                      fontSize: 12,
-                      fontFamily: 'Gilroy',
-                      fontWeight: FontWeight.w400,
-                      height: 0,
+                    TextSpan(
+                      text: '*',
+                      style: TextStyle(
+                        color: Color(0xFF090B0E),
+                        fontSize: 12,
+                        fontFamily: 'Gilroy',
+                        fontWeight: FontWeight.w400,
+                        height: 0,
+                      ),
                     ),
-                  ),
-                  TextSpan(
-                    text: 'No Credit Card Needed',
-                    style: TextStyle(
-                      color: Color(0xFF090B0E),
-                      fontSize: 12,
-                      fontFamily: 'Gilroy',
-                      fontWeight: FontWeight.w500,
-                      height: 0,
-                    ),
-                  ),
-                  TextSpan(
-                    text: '*',
-                    style: TextStyle(
-                      color: Color(0xFF090B0E),
-                      fontSize: 12,
-                      fontFamily: 'Gilroy',
-                      fontWeight: FontWeight.w400,
-                      height: 0,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          ]),
+                  ],
+                ),
+              )
+            ]),
+          ),
         ),
+      ),
+    );
+  }
+
+  customCard(QueryDocumentSnapshot snap) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      color: Colors.white,
+      elevation: 1,
+      child: Column(
+        children: <Widget>[
+          SizedBox(
+            height: 15,
+          ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.network(
+              snap.get('communityProfilePic'), // Add your image URL here
+              fit: BoxFit.cover,
+              width: 300,
+              height: 150,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0).copyWith(bottom: 0),
+            child: Text(
+              snap.get('communityName'),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0).copyWith(top: 3),
+            child: Text(
+              snap.get('communityAbout'),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'INR 99',
+                    style: TextStyle(
+                      color: Color(0xFF546881),
+                      fontSize: 14,
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    'Joining Fee',
+                    style: TextStyle(
+                      color: Color(0xFF546881),
+                      fontSize: 12,
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    '1200+',
+                    style: TextStyle(
+                      color: Color(0xFF546881),
+                      fontSize: 14,
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    'Joined',
+                    style: TextStyle(
+                      color: Color(0xFF546881),
+                      fontSize: 12,
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Social Dance Tribe Host',
+                    style: TextStyle(
+                      color: Color(0xFF546881),
+                      fontSize: 14,
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    'Community Creator',
+                    style: TextStyle(
+                      color: Color(0xFF546881),
+                      fontSize: 12,
+                      fontFamily: 'Gilroy',
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          Obx(
+            () => Visibility(
+              visible: !controller.isCardExpanded.contains(snap.id),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  TextButton(
+                    onPressed: () {
+                      // Explore Button Pressed
+                      controller.isCardExpanded.add(snap.id);
+                    },
+                    child: Text('Explore the Community'),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF7B61FF),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10))),
+                    onPressed: () async {
+                      try {
+                        print(1);
+                        UserCommunity userCommunity = UserCommunity(
+                            chapters: snap.get("chapters"),
+                            communityId: snap.id,
+                            leaderboards: "leaderboards",
+                            onboardingAnswers: "onboardingAnswers",
+                            permissions: "permissions",
+                            status: "status",
+                            streak: "streak",
+                            uid: mainController.currentUser!.uid,
+                            userRole: "user");
+                            print("userCommunity");
+                        print(2);
+                        await FirestoreMethods()
+                            .onSave("userCommunities", userCommunity.toJson());
+                            print(3);
+                        await FirebaseFirestore.instance
+                            .collection("users")
+                            .doc(mainController.currentUser!.uid)
+                            .update({
+                          "communities": FieldValue.arrayUnion([snap.id]), 
+                        });
+                        print(4);
+                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        prefs.setString(Constants.currentCommunityId, snap.id);
+                        print(5);
+                        mainController.currentUser!.communities.add(snap.id);
+                        prefs.setString(Constants.usersPref, jsonEncode(mainController.currentUser!.toJson()));
+                        print(6);
+                        await mainController.getAllUsefulData();
+                        Get.offAll(() => HomeScreen());
+                      } catch (e) {
+                        print(7);
+                        print(e.toString());
+                      }
+                      // openMyDialog();
+                    },
+                    child: Text(
+                      'Join Now',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Obx(
+            () => Visibility(
+                visible: controller.isCardExpanded.contains(snap.id),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        imageCotainer(),
+                        imageCotainer(),
+                        imageCotainer(),
+                        imageCotainer(),
+                        imageCotainer(),
+                      ],
+                    ),
+                    SizedBox(
+                      height: 15,
+                    ),
+                    Container(
+                      width: double.infinity,
+                      margin: EdgeInsets.symmetric(horizontal: 10),
+                      child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF7B61FF),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () {
+                            openMyDialog();
+                          },
+                          child: const Text("Join the Community",
+                              style: TextStyle(color: Colors.white))),
+                    )
+                  ],
+                )),
+          ),
+          SizedBox(
+            height: 10,
+          ),
+        ],
       ),
     );
   }

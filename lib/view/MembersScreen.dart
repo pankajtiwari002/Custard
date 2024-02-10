@@ -50,7 +50,7 @@ class MembersScreen extends StatelessWidget {
                 },
               ),
               ListTile(
-                leading: Icon(IconData(0xe6c3, fontFamily: 'MaterialIcons')),
+                leading: Icon(const IconData(0xe6c3, fontFamily: 'MaterialIcons')),
                 title: Text('Mute'),
                 onTap: () {
                   // Add your logic here for each list tile.

@@ -15,15 +15,8 @@ class GroupCreationController extends GetxController {
   var grpName = TextEditingController();
   RxList<Uint8List> images = RxList();
   List<String> imagePaths = [];
-  RxList<Map<String, dynamic>> members = [
-    {"id": 0, "name": "Priya Bhatt"},
-    {"id": 1, "name": "Priya Bhatt"},
-    {"id": 2, "name": "Priya Bhatt"},
-    {"id": 3, "name": "Priya Bhatt"},
-    {"id": 4, "name": "Priya Bhatt"},
-  ].obs;
-  RxList<Map<String, dynamic>> participants = RxList();
-  RxList<Map<String, dynamic>> tempParticipants = RxList();
+  RxList<Rx<String>> participants = RxList();
+  RxList<Rx<String>> tempParticipants = RxList();
 
   List<String> convertUint8ListImagesToStrings(List<Uint8List> Images) {
     List<String> encodedImages = [];
@@ -61,6 +54,10 @@ class GroupCreationController extends GetxController {
     try {
       // var user = await FirebaseAuth.instance.signInAnonymously();
       // log("upload on firestore");
+      List<String> participant = List.empty(growable: true);
+      participants.forEach((element) {
+        participant.add(element.value);
+      });
       String galleryId = Uuid().v1();
       Gallery gallery = Gallery(
           chapterId: "467f0590-d529-1d71-a532-11007c9f039a",
@@ -68,7 +65,7 @@ class GroupCreationController extends GetxController {
           eventId: "eventId",
           galleryId: galleryId,
           createdOn: DateTime.now(),
-          participants: [],
+          participants: participant,
           thumbnails: "thumbnails",
           urls: imageUrls);
       // log("firestore calls");

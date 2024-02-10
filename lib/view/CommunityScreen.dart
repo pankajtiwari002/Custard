@@ -1,20 +1,22 @@
 import 'dart:developer';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:custard_flutter/components/CustardButton.dart';
 import 'package:custard_flutter/components/EventCard.dart';
 import 'package:custard_flutter/view/AcceptOrRejectScreen.dart';
 import 'package:custard_flutter/view/RoleScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-
+import '../controllers/MainController.dart';
 import '../components/HighlightContainer.dart';
 import '../controllers/CommunityController.dart';
 
 class CommunityScreen extends StatelessWidget {
   CommunityScreen({super.key});
-
-  final controller = Get.put(CommunityController());
-
+  ScrollController scrollController = ScrollController();
+  MainController mainController = Get.find();
+  late CommunityController controller;
   void _showMoreBottomSheet() {
     Get.bottomSheet(
       ClipRRect(
@@ -49,63 +51,83 @@ class CommunityScreen extends StatelessWidget {
                 ),
               ),
               const Divider(),
-              Obx(
-                () => Visibility(
-                  visible: controller.tabIndex == 0,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: Icon(Icons.people),
-                        title: Text('Theme Customization'),
-                      ),
-                      ListTile(
-                        onTap: (){
-                          Get.to(() => RoleScreen());
-                        },
-                        leading: Icon(Icons.people),
-                        title: Text('Roles'),
-                      ),
-                      ListTile(
-                        leading: Icon(Icons.remove_red_eye),
-                        title: Text('Member View'),
-                      ),
-                      ListTile(
-                        leading: Icon(Icons.share),
-                        title: Text('Share Page'),
-                      ),
-                    ],
-                  ),
+              ListTile(
+                leading: Icon(Icons.people),
+                title: Text('Theme Customization'),
+              ),
+              ListTile(
+                onTap: () {
+                  Get.to(() => RoleScreen());
+                },
+                leading: Icon(Icons.people),
+                title: Text('Roles'),
+              ),
+              ListTile(
+                leading: Icon(Icons.remove_red_eye),
+                title: Text('Member View'),
+              ),
+              ListTile(
+                leading: Icon(Icons.share),
+                title: Text('Share Page'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openBanSheet() {
+    Get.bottomSheet(
+      ClipRRect(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(40.0),
+          topRight: Radius.circular(40.0),
+        ),
+        child: Container(
+          padding: EdgeInsets.only(bottom: 20),
+          color: Colors.white,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding:
+                    EdgeInsets.only(top: 20, bottom: 0, left: 30, right: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'More Options',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close),
+                      onPressed: () {
+                        Get.back();
+                      },
+                    ),
+                  ],
                 ),
               ),
-              Obx(
-                () => Visibility(
-                  visible: controller.tabIndex == 1,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: Icon(
-                          Icons.people,
-                          color: Colors.red,
-                        ),
-                        title: Text(
-                          'Kick Priya Bhatt',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
-                      ListTile(
-                        leading: Icon(
-                          Icons.block,
-                          color: Colors.red,
-                        ),
-                        title: Text(
-                          'Ban Priya Bhatt',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ],
-                  ),
+              const Divider(),
+              ListTile(
+                leading: Icon(
+                  Icons.people,
+                  color: Colors.red,
+                ),
+                title: Text(
+                  'Kick Priya Bhatt',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.block,
+                  color: Colors.red,
+                ),
+                title: Text(
+                  'Ban Priya Bhatt',
+                  style: TextStyle(color: Colors.red),
                 ),
               ),
             ],
@@ -361,12 +383,14 @@ class CommunityScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    controller = Get.put(CommunityController(role: mainController.role.value));
     final size = MediaQuery.of(context).size;
     return SafeArea(
       child: Scaffold(
         body: SizedBox(
           height: size.height,
           child: SingleChildScrollView(
+            controller: scrollController,
             child: DefaultTabController(
               length: 3,
               child: Column(
@@ -377,8 +401,9 @@ class CommunityScreen extends StatelessWidget {
                       SizedBox(
                         width: size.width,
                         height: size.height * 0.25,
-                        child: Image.asset(
-                          'assets/images/background.jpeg',
+                        child: Image.network(
+                          mainController
+                              .currentCommunity.value!.communityProfilePic,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -412,31 +437,44 @@ class CommunityScreen extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            Center(
-                              child: Container(
-                                width: 150,
-                                height: 40,
-                                child: ElevatedButton(
-                                  onPressed: () {},
-                                  style: ElevatedButton.styleFrom(
-                                      elevation: 12.0,
-                                      backgroundColor: const Color.fromARGB(
-                                          255, 255, 255, 255),
-                                      // minimumSize: const Size.fromHeight(40),
-                                      padding: const EdgeInsets.all(5)),
-                                  child: const Text(
-                                    "Replace Image",
-                                    style: TextStyle(
-                                      color: Color(0xFF7B61FF),
-                                      fontSize: 16,
-                                      fontFamily: 'Gilroy',
-                                      fontWeight: FontWeight.w700,
-                                      height: 0,
+                            if (mainController.role.value == "admin")
+                              Center(
+                                child: Container(
+                                  width: 150,
+                                  height: 40,
+                                  child: ElevatedButton(
+                                    onPressed: () {},
+                                    style: ElevatedButton.styleFrom(
+                                        elevation: 12.0,
+                                        backgroundColor: const Color.fromARGB(
+                                            255, 255, 255, 255),
+                                        // minimumSize: const Size.fromHeight(40),
+                                        padding: const EdgeInsets.all(5)),
+                                    child: Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 10,
+                                        ),
+                                        SvgPicture.asset(
+                                            "assets/images/image_icon.svg"),
+                                        const Text(
+                                          "  Replace Image",
+                                          style: TextStyle(
+                                            color: Color(0xFF7B61FF),
+                                            fontSize: 14,
+                                            fontFamily: 'Gilroy',
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
+                            if (mainController.role.value == "user")
+                              SizedBox(
+                                height: 40,
+                              ),
                             SizedBox(
                               height: size.height * 0.05,
                             ),
@@ -447,9 +485,11 @@ class CommunityScreen extends StatelessWidget {
                                   width: 150,
                                   // alignment: Alignment.topLeft,
                                   decoration: BoxDecoration(
-                                    image: const DecorationImage(
-                                        image: AssetImage(
-                                            'assets/images/background.jpeg'),
+                                    image: DecorationImage(
+                                        image: NetworkImage(mainController
+                                            .currentCommunity
+                                            .value!
+                                            .communityProfilePic),
                                         fit: BoxFit.cover),
                                     color: Colors.red,
                                     borderRadius: BorderRadius.circular(25),
@@ -458,7 +498,7 @@ class CommunityScreen extends StatelessWidget {
                                 const SizedBox(
                                   width: 10,
                                 ),
-                                const Column(
+                                Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     SizedBox(
@@ -472,7 +512,8 @@ class CommunityScreen extends StatelessWidget {
                                           fontSize: 18),
                                     ),
                                     Text(
-                                      "The Mountainers",
+                                      mainController.currentCommunity.value!
+                                          .communityName,
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 17),
@@ -507,18 +548,32 @@ class CommunityScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(15),
                                 color: Color(0x30FFB661),
                               ),
-                              child: const Column(
+                              child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    "Today's Affirmation:",
-                                    style: TextStyle(
-                                      color: Color(0xFF4B3A00),
-                                      fontSize: 14,
-                                      fontFamily: 'Gilroy',
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        "Today's Affirmation:",
+                                        style: TextStyle(
+                                          color: Color(0xFF4B3A00),
+                                          fontSize: 14,
+                                          fontFamily: 'Gilroy',
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: EdgeInsets.all(3),
+                                        decoration: BoxDecoration(
+                                            color: Color(0xffffb661),
+                                            shape: BoxShape.circle),
+                                        child: SvgPicture.asset(
+                                            "assets/images/edit.svg"),
+                                      ),
+                                    ],
                                   ),
                                   Text(
                                     '"Your potential is endless. Go conquer the day!"',
@@ -544,30 +599,39 @@ class CommunityScreen extends StatelessWidget {
                   ),
                   TabBar(
                     controller: controller.tabController,
-                    tabs: const [
+                    tabs: [
                       Tab(text: 'Details'),
                       Tab(text: 'Member'),
                       Tab(text: 'Access'),
-                      Tab(text: 'Settings'),
+                      if (mainController.role.value == "admin")
+                        Tab(text: 'Settings'),
                     ],
                     labelColor: const Color(0xFF7B61FF),
                     unselectedLabelColor: Colors.black,
                     indicatorColor: const Color(0xFF7B61FF),
                     indicatorWeight: 3.0,
+                    dividerColor: Colors.transparent,
                   ),
                   Container(
                     // height: size.height * 1.15,
                     constraints: BoxConstraints(
                         maxHeight: size.height * 0.9,
-                        minHeight: size.height * 0.4),
+                        minHeight: size.height * 0.2),
                     child: TabBarView(
                       controller: controller.tabController,
                       children: [
-                        details(controller, openEditAboutSheet),
-                        member(controller, context, _showDialog,
-                            _showFilterBottomSheet, _addARoleBottomSheet),
-                        access(),
-                        settings(),
+                        details(controller, openEditAboutSheet, mainController,
+                            scrollController),
+                        member(
+                            controller,
+                            mainController,
+                            context,
+                            _showDialog,
+                            _showFilterBottomSheet,
+                            _addARoleBottomSheet,
+                            _openBanSheet),
+                        access(controller),
+                        if (mainController.role.value == "admin") settings(),
                       ],
                     ),
                   )
@@ -581,12 +645,15 @@ class CommunityScreen extends StatelessWidget {
   }
 }
 
-details(CommunityController controller, Function openEditAboutSheet) {
+details(CommunityController controller, Function openEditAboutSheet,
+    MainController mainController, ScrollController scrollController) {
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     child: SingleChildScrollView(
+      controller: scrollController,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -603,14 +670,24 @@ details(CommunityController controller, Function openEditAboutSheet) {
               SizedBox(
                 width: 10,
               ),
-              IconButton(
-                  onPressed: () {
-                    openEditAboutSheet();
-                  },
-                  icon: Icon(Icons.edit))
+              if (mainController.role.value == "admin")
+                IconButton(
+                    onPressed: () {
+                      openEditAboutSheet();
+                    },
+                    icon: SvgPicture.asset("assets/images/edit-2.svg"))
             ],
           ),
-          Text(controller.about.value),
+          Text(
+            mainController.currentCommunity.value!.communityAbout,
+            textAlign: TextAlign.left,
+            style: TextStyle(
+              color: Color(0xFF546881),
+              fontSize: 14,
+              fontFamily: 'Gilroy',
+              fontWeight: FontWeight.w400,
+            ),
+          ),
           Row(
             children: [
               const Text(
@@ -626,20 +703,43 @@ details(CommunityController controller, Function openEditAboutSheet) {
               const SizedBox(
                 width: 10,
               ),
-              IconButton(onPressed: () {}, icon: Icon(Icons.edit))
+              if (mainController.role.value == "admin")
+                IconButton(
+                    onPressed: () {},
+                    icon: SvgPicture.asset("assets/images/edit-2.svg"))
             ],
           ),
           Container(
-            alignment: Alignment.topLeft,
-            height: 300,
-            child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: 4,
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (context, index) {
-                  return EventCard();
+              alignment: Alignment.topLeft,
+              constraints: BoxConstraints(minHeight: 50, maxHeight: 300),
+              child: FutureBuilder(
+                future: FirebaseFirestore.instance
+                    .collection("events")
+                    .where("community",
+                        isEqualTo: mainController.currentCommunityId)
+                    .get(),
+                builder: ((context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.active ||
+                      snapshot.connectionState == ConnectionState.done) {
+                    if (snapshot.hasData) {
+                      if (snapshot.data!.docs.length > 0)
+                        return ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: snapshot.data!.docs.length,
+                            scrollDirection: Axis.horizontal,
+                            itemBuilder: (context, index) {
+                              return EventCard(
+                                index: index,
+                                snapshot: snapshot,
+                              );
+                            });
+                    }
+                  }
+                  return SizedBox(
+                    height: 0,
+                  );
                 }),
-          ),
+              )),
           Row(
             children: [
               const Text(
@@ -655,7 +755,10 @@ details(CommunityController controller, Function openEditAboutSheet) {
               const SizedBox(
                 width: 10,
               ),
-              IconButton(onPressed: () {}, icon: Icon(Icons.edit))
+              if (mainController.role.value == "admin")
+                IconButton(
+                    onPressed: () {},
+                    icon: SvgPicture.asset("assets/images/edit-2.svg"))
             ],
           ),
           Container(
@@ -666,7 +769,7 @@ details(CommunityController controller, Function openEditAboutSheet) {
                 itemCount: 4,
                 scrollDirection: Axis.horizontal,
                 itemBuilder: (context, index) {
-                  return HighlightContainer();
+                  return HighlightContainer(imageUrl: "",title: "Revisit the moment",);
                 }),
           ),
           Row(
@@ -684,28 +787,74 @@ details(CommunityController controller, Function openEditAboutSheet) {
               const SizedBox(
                 width: 10,
               ),
-              IconButton(onPressed: () {}, icon: Icon(Icons.edit)),
+              if (mainController.role.value == "admin")
+                IconButton(
+                    onPressed: () {},
+                    icon: SvgPicture.asset("assets/images/edit-2.svg")),
             ],
           ),
           Container(
-            alignment: Alignment.topLeft,
-            height: 100,
-            child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: 3,
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (context, index) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    child: CircleAvatar(
-                      backgroundImage: NetworkImage(
-                        "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500",
-                      ),
-                      radius: 40,
-                    ),
-                  );
-                }),
-          ),
+              alignment: Alignment.topLeft,
+              height: 100,
+              child: FutureBuilder(
+                  future: FirebaseFirestore.instance
+                      .collection("userCommunities")
+                      .where("community_id",
+                          isEqualTo: mainController.currentCommunityId)
+                      .where('userRole', isEqualTo: "admin")
+                      .get(),
+                  builder: ((context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.active ||
+                        snapshot.connectionState == ConnectionState.done) {
+                      if (snapshot.hasData) {
+                        return ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: snapshot.data!.docs.length,
+                            scrollDirection: Axis.horizontal,
+                            itemBuilder: (context, index) {
+                              return FutureBuilder(
+                                  future: FirebaseFirestore.instance
+                                      .collection("users")
+                                      .doc(snapshot.data!.docs[index]['uid'])
+                                      .get(),
+                                  builder: (context, snap) {
+                                    if (snap.connectionState ==
+                                            ConnectionState.active ||
+                                        snap.connectionState ==
+                                            ConnectionState.done) {
+                                      if (snap.hasData) {
+                                        return Column(
+                                          children: [
+                                            Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 8, horizontal: 10),
+                                              child: CircleAvatar(
+                                                backgroundImage: NetworkImage(
+                                                    snap.data!['profilePic']),
+                                                radius: 30,
+                                              ),
+                                            ),
+                                            Text(
+                                              snap.data!['name'],
+                                              style: TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 14,
+                                                fontFamily: 'Gilroy',
+                                                fontWeight: FontWeight.w500,
+                                                height: 0,
+                                              ),
+                                            )
+                                          ],
+                                        );
+                                      }
+                                    }
+                                    return Container();
+                                  });
+                            });
+                      }
+                    }
+                    return Container();
+                  }))),
         ],
       ),
     ),
@@ -714,35 +863,40 @@ details(CommunityController controller, Function openEditAboutSheet) {
 
 member(
     CommunityController controller,
+    MainController mainController,
     BuildContext context,
     Function showDialog,
     Function showFilterBottomSheet,
-    Function addARoleBottomSheet) {
+    Function addARoleBottomSheet,
+    Function openBanSheet) {
   return Padding(
     padding: const EdgeInsets.all(8.0),
     child: SingleChildScrollView(
+      primary: false,
       child: Column(
         children: [
-          const SizedBox(
-            height: 10,
-          ),
-          Row(
-            children: [
-              CustomContainer(
-                text: "108 Member",
-                controller: controller,
-                containerIndex: 0,
-              ),
-              const SizedBox(
-                width: 10,
-              ),
-              CustomContainer(
-                text: "4 Pending Approval",
-                controller: controller,
-                containerIndex: 1,
-              ),
-            ],
-          ),
+          if (mainController.role.value == "admin")
+            const SizedBox(
+              height: 10,
+            ),
+          if (mainController.role.value == "admin")
+            Row(
+              children: [
+                CustomContainer(
+                  text: "108 Member",
+                  controller: controller,
+                  containerIndex: 0,
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                CustomContainer(
+                  text: "4 Pending Approval",
+                  controller: controller,
+                  containerIndex: 1,
+                ),
+              ],
+            ),
           SizedBox(
             height: 10,
           ),
@@ -752,30 +906,31 @@ member(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    margin: EdgeInsets.symmetric(horizontal: 15),
-                    width: 400,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Add the function to be executed when the button is pressed
-                        addARoleBottomSheet();
-                      },
-                      style: ElevatedButton.styleFrom(
-                          // Text color
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25.0),
-                            side: BorderSide(color: Color(0xFF7B61FF)),
+                  if (mainController.role.value == "admin")
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 15),
+                      width: 400,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // Add the function to be executed when the button is pressed
+                          addARoleBottomSheet();
+                        },
+                        style: ElevatedButton.styleFrom(
+                            // Text color
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25.0),
+                              side: BorderSide(color: Color(0xFF7B61FF)),
+                            ),
+                            backgroundColor: Colors.white),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            '+ Invite Member',
+                            style: TextStyle(color: Color(0xFF7B61FF)),
                           ),
-                          backgroundColor: Colors.white),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        child: Text(
-                          '+ Invite Member',
-                          style: TextStyle(color: Color(0xFF7B61FF)),
                         ),
                       ),
                     ),
-                  ),
                   const SizedBox(
                     height: 10,
                   ),
@@ -831,51 +986,96 @@ member(
                       )
                     ],
                   ),
-                  ListView.builder(
-                    itemCount: 2,
-                    shrinkWrap: true,
-                    primary: false,
-                    itemBuilder: (context, index) {
-                      return const ListTile(
-                        title: Text("Priya Bhatt"),
-                        leading: CircleAvatar(
-                          backgroundImage: NetworkImage(
-                              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdXX7GO70tKqiGR95LplD2avbw4oIOGll9jJBNCnvT&s"),
-                          radius: 16,
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text.rich(
-                              TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: '24 days streak ',
-                                    style: TextStyle(
-                                      color: Color(0xFFFF6161),
-                                      fontSize: 14,
-                                      fontFamily: 'Gilroy',
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: '🔥',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 16,
-                                      fontFamily: 'Gilroy',
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            Icon(Icons.more_vert)
-                          ],
-                        ),
-                      );
-                    },
+                  FutureBuilder(
+                    future: FirebaseFirestore.instance
+                        .collection("userCommunities")
+                        .where('community_id',
+                            isEqualTo: mainController.currentCommunityId)
+                        .where('chapters',
+                            arrayContains: mainController
+                                .currentCommunity.value!.chapters[0])
+                        .where('userRole', isEqualTo: "admin")
+                        .get(),
+                    builder: ((context, snapshot) {
+                      if ((snapshot.connectionState == ConnectionState.active ||
+                              snapshot.connectionState ==
+                                  ConnectionState.done) &&
+                          snapshot.hasData) {
+                        return ListView.builder(
+                          itemCount: snapshot.data!.docs.length,
+                          shrinkWrap: true,
+                          primary: false,
+                          itemBuilder: (context, index) {
+                            return FutureBuilder(
+                                future: FirebaseFirestore.instance
+                                    .collection("users")
+                                    .doc(snapshot.data!.docs[index]['uid'])
+                                    .get(),
+                                builder: (context, snap) {
+                                  if ((snap.connectionState ==
+                                              ConnectionState.active ||
+                                          snap.connectionState ==
+                                              ConnectionState.done) &&
+                                      snap.hasData) {
+                                    return ListTile(
+                                      title: Text(snap.data!['name']),
+                                      leading: CircleAvatar(
+                                        backgroundImage: NetworkImage(
+                                            snap.data!['profilePic']),
+                                        radius: 16,
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (mainController
+                                                  .currentUser!.role ==
+                                              "admin")
+                                            Text.rich(
+                                              TextSpan(
+                                                children: [
+                                                  TextSpan(
+                                                    text: '24 days streak ',
+                                                    style: TextStyle(
+                                                      color: Color(0xFFFF6161),
+                                                      fontSize: 14,
+                                                      fontFamily: 'Gilroy',
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                  TextSpan(
+                                                    text: '🔥',
+                                                    style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 16,
+                                                      fontFamily: 'Gilroy',
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          if (mainController
+                                                  .currentUser!.role ==
+                                              "admin")
+                                            IconButton(
+                                                onPressed: () {
+                                                  openBanSheet();
+                                                },
+                                                icon: Icon(Icons.more_vert))
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  return Container();
+                                });
+                          },
+                        );
+                      }
+                      return Container();
+                    }),
                   ),
                   const SizedBox(
                     height: 10,
@@ -884,7 +1084,7 @@ member(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'School',
+                        'User',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Color(0xFF546881),
@@ -905,51 +1105,96 @@ member(
                       )
                     ],
                   ),
-                  ListView.builder(
-                    itemCount: 1,
-                    shrinkWrap: true,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        title: const Text("Priya Bhatt"),
-                        leading: const CircleAvatar(
-                          backgroundImage: NetworkImage(
-                              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdXX7GO70tKqiGR95LplD2avbw4oIOGll9jJBNCnvT&s"),
-                          radius: 16,
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text.rich(
-                              TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: '24 days streak ',
-                                    style: TextStyle(
-                                      color: Color(0xFFFF6161),
-                                      fontSize: 14,
-                                      fontFamily: 'Gilroy',
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: '🔥',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 16,
-                                      fontFamily: 'Gilroy',
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            IconButton(
-                                onPressed: () {}, icon: Icon(Icons.more_vert))
-                          ],
-                        ),
-                      );
-                    },
+                  FutureBuilder(
+                    future: FirebaseFirestore.instance
+                        .collection("userCommunities")
+                        .where('community_id',
+                            isEqualTo: mainController.currentCommunityId)
+                        .where('chapters',
+                            arrayContains: mainController
+                                .currentCommunity.value!.chapters[0])
+                        .where('userRole', isEqualTo: "user")
+                        .get(),
+                    builder: ((context, snapshot) {
+                      if ((snapshot.connectionState == ConnectionState.active ||
+                              snapshot.connectionState ==
+                                  ConnectionState.done) &&
+                          snapshot.hasData) {
+                        return ListView.builder(
+                          itemCount: snapshot.data!.docs.length,
+                          shrinkWrap: true,
+                          primary: false,
+                          itemBuilder: (context, index) {
+                            return FutureBuilder(
+                                future: FirebaseFirestore.instance
+                                    .collection("users")
+                                    .doc(snapshot.data!.docs[index]['uid'])
+                                    .get(),
+                                builder: (context, snap) {
+                                  if ((snap.connectionState ==
+                                              ConnectionState.active ||
+                                          snap.connectionState ==
+                                              ConnectionState.done) &&
+                                      snap.hasData) {
+                                    return ListTile(
+                                      title: Text(snap.data!['name']),
+                                      leading: CircleAvatar(
+                                        backgroundImage: NetworkImage(
+                                            snap.data!['profilePic']),
+                                        radius: 16,
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (mainController
+                                                  .currentUser!.role ==
+                                              "admin")
+                                            Text.rich(
+                                              TextSpan(
+                                                children: [
+                                                  TextSpan(
+                                                    text: '24 days streak ',
+                                                    style: TextStyle(
+                                                      color: Color(0xFFFF6161),
+                                                      fontSize: 14,
+                                                      fontFamily: 'Gilroy',
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                  TextSpan(
+                                                    text: '🔥',
+                                                    style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 16,
+                                                      fontFamily: 'Gilroy',
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          if (mainController
+                                                  .currentUser!.role ==
+                                              "admin")
+                                            IconButton(
+                                                onPressed: () {
+                                                  openBanSheet();
+                                                },
+                                                icon: Icon(Icons.more_vert))
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                  return Container();
+                                });
+                          },
+                        );
+                      }
+                      return Container();
+                    }),
                   ),
                 ],
               ),
@@ -1021,7 +1266,7 @@ member(
   );
 }
 
-access() {
+access(CommunityController controller) {
   return Padding(
     padding: const EdgeInsets.all(12),
     child: Column(children: [
@@ -1055,13 +1300,23 @@ access() {
               fontWeight: FontWeight.w600,
             ),
           ),
-          IconButton(
-              onPressed: () {},
-              icon: Icon(
-                Icons.toggle_on,
-                color: Color(0xFF7B61FF),
-                size: 60,
-              )),
+          Obx(
+            () => IconButton(
+                onPressed: () {
+                  controller.paid.value = !controller.paid.value;
+                },
+                icon: controller.paid.value
+                    ? Icon(
+                        Icons.toggle_on,
+                        color: Color(0xFF7B61FF),
+                        size: 60,
+                      )
+                    : Icon(
+                        Icons.toggle_off,
+                        color: Colors.grey,
+                        size: 60,
+                      )),
+          ),
           Text(
             'Paid',
             textAlign: TextAlign.center,
@@ -1194,33 +1449,48 @@ access() {
       SizedBox(
         height: 30,
       ),
-      Text.rich(
-        TextSpan(
-          children: [
+      Obx(() {
+        if (controller.paid.value) {
+          return Text.rich(
             TextSpan(
-              text: 'Rs 149 ',
-              style: TextStyle(
-                color: Color(0xFF090B0E),
-                fontSize: 32,
-                fontFamily: 'Gilroy',
-                fontWeight: FontWeight.w700,
-                height: 0,
-              ),
+              children: [
+                TextSpan(
+                  text: 'Rs 149 ',
+                  style: TextStyle(
+                    color: Color(0xFF090B0E),
+                    fontSize: 32,
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w700,
+                    height: 0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'only',
+                  style: TextStyle(
+                    color: Color(0xFF090B0E),
+                    fontSize: 18,
+                    fontFamily: 'Gilroy',
+                    fontWeight: FontWeight.w500,
+                    height: 0,
+                  ),
+                ),
+              ],
             ),
-            TextSpan(
-              text: 'only',
-              style: TextStyle(
-                color: Color(0xFF090B0E),
-                fontSize: 18,
-                fontFamily: 'Gilroy',
-                fontWeight: FontWeight.w500,
-                height: 0,
-              ),
+            textAlign: TextAlign.center,
+          );
+        } else {
+          return Text(
+            'Free',
+            style: TextStyle(
+              color: Color(0xFF090B0E),
+              fontSize: 32,
+              fontFamily: 'Gilroy',
+              fontWeight: FontWeight.w700,
+              height: 0,
             ),
-          ],
-        ),
-        textAlign: TextAlign.center,
-      ),
+          );
+        }
+      }),
       SizedBox(height: 20),
       Container(
         width: double.infinity,
@@ -1265,20 +1535,15 @@ settings() {
     Divider(),
     SizedBox(height: 2),
     SwitchListTile(
-      value: true,
-      title: Text("Mute this Chapter"),
-      onChanged: (val) {}
-    ),
+        value: true, title: Text("Mute this Chapter"), onChanged: (val) {}),
     SwitchListTile(
-      title: Text("Notification Settings"),
-      value: true, 
-      onChanged: (val) {}
-    ),
+        title: Text("Notification Settings"), value: true, onChanged: (val) {}),
     SizedBox(height: 2),
     Divider(),
     SizedBox(height: 2),
     ListTile(
-      title: Text("Open Foundation Page",style: TextStyle(color: Color(0xFF7B61FF))),
+      title: Text("Open Foundation Page",
+          style: TextStyle(color: Color(0xFF7B61FF))),
       trailing: Icon(
         Icons.link,
         color: Color(0xFF7B61FF),

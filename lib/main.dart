@@ -11,6 +11,7 @@ import 'package:custard_flutter/firebase_options.dart';
 import 'package:custard_flutter/repo/AuthRepo.dart';
 import 'package:custard_flutter/repo/StorageMethods.dart';
 import 'package:custard_flutter/view/HomeScreen.dart';
+import 'package:custard_flutter/view/JoinCommunityScreen.dart';
 import 'package:custard_flutter/view/LoginScreen.dart';
 import 'package:custard_flutter/view/SplashScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,6 +20,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -92,7 +94,7 @@ void callbackDispatcher() {
           }
           final DatabaseReference databaseReference = FirebaseDatabase.instance
               .ref()
-              .child("communityChats/chapterId/messages");
+              .child("${inputData['communityId']}/${inputData['chapterId']}/messages");
           DatabaseReference newMessage = databaseReference.push();
           String messageId = newMessage.key!;
           DateTime time = DateTime.now();
@@ -129,7 +131,7 @@ void callbackDispatcher() {
           }
           final DatabaseReference databaseReference = FirebaseDatabase.instance
               .ref()
-              .child("communityChats/chapterId/messages");
+              .child("${inputData['communityId']}/${inputData['chapterId']}/messages");
           DatabaseReference newMessage = databaseReference.push();
           String messageId = newMessage.key!;
           DateTime time = DateTime.now();
@@ -165,7 +167,7 @@ void callbackDispatcher() {
           }
           final DatabaseReference databaseReference = FirebaseDatabase.instance
               .ref()
-              .child("communityChats/chapterId/messages");
+              .child("${inputData['communityId']}/${inputData['chapterId']}/messages");
           DatabaseReference newMessage = databaseReference.push();
           String messageId = newMessage.key!;
           DateTime time = DateTime.now();
@@ -208,7 +210,7 @@ void callbackDispatcher() {
 
           final DatabaseReference databaseReference = FirebaseDatabase.instance
               .ref()
-              .child("communityChats/chapterId/messages");
+              .child("${inputData['communityId']}/${inputData['chapterId']}/messages");
           DatabaseReference newMessage = databaseReference.push();
           String messageId = newMessage.key!;
           DateTime time = DateTime.now();
@@ -299,6 +301,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      builder: EasyLoading.init(),
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
             seedColor: Colors.deepPurple, background: Colors.white),
@@ -307,12 +310,16 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.light,
-      home: Obx((){
-        if(controller.loading.value){
+      // home: JoinCommunityScreen(),
+      home: Obx(() {
+        if (controller.loading.value) {
           return SplashScreen();
-        }
-        else{
-          return controller.prefs.getBool(Constants.isUserSignedInPref)!=null && controller.prefs.getBool(Constants.isUserSignedInPref)! ? HomeScreen() : LoginScreen();
+        } else {
+          return controller.prefs.getBool(Constants.isUserSignedInPref) !=
+                      null &&
+                  controller.prefs.getBool(Constants.isUserSignedInPref)!
+              ? HomeScreen()
+              : LoginScreen();
         }
       }),
     );
