@@ -250,6 +250,7 @@ Future<void> backgroundHandler(RemoteMessage message) async {
 }
 
 void main() async {
+  // community Platform app
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)
       .then((value) => Get.put(AuthRepo()));
